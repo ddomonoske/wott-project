@@ -1,6 +1,7 @@
 import tkinter as tk
 import customtkinter as ctk
 from typing import List
+from functools import partial
 
 class View(ctk.CTkFrame):
     def __init__(self, parent):
@@ -22,11 +23,17 @@ class View(ctk.CTkFrame):
         self.logo_lbl.grid(row=0, column=0, padx=20, pady=(20, 10))
 
         # top selection buttons
-        self.rider_btn = ctk.CTkButton(self.topSelect_frm, text="Rider Profiles", command=self.riderBtnPress)
+        self.rider_btn = ctk.CTkButton(self.topSelect_frm,
+                                       text="Rider Profiles",
+                                       command=self.riderBtnPress)
         self.rider_btn.grid(row=1, column=0, pady=5)
-        self.envir_btn = ctk.CTkButton(self.topSelect_frm, text="Environments", command=self.envirBtnPress)
+        self.envir_btn = ctk.CTkButton(self.topSelect_frm,
+                                       text="Environments",
+                                       command=self.envirBtnPress)
         self.envir_btn.grid(row=2, column=0, pady=5)
-        self.sim_btn = ctk.CTkButton(self.topSelect_frm, text="Simulations", command=self.simBtnPress)
+        self.sim_btn = ctk.CTkButton(self.topSelect_frm,
+                                     text="Simulations",
+                                     command=self.simBtnPress)
         self.sim_btn.grid(row=3, column=0, pady=5)
 
         self.topSelect_frm.grid(row=0, column=0, padx=0, pady=0, sticky="news")
@@ -97,8 +104,10 @@ class View(ctk.CTkFrame):
 
 # General scrollable frame for riders, environments, or
 class SubSelectFrame(ctk.CTkScrollableFrame):
-    def __init__(self, parent, names: List[str]):
+    def __init__(self, parent, names: List[str], controller=None):
         super().__init__(parent, fg_color=("gray70", "gray10"))
+
+        self.controller = controller
 
         # list of btns for each name
         self.name_btns = []
@@ -109,9 +118,17 @@ class SubSelectFrame(ctk.CTkScrollableFrame):
 
         # Create a btn for each name and append to list
         for i, name in enumerate(names, start=1):
-            btn = ctk.CTkButton(self, text=name)
+            btn = ctk.CTkButton(self, text=name, command=partial(self.subSelectBtnPress, name))
             self.name_btns.append(btn)
             btn.grid(row=i, column=0)
+
+    ### ------ connect controller ------ ###
+    def setController(self, controller):
+        self.controller = controller
+
+    def subSelectBtnPress(self, name: str):
+        if self.controller:
+            self.controller.subSelectBtnPress(name)
 
 # Rider Profiles main content frame
 class RiderProfilesFrame(ctk.CTkFrame):
