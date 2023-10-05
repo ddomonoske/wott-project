@@ -2,12 +2,48 @@ from wottview import *
 import tkinter as tk
 import customtkinter as ctk
 
+fruitStr = ["apple",
+            "banana",
+            "cherry",
+            "dragon fruit",
+            "elderberry",
+            "fig",
+            "grapes"]
+
+riderStr = ["David",
+            "Anders",
+            "Grant",
+            "Brendan",
+            "Colby",
+            "Viggo",
+            "Eddy"]
+
+envirStr = ["LA",
+            "COS",
+            "San Juan",
+            "Paris"]
+
+simStr = ["10/8/23 COS Testing",
+          "8/8/23 Worlds"]
+
 class BasicController():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, view: ctk.CTkFrame = None) -> None:
+        self.view = view
 
     def subSelectBtnPress(self, name: str):
         print(f"{name} button pressed")
+
+    def riderBtnPress(self):
+        if self.view:
+            self.view.updateSubSelectionFrame(riderStr)
+
+    def envirBtnPress(self):
+        if self.view:
+            self.view.updateSubSelectionFrame(envirStr)
+
+    def simBtnPress(self):
+        if self.view:
+            self.view.updateSubSelectionFrame(simStr)
 
 # test SubSelectFrame with individual callbacks
 def test_SubSelectFrame(parent: ctk.CTkToplevel):
@@ -17,15 +53,7 @@ def test_SubSelectFrame(parent: ctk.CTkToplevel):
 
     controller = BasicController()
 
-    names = ["apple",
-             "banana",
-             "cherry",
-             "dragon fruit",
-             "elderberry",
-             "fig",
-             "grapes"]
-
-    ss_frame = SubSelectFrame(parent, names, controller)
+    ss_frame = SubSelectFrame(parent, fruitStr, controller)
     ss_frame.grid(row=0, column=0, sticky="news")
 
 # test the entire View
@@ -37,6 +65,10 @@ def test_View(parent: ctk.CTkToplevel):
 
     view = View(parent)
     view.grid(row=0, column=0, sticky="news")
+
+    controller = BasicController(view)
+    view.setController(controller)
+
 
 test_list = [test_SubSelectFrame]
 

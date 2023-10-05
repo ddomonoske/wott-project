@@ -55,11 +55,11 @@ class View(ctk.CTkFrame):
         # create simulations frame
         self.sim_frm = SimulationProfilesFrame(self)
 
-    ### ------ connect controller ------ ###
+    """ ------ connect controller ------ """
     def setController(self, controller):
         self.controller = controller
 
-    ### ------ button handlers ------ ###
+    """ ------ button handlers ------ """
     def riderBtnPress(self):
         if self.controller:
             self.controller.riderBtnPress()
@@ -72,37 +72,30 @@ class View(ctk.CTkFrame):
         if self.controller:
             self.controller.simBtnPress()
 
-    ### ------ update view methods ------ ###
+    """ ------ update view methods ------ """
 
+    # TODO give this column a title, which would require different methods for rider, envir, and sim
     # to update entire view when top level buttons are clicked
-    def showRiders(riderList: List):
+    def updateSubSelectionFrame(self, list: List[str]):
         # show list of riders in sub selection frame
-        rider = riderList[1]
-        # clear main content frame
-
-    def showEnvironments(envirList: List):
-        # show list of environments in sub selection frame
-        envir = envirList[1]
-        # clear main content frame
-
-    def showSimulations(simList: List[str]):
-        # show list of simulations in sub selection frame
-        sim = simList[1]
-        # clear main content frame
+        self.subSelect_frm = SubSelectFrame(self, list, self.controller)
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="news")
+        # TODO clear main content frame
 
     def showRiderDetail(rider):
-        # show rider details in main content frame
+        # TODO show rider details in main content frame
         rider
 
     def showEnvirDetail(envir):
-        # show environment details in main content frame
+        # TODO show environment details in main content frame
         envir
 
     def showSimDetail(sim):
-        # show sim details in main content frame
+        # TODO show sim details in main content frame
         sim
 
-# General scrollable frame for riders, environments, or
+# TODO split SubSelectFrame into a more general scrollable list of buttons
+# General scrollable frame for riders, environments, or simulations
 class SubSelectFrame(ctk.CTkScrollableFrame):
     def __init__(self, parent, names: List[str], controller=None):
         super().__init__(parent, fg_color=("gray70", "gray10"))
@@ -122,7 +115,7 @@ class SubSelectFrame(ctk.CTkScrollableFrame):
             self.name_btns.append(btn)
             btn.grid(row=i, column=0)
 
-    ### ------ connect controller ------ ###
+    """ ------ connect controller ------ """
     def setController(self, controller):
         self.controller = controller
 
