@@ -144,19 +144,3 @@ class EnvironmentProfilesFrame(ctk.CTkFrame):
 class SimulationProfilesFrame(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
-
-# for testing
-if __name__ == '__main__':
-    ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
-    ctk.set_default_color_theme("blue")  # ["blue", "green", "dark-blue", "sweetkind"]
-
-    app = ctk.CTk()
-    app.title("WOTT Main View Demo")
-    app.state("zoomed")
-
-    app.columnconfigure(0,weight=1)
-    app.rowconfigure(0,weight=1)
-
-    view = View(app)
-    view.grid(row=0, column=0, sticky="news")
-    app.mainloop()

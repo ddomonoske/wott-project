@@ -2,8 +2,6 @@ from wottview import *
 import tkinter as tk
 import customtkinter as ctk
 
-#TODO make more tests that actually check that things are working
-
 class BasicController():
     def __init__(self) -> None:
         pass
