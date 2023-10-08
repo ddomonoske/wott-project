@@ -106,12 +106,13 @@ class SubSelectFrame(ctk.CTkScrollableFrame):
         self.name_btns = []
 
         # Add button
-        self.add_btn = ctk.CTkButton(self, text="Add Rider")
-        self.add_btn.grid(row=0, column=0)
+        self.add_btn = ctk.CTkButton(self, text="Add New", fg_color="green")
+        self.add_btn.grid(row=0, column=0, pady=(30,10))
 
         # Create a btn for each name and append to list
         for i, name in enumerate(names, start=1):
-            btn = ctk.CTkButton(self, text=name, command=partial(self.subSelectBtnPress, name))
+            btn = ctk.CTkButton(self, text=name, corner_radius=0, border_width=1, border_color="black",
+                                command=partial(self.subSelectBtnPress, name))
             self.name_btns.append(btn)
             btn.grid(row=i, column=0)
 
