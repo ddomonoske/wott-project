@@ -48,8 +48,8 @@ class BasicController():
 # test SubSelectFrame with individual callbacks
 def test_SubSelectFrame(parent: ctk.CTkToplevel):
     parent.title("SubSelectFrame Test")
-    parent.columnconfigure(0,weight=1)
-    parent.rowconfigure(0,weight=1)
+    parent.grid_columnconfigure(0,weight=1)
+    parent.grid_rowconfigure(0,weight=1)
 
     controller = BasicController()
 
@@ -60,8 +60,8 @@ def test_SubSelectFrame(parent: ctk.CTkToplevel):
 def test_View(parent: ctk.CTkToplevel):
     parent.title("View Test")
     parent.wm_state("zoomed")  # this only works on the main window (ctk.CTk), not toplevel windows (ctk.CTkTopLevel)
-    parent.columnconfigure(0,weight=1)
-    parent.rowconfigure(0,weight=1)
+    parent.grid_columnconfigure(0,weight=1)
+    parent.grid_rowconfigure(0,weight=1)
 
     view = View(parent)
     view.grid(row=0, column=0, sticky="news")
