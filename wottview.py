@@ -112,12 +112,13 @@ class SubSelectFrame(ctk.CTkScrollableFrame):
         # Add button
         self.add_btn = ctk.CTkButton(self, text="Add New", fg_color="green", hover_color="dark green", width=50)
         self.add_btn.grid(row=0, column=0, pady=(30,10))
-        
-        bg_color = self.cget("fg_color")
+
+        # get frame color for "transparent" border
+        fg_color = self.cget("fg_color")
 
         # Create a btn for each name and append to list
         for i, name in enumerate(names, start=1):
-            btn = ctk.CTkButton(self, text=name, corner_radius=0, border_width=1, border_color=bg_color,
+            btn = ctk.CTkButton(self, text=name, corner_radius=0, border_width=1, border_color=fg_color,
                                 command=partial(self.subSelectBtnPress, name))
             self.name_btns.append(btn)
             btn.grid(row=i, column=0, sticky="EW")
