@@ -12,11 +12,9 @@ simsFile = "sims_data"
 
 class Model(object):
     def __init__(self, storageDir: str = defaultStorageDir):
-        self.riders = List[Rider]
-        self.envirs = List[Environment]
-        self.sims = List[Simulation]
-
         self.storageDir = storageDir
+
+        self.loadModel()
 
         # TODO should I have a save flag that represents if the data has been changed since it was last stored?
 
