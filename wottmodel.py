@@ -18,6 +18,7 @@ class Model(object):
 
         # TODO should I have a save flag that represents if the data has been changed since it was last stored?
 
+    """ ------ Load methods ------ """
     # load all model data
     def loadModel(self):
         # create application directory if it doesn't exist
@@ -84,8 +85,43 @@ class Model(object):
             data = None
         return data
 
+    """ ------ Save methods ------ """
+    # save all model data
+    def saveModel(self):
+        # create application directory if it doesn't exist
+        Path(self.storageDir).mkdir(parents=True, exist_ok=True)
 
-    # be able to save data
+        self.saveRiders()
+        self.saveEnvirs()
+        self.saveSims()
+
+    # save riders to file
+    def saveRiders(self):
+        filePath = self.storageDir + "/" + ridersFile
+        self.saveObject(filePath, self.riders)
+
+    # save environments to file
+    def saveEnvirs(self):
+        filePath = self.storageDir + "/" + envirsFile
+        self.saveObject(filePath, self.envirs)
+
+    # save simulations to file
+    def saveSims(self):
+        filePath = self.storageDir + "/" + simsFile
+        self.saveObject(filePath, self.sims)
+
+    # save an object to a binary file using Pickle. Deletes and replaces the file if it exists
+    def saveObject(self, filePath: str, obj: object):
+        # delete existing file
+        if Path(filePath).exists():
+            Path(filePath).unlink()
+
+        # TODO check that file opened correctly
+        f=open(filePath,"wb")
+
+        # TODO check that this worked
+        pickle.dump(obj, f)
+
 
     # get specific rider, given a string
     # get specific environment, given a string
