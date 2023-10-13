@@ -1,12 +1,13 @@
 import pickle
 from typing import List
+from pathlib import Path
 
 
 # TODO check file stuff
 # file paths for persistant data storage
 storageDir = "/Users/daviddomonoske/Library/Application Support/wott_project"
 ridersFile = "riders_data"
-evirsFile = "envirs_data"
+envirsFile = "envirs_data"
 simsFile = "sims_data"
 
 class Model(object):
@@ -19,37 +20,69 @@ class Model(object):
 
     # load all model data
     def loadModel(self):
-        # TODO directory check
+        # create application directory if it doesn't exist
+        Path(storageDir).mkdir(parents=True, exist_ok=True)
 
         self.loadRiders()
         self.loadEnvirs()
         self.loadSims()
 
-    # TODO figure out an actually safe way to load this data, and apply to each list
-    # load riders
+    # safely load riders
     def loadRiders(self):
         filePath = storageDir + "/" + ridersFile
-        
+
         # load raw data
         data = self.loadObject(filePath)
 
-        # TODO this actually makes no sense
-        # check that data represents Riders
-        self.riders = data.safeGetRiders()
+        # init as empty list of riders
+        self.riders = List[Rider]
 
-    # load environments
+        # if data represents list of riders, save to self.riders
+        if isinstance(data, List):
+            if data and isinstance(data[0], Rider):
+                self.riders = data
+
+    # safely load environments
     def loadEnvirs(self):
-        data = self.loadObject()
+        filePath = storageDir + "/" + envirsFile
 
-    # load simulations(self):
+        # load raw data
+        data = self.loadObject(filePath)
+
+        # init as empty list of environments
+        self.envirs = List[Environment]
+
+        # if data represents list of environments, save to self.envirs
+        if isinstance(data, List):
+            if data and isinstance(data[0], Environment):
+                self.envirs = data
+
+    # safely load simulations(self):
     def loadSims(self):
-        data = self.loadObject()
+        filePath = storageDir + "/" + simsFile
 
-    # check file, load contents and return object
+        # load raw data
+        data = self.loadObject(filePath)
+
+        # init as empty list of simulations
+        self.sims = List[Simulation]
+
+        # if data represents list of simulations, save to self.sims
+        if isinstance(data, List):
+            if data and isinstance(data[0], Simulation):
+                self.sims = data
+
+
+    # check file, load contents and return object. If file DNE, then return None
     def loadObject(self, filePath: str) -> object:
-        # TODO check file path exists / is valid
-        f=open(filePath,"rb")
-        return pickle.load(f)
+        if Path(filePath).exists():
+            f=open(filePath,"rb")
+            # TODO check file is valid python object
+            data = pickle.load(f)
+            f.close()
+        else:
+            data = None
+        return data
 
 
     # be able to save data
@@ -96,7 +129,7 @@ class RiderList(object):
     def __init__(self, riders: List[Rider] = None):
         self.isRider = True
         self.riders = riders
-    
+
     def safeGetRiders(self):
         if self.isRider:
             return self.riders
@@ -107,7 +140,7 @@ class EnvirList(object):
     def __init__(self, envirs: List[Environment] = None):
         self.isEnvir = True
         self.envirs = envirs
-    
+
     def safeGetEnvirs(self):
         if self.isEnvir:
             return self.envirs
