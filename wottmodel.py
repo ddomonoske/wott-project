@@ -5,23 +5,25 @@ from pathlib import Path
 
 # TODO check file stuff
 # file paths for persistant data storage
-storageDir = "/Users/daviddomonoske/Library/Application Support/wott_project"
+defaultStorageDir = "~/Library/Application Support/wott_project"
 ridersFile = "riders_data"
 envirsFile = "envirs_data"
 simsFile = "sims_data"
 
 class Model(object):
-    def __init__(self):
+    def __init__(self, storageDir: str = defaultStorageDir):
         self.riders = List[Rider]
         self.envirs = List[Environment]
         self.sims = List[Simulation]
+
+        self.storageDir = storageDir
 
         # TODO should I have a save flag that represents if the data has been changed since it was last stored?
 
     # load all model data
     def loadModel(self):
         # create application directory if it doesn't exist
-        Path(storageDir).mkdir(parents=True, exist_ok=True)
+        Path(self.storageDir).mkdir(parents=True, exist_ok=True)
 
         self.loadRiders()
         self.loadEnvirs()
@@ -29,7 +31,7 @@ class Model(object):
 
     # safely load riders
     def loadRiders(self):
-        filePath = storageDir + "/" + ridersFile
+        filePath = self.storageDir + "/" + ridersFile
 
         # load raw data
         data = self.loadObject(filePath)
@@ -44,7 +46,7 @@ class Model(object):
 
     # safely load environments
     def loadEnvirs(self):
-        filePath = storageDir + "/" + envirsFile
+        filePath = self.storageDir + "/" + envirsFile
 
         # load raw data
         data = self.loadObject(filePath)
@@ -59,7 +61,7 @@ class Model(object):
 
     # safely load simulations(self):
     def loadSims(self):
-        filePath = storageDir + "/" + simsFile
+        filePath = self.storageDir + "/" + simsFile
 
         # load raw data
         data = self.loadObject(filePath)
