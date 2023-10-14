@@ -83,16 +83,6 @@ def test_loadModel() -> int:
         printFailure("test_loadModel")
         return 1
 
-def test_saveModel() -> int:
-    try:
-        model = Model()
-        model.saveModel()
-        printSuccess("test_saveModel")
-        return 0
-    except:
-        printFailure("test_saveModel")
-        return 1
-
 def test_saveRiders() -> int:
     try:
         model = Model()
@@ -121,6 +111,16 @@ def test_saveSims() -> int:
         return 0
     except:
         printFailure("test_saveSims")
+        return 1
+
+def test_saveModel() -> int:
+    try:
+        model = Model()
+        model.saveModel()
+        printSuccess("test_saveModel")
+        return 0
+    except:
+        printFailure("test_saveModel")
         return 1
 
 

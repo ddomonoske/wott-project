@@ -5,14 +5,14 @@ from pathlib import Path
 
 # TODO check file stuff
 # file paths for persistant data storage
-defaultStorageDir = "~/Library/Application Support/wott_project"
+defaultStorageDir = Path.home() / "Library/Application Support/wott_project"
 ridersFile = "riders_data"
 envirsFile = "envirs_data"
 simsFile = "sims_data"
 
 class Model(object):
-    def __init__(self, storageDir: str = defaultStorageDir):
-        self.storageDir = storageDir
+    def __init__(self, storageDir: str = str(defaultStorageDir)):
+        self.storageDir = Path(storageDir)
 
         self.loadModel()
 
@@ -30,7 +30,7 @@ class Model(object):
 
     # safely load riders
     def loadRiders(self):
-        filePath = self.storageDir + "/" + ridersFile
+        filePath = self.storageDir / ridersFile
 
         # load raw data
         data = self.loadObject(filePath)
@@ -45,7 +45,7 @@ class Model(object):
 
     # safely load environments
     def loadEnvirs(self):
-        filePath = self.storageDir + "/" + envirsFile
+        filePath = self.storageDir / envirsFile
 
         # load raw data
         data = self.loadObject(filePath)
@@ -60,7 +60,7 @@ class Model(object):
 
     # safely load simulations(self):
     def loadSims(self):
-        filePath = self.storageDir + "/" + simsFile
+        filePath = self.storageDir / simsFile
 
         # load raw data
         data = self.loadObject(filePath)
@@ -75,8 +75,8 @@ class Model(object):
 
 
     # check file, load contents and return object. If file DNE, then return None
-    def loadObject(self, filePath: str) -> object:
-        if Path(filePath).exists():
+    def loadObject(self, filePath: Path) -> object:
+        if filePath.exists():
             f=open(filePath,"rb")
             # TODO check file is valid python object
             data = pickle.load(f)
@@ -97,17 +97,17 @@ class Model(object):
 
     # save riders to file
     def saveRiders(self):
-        filePath = self.storageDir + "/" + ridersFile
+        filePath = self.storageDir / ridersFile
         self.saveObject(filePath, self.riders)
 
     # save environments to file
     def saveEnvirs(self):
-        filePath = self.storageDir + "/" + envirsFile
+        filePath = self.storageDir / envirsFile
         self.saveObject(filePath, self.envirs)
 
     # save simulations to file
     def saveSims(self):
-        filePath = self.storageDir + "/" + simsFile
+        filePath = self.storageDir / simsFile
         self.saveObject(filePath, self.sims)
 
     # save an object to a binary file using Pickle. Deletes and replaces the file if it exists
@@ -160,7 +160,8 @@ class Simulation(object):
 
     # simulate race
 
-# TODO these are stupid. The check can't be internal. The check has to be outside
+# TODO these are stupid. The check can't be internal. The check has to be outside.
+# TODO I think these can be deleted now
 class RiderList(object):
     def __init__(self, riders: List[Rider] = None):
         self.isRider = True
