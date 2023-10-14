@@ -20,6 +20,44 @@ def printSuccess(text: str = "success"):
 def printFailure(text: str = "failure"):
     print(f"{bcolors.FAIL}{text}{bcolors.ENDC}")
 
+def test_Rider_valid_attributes() -> int:
+    try:
+        attributes = {
+            Rider.attributes.FIRSTNAME: "David",
+            Rider.attributes.LASTNAME: "Domonoske",
+            Rider.attributes.WEIGHT: 90,
+            Rider.attributes.FTP: 380,
+            Rider.attributes.CDA: 0.19,
+            Rider.attributes.WPRIME: 20
+        }
+        rider = Rider(attributeDict=attributes)
+        printSuccess("test_Rider_valid_attributes")
+        return 0
+    except:
+        printFailure("test_Rider_valid_attributes")
+        return 1
+
+def test_Rider_invalid_attributes() -> int:
+    try:
+        attributes = {
+            Rider.attributes.FIRSTNAME: "David",
+            Rider.attributes.LASTNAME: "Domonoske",
+            Rider.attributes.WEIGHT: 90,
+            Rider.attributes.FTP: 380,
+            Rider.attributes.CDA: 0.19,
+            Rider.attributes.WPRIME: 20,
+            "invalidAttribute": 0
+        }
+        rider = Rider(attributeDict=attributes)
+        printFailure("test_Rider_invalid_attributes")
+        return 1
+    except AttributeError:
+        printSuccess("test_Rider_invalid_attributes")
+        return 0
+    except:
+        printFailure("test_Rider_invalid_attributes")
+        return 1
+
 def test_saveObject_loadObject() -> int:
     # instanciate model with a test directory
     testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
@@ -124,7 +162,9 @@ def test_saveModel() -> int:
         return 1
 
 
-test_list = [test_saveObject_loadObject,
+test_list = [test_Rider_valid_attributes,
+             test_Rider_invalid_attributes,
+             test_saveObject_loadObject,
              test_loadRiders,
              test_loadEnvirs,
              test_loadSims,

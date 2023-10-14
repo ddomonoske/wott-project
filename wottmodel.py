@@ -1,5 +1,5 @@
 import pickle
-from typing import List
+from typing import List, Dict
 from pathlib import Path
 
 
@@ -136,10 +136,57 @@ class Model(object):
     # get list of strings for simulations
 
 class Rider(object):
-    def __init__(self) -> None:
-        # name, weight, threshold, w', cda,
-        # power results are a list of something
-        pass
+    # valid keys for setting Rider attributes
+    class attributes:
+        FIRSTNAME = "firstName"
+        LASTNAME = "lastName"
+        WEIGHT = "weight"
+        FTP = "FTP"
+        WPRIME = "wPrime"
+        CDA = "CdA"
+        POWERRESULTS = "powerResults"
+
+    def __init__(self,
+                 firstName: str = "",
+                 lastName: str = "",
+                 weight: float = 0,
+                 FTP: float = 0,
+                 wPrime: float = 0,
+                 CdA: float = 0,
+                 powerResults: Dict[float, float] = {},
+                 attributeDict: Dict[str, object] = {}) -> None:
+        self.firstName = firstName
+        self.lastName = lastName
+        self.weight = weight
+        self.FTP = FTP
+        self.wPrime = wPrime
+        self.CdA = CdA
+        self.powerResults = powerResults
+
+        if attributeDict:
+            self.setProperty(attributeDict)
+
+    # TODO check that the values are appropriate type and value
+    # TODO I think there's a more pythonic way to do this, but it works
+    def setProperty(self, attributeDict: Dict[str, object]):
+        for attribute, value in attributeDict.items():
+            match attribute:
+                case self.attributes.FIRSTNAME:
+                    self.firstName = value
+                case self.attributes.LASTNAME:
+                    self.firstName = value
+                case self.attributes.WEIGHT:
+                    self.firstName = value
+                case self.attributes.FTP:
+                    self.firstName = value
+                case self.attributes.WPRIME:
+                    self.firstName = value
+                case self.attributes.CDA:
+                    self.firstName = value
+                case self.attributes.POWERRESULTS:
+                    self.firstName = value
+                case _:
+                    raise AttributeError(f"'{attribute}' is not a property of the Rider class")
 
     # calculate threshold and w' from set of power results
 
