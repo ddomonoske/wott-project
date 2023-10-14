@@ -16,7 +16,7 @@ class Model(object):
 
         self.loadModel()
 
-        # TODO should I have a save flag that represents if the data has been changed since it was last stored?
+        # TODO should I have a save flag that represents if the data has been changed since it was last saved?
 
     """ ------ Load methods ------ """
     # load all model data
@@ -159,38 +159,3 @@ class Simulation(object):
         pass
 
     # simulate race
-
-# TODO these are stupid. The check can't be internal. The check has to be outside.
-# TODO I think these can be deleted now
-class RiderList(object):
-    def __init__(self, riders: List[Rider] = None):
-        self.isRider = True
-        self.riders = riders
-
-    def safeGetRiders(self):
-        if self.isRider:
-            return self.riders
-        else:
-            return List[Rider]
-
-class EnvirList(object):
-    def __init__(self, envirs: List[Environment] = None):
-        self.isEnvir = True
-        self.envirs = envirs
-
-    def safeGetEnvirs(self):
-        if self.isEnvir:
-            return self.envirs
-        else:
-            return List[Environment]
-
-class SimList(object):
-    def __init__(self, sims: List[Simulation] = None):
-        self.isSim = True
-        self.sims = sims
-
-    def safeGetSims(self):
-        if self.isSim:
-            return self.sims
-        else:
-            return List[Simulation]
