@@ -174,17 +174,17 @@ class Rider(object):
                 case self.attributes.FIRSTNAME:
                     self.firstName = value
                 case self.attributes.LASTNAME:
-                    self.firstName = value
+                    self.lastNAme = value
                 case self.attributes.WEIGHT:
-                    self.firstName = value
+                    self.weight = value
                 case self.attributes.FTP:
-                    self.firstName = value
+                    self.FTP = value
                 case self.attributes.WPRIME:
-                    self.firstName = value
+                    self.wPrime = value
                 case self.attributes.CDA:
-                    self.firstName = value
+                    self.CdA = value
                 case self.attributes.POWERRESULTS:
-                    self.firstName = value
+                    self.powerResults = value
                 case _:
                     raise AttributeError(f"'{attribute}' is not a property of the Rider class")
 
