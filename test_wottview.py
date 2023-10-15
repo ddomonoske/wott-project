@@ -56,6 +56,17 @@ def test_SubSelectFrame(parent: ctk.CTkToplevel):
     ss_frame = SubSelectFrame(parent, fruitStr, controller)
     ss_frame.grid(row=0, column=0, sticky="news")
 
+# test the Rider Frame
+def test_RiderProfileFrame(parent: ctk.CTkToplevel):
+    parent.title("Rider Frame Test")
+    parent.grid_columnconfigure(0,weight=1)
+    parent.grid_rowconfigure(0,weight=1)
+
+    controller = BasicController()
+
+    rp_frame = RiderProfileFrame(parent)
+    rp_frame.grid(row=0, column=0, sticky="NSEW")
+
 # test the entire View
 def test_View(parent: ctk.CTkToplevel):
     parent.title("View Test")
@@ -70,11 +81,12 @@ def test_View(parent: ctk.CTkToplevel):
     view.setController(controller)
 
 
-test_list = [test_SubSelectFrame]
+test_list = [test_SubSelectFrame,
+             test_RiderProfileFrame]
 
 # run all tests
 if __name__ == '__main__':
-    ctk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
+    ctk.set_appearance_mode("Light")  # Modes: "System" (standard), "Dark", "Light"
     ctk.set_default_color_theme("blue")  # ["blue", "green", "dark-blue", "sweetkind"]
 
     # run the main View fullscreen
