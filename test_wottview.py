@@ -1,6 +1,7 @@
 from wottview import *
 import tkinter as tk
 import customtkinter as ctk
+from typing import Dict
 
 fruitStr = ["apple",
             "banana",
@@ -45,6 +46,9 @@ class BasicController():
         if self.view:
             self.view.updateSubSelectionFrame(simStr)
 
+    def saveRiderBtnPress(self, attributeDict: Dict[str, str] = {}):
+        print(attributeDict)
+
 # test SubSelectFrame with individual callbacks
 def test_SubSelectFrame(parent: ctk.CTkToplevel):
     parent.title("SubSelectFrame Test")
@@ -64,7 +68,7 @@ def test_RiderProfileFrame(parent: ctk.CTkToplevel):
 
     controller = BasicController()
 
-    rp_frame = RiderProfileFrame(parent)
+    rp_frame = RiderProfileFrame(parent, controller)
     rp_frame.grid(row=0, column=0, sticky="NSEW")
 
 # test the entire View

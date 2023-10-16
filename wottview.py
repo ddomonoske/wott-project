@@ -215,6 +215,11 @@ class RiderProfileFrame(ctk.CTkFrame):
         self.wPrimeEnt = ctk.CTkEntry(self.powerFrm, textvariable=self.wPrime)
         self.wPrimeEnt.grid(row=1, column=3, padx=(5,25), pady=(10,10))
 
+        # Save Rider button
+        self.saveBtn = ctk.CTkButton(self, text="Save", fg_color="green", hover_color="dark green",
+                                     command=self.saveRiderBtnPress)
+        self.saveBtn.grid(row=3, column=0, padx=(10,10), pady=(10,10))
+
     # exactly the same as wottmodel.Rider.setProperty
     def setAttribute(self, attributeDict: Dict[str, object]):
         for attribute, value in attributeDict.items():
@@ -238,6 +243,16 @@ class RiderProfileFrame(ctk.CTkFrame):
                     pass
 
     def saveRiderBtnPress(self):
+        # update the internal variables
+        self.firstName = self.firstNameEnt.get()
+        self.lastName = self.lastNameEnt.get()
+        self.weight = self.weightEnt.get()
+        self.FTP = self.FTPEnt.get()
+        self.wPrime = self.wPrimeEnt.get()
+        self.CdA = self.CdAEnt.get()
+        # TODO get powerresults, or maybe they're already updated elsewhere
+
+        # send to controller
         if self.controller:
             attributeDict = {self.attributes.FIRSTNAME: self.firstName,
                             self.attributes.LASTNAME: self.lastName,
