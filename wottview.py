@@ -1,6 +1,6 @@
 import tkinter as tk
 import customtkinter as ctk
-from typing import List
+from typing import List, Dict
 from functools import partial
 
 class View(ctk.CTkFrame):
@@ -49,13 +49,13 @@ class View(ctk.CTkFrame):
         self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="news")
 
         # rider frame
-        self.rider_frm = RiderProfilesFrame(self)
+        self.rider_frm = RiderProfileFrame(self)
 
         # create environment frame
-        self.envir_frm = EnvironmentProfilesFrame(self)
+        self.envir_frm = EnvironmentProfileFrame(self)
 
         # create simulations frame
-        self.sim_frm = SimulationProfilesFrame(self)
+        self.sim_frm = SimulationProfileFrame(self)
 
     """ ------ connect controller ------ """
     def setController(self, controller):
@@ -105,6 +105,7 @@ class SubSelectFrame(ctk.CTkScrollableFrame):
         self.controller = controller
 
         self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
         # list of btns for each name
         self.name_btns = []
@@ -132,16 +133,147 @@ class SubSelectFrame(ctk.CTkScrollableFrame):
             self.controller.subSelectBtnPress(name)
 
 # Rider Profiles main content frame
-class RiderProfilesFrame(ctk.CTkFrame):
-    def __init__(self, parent):
+class RiderProfileFrame(ctk.CTkFrame):
+    # same as wottmodel.Rider.attributes
+    class attributes:
+        FIRSTNAME = "firstName"
+        LASTNAME = "lastName"
+        WEIGHT = "weight"
+        FTP = "FTP"
+        WPRIME = "wPrime"
+        CDA = "CdA"
+        POWERRESULTS = "powerResults"
+
+    def __init__(self, parent, controller = None,
+                 firstName: str = "",
+                 lastName: str = "",
+                 weight: str = "",
+                 FTP: str = "",
+                 wPrime: str = "",
+                 CdA: str = "",
+                 powerResults: Dict[str, str] = {},
+                 attributeDict: Dict[str, object] = {}):
         super().__init__(parent)
 
+        self.controller = controller
+
+        self.grid_columnconfigure(0, weight=1)
+
+        self.firstName = firstName
+        self.lastName = lastName
+        self.weight = weight
+        self.FTP = FTP
+        self.wPrime = wPrime
+        self.CdA = CdA
+        self.powerResults = powerResults
+
+        if attributeDict:
+            self.setAttribute(attributeDict)
+
+
+        """ ------ set up the geometry ------ """
+        # Name section
+        self.nameFrm = ctk.CTkFrame(self)
+        self.nameFrm.columnconfigure(4, weight=1)
+        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.nameLbl = SectionLabel(self.nameFrm, "Rider Name")
+        self.nameLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
+        self.firstNameLbl = ctk.CTkLabel(self.nameFrm, text="First Name:")
+        self.firstNameLbl.grid(row=1, column=0, padx=(15,5), pady=(10,10))
+        self.firstNameEnt = ctk.CTkEntry(self.nameFrm, textvariable=self.firstName)
+        self.firstNameEnt.grid(row=1, column=1, padx=(5,25), pady=(10,10))
+        self.lastNameLbl = ctk.CTkLabel(self.nameFrm, text="Last Name:")
+        self.lastNameLbl.grid(row=1, column=2, padx=(25,5), pady=(10,10))
+        self.lastNameEnt = ctk.CTkEntry(self.nameFrm, textvariable=lastName)
+        self.lastNameEnt.grid(row=1, column=3, padx=(5,25), pady=(10,10))
+
+        # Physical stats section
+        self.statsFrm = ctk.CTkFrame(self)
+        self.statsFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.statsLbl = SectionLabel(self.statsFrm, "Physical Characteristics")
+        self.statsLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
+        self.weightLbl = ctk.CTkLabel(self.statsFrm, text="Weight (kg):")
+        self.weightLbl.grid(row=1, column=0, padx=(15,5), pady=(10,10))
+        self.weightEnt = ctk.CTkEntry(self.statsFrm, textvariable=self.weight)
+        self.weightEnt.grid(row=1, column=1, padx=(5,25), pady=(10,10))
+        self.CdALbl = ctk.CTkLabel(self.statsFrm, text=f"CdA (m\N{SUPERSCRIPT TWO}):")
+        self.CdALbl.grid(row=1, column=2, padx=(25,5), pady=(10,10))
+        self.CdAEnt = ctk.CTkEntry(self.statsFrm, textvariable=self.CdA)
+        self.CdAEnt.grid(row=1, column=3, padx=(5,25), pady=(10,10))
+
+        # FTP and wPrime section
+        self.powerFrm = ctk.CTkFrame(self)
+        self.powerFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.powerLbl = SectionLabel(self.powerFrm, "Physiological Characteristics")
+        self.powerLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
+        self.FTPLbl = ctk.CTkLabel(self.powerFrm, text="FTP (Watts):")
+        self.FTPLbl.grid(row=1, column=0, padx=(15,5), pady=(10,10))
+        self.FTPEnt = ctk.CTkEntry(self.powerFrm, textvariable=self.FTP)
+        self.FTPEnt.grid(row=1, column=1, padx=(5,25), pady=(10,10))
+        self.wPrimeLbl = ctk.CTkLabel(self.powerFrm, text="wPrime (kJ):")
+        self.wPrimeLbl.grid(row=1, column=2, padx=(25,5), pady=(10,10))
+        self.wPrimeEnt = ctk.CTkEntry(self.powerFrm, textvariable=self.wPrime)
+        self.wPrimeEnt.grid(row=1, column=3, padx=(5,25), pady=(10,10))
+
+        # Save Rider button
+        self.saveBtn = ctk.CTkButton(self, text="Save", fg_color="green", hover_color="dark green",
+                                     command=self.saveRiderBtnPress)
+        self.saveBtn.grid(row=3, column=0, padx=(10,10), pady=(10,10))
+
+    # exactly the same as wottmodel.Rider.setProperty
+    def setAttribute(self, attributeDict: Dict[str, object]):
+        for attribute, value in attributeDict.items():
+            match attribute:
+                # TODO change all of these to
+                case self.attributes.FIRSTNAME:
+                    self.firstName = value
+                case self.attributes.LASTNAME:
+                    self.lastName = value
+                case self.attributes.WEIGHT:
+                    self.weight = value
+                case self.attributes.FTP:
+                    self.FTP = value
+                case self.attributes.WPRIME:
+                    self.wPrime = value
+                case self.attributes.CDA:
+                    self.CdA = value
+                case self.attributes.POWERRESULTS:
+                    self.powerResults = value
+                case _:
+                    pass
+
+    def saveRiderBtnPress(self):
+        # update the internal variables
+        self.firstName = self.firstNameEnt.get()
+        self.lastName = self.lastNameEnt.get()
+        self.weight = self.weightEnt.get()
+        self.FTP = self.FTPEnt.get()
+        self.wPrime = self.wPrimeEnt.get()
+        self.CdA = self.CdAEnt.get()
+        # TODO get powerresults, or maybe they're already updated elsewhere
+
+        # send to controller
+        if self.controller:
+            attributeDict = {self.attributes.FIRSTNAME: self.firstName,
+                            self.attributes.LASTNAME: self.lastName,
+                            self.attributes.WEIGHT: self.weight,
+                            self.attributes.FTP: self.FTP,
+                            self.attributes.WPRIME: self.wPrime,
+                            self.attributes.CDA: self.CdA,
+                            self.attributes.POWERRESULTS: self.powerResults}
+
+            self.controller.saveRiderBtnPress(attributeDict)
+
 # Environment Profiles main content frame
-class EnvironmentProfilesFrame(ctk.CTkFrame):
+class EnvironmentProfileFrame(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
 
 # Simulation Profiles main content frame
-class SimulationProfilesFrame(ctk.CTkFrame):
+class SimulationProfileFrame(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
+
+class SectionLabel(ctk.CTkLabel):
+    def __init__(self, parent, text: str = ""):
+        super().__init__(parent, text=text, font=ctk.CTkFont(size=15, weight="bold"))
