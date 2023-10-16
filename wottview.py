@@ -152,7 +152,7 @@ class RiderProfileFrame(ctk.CTkFrame):
                  wPrime: str = "",
                  CdA: str = "",
                  powerResults: Dict[str, str] = {},
-                 attributeDict: Dict[str, str] = {}):
+                 attributeDict: Dict[str, object] = {}):
         super().__init__(parent)
 
         self.controller = controller
@@ -239,8 +239,15 @@ class RiderProfileFrame(ctk.CTkFrame):
 
     def saveRiderBtnPress(self):
         if self.controller:
-            # TODO get all the properties from entry fields and put into Dict
-            self.controller.saveRiderBtnPress()
+            attributeDict = {self.attributes.FIRSTNAME: self.firstName,
+                            self.attributes.LASTNAME: self.lastName,
+                            self.attributes.WEIGHT: self.weight,
+                            self.attributes.FTP: self.FTP,
+                            self.attributes.WPRIME: self.wPrime,
+                            self.attributes.CDA: self.CdA,
+                            self.attributes.POWERRESULTS: self.powerResults}
+
+            self.controller.saveRiderBtnPress(attributeDict)
 
 # Environment Profiles main content frame
 class EnvironmentProfileFrame(ctk.CTkFrame):
