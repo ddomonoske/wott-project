@@ -10,17 +10,17 @@ class Controller(object):
     """ ------ View Action Callbacks ------ """
     def riderBtnPress(self):
         # TODO get the list of riders from the model
-        riderStrList: List[str] = []
+        riderStrList: List[tuple[str,id]] = []
         self.view.updateSubSelectionFrame(riderStrList)
 
     def envirBtnPress(self):
         # TODO get the list of envirs from the model
-        envirStrList: List[str] = []
+        envirStrList: List[tuple[str,id]] = []
         self.view.updateSubSelectionFrame(envirStrList)
 
     def simBtnPress(self):
         # TODO get the list of sims from the model
-        simStrList: List[str] = []
+        simStrList: List[tuple[str,id]] = []
         self.view.updateSubSelectionFrame(simStrList)
 
     def subSelectBtnPress(self, name: str):

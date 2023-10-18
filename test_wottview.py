@@ -3,26 +3,26 @@ import tkinter as tk
 import customtkinter as ctk
 from typing import Dict
 
-fruitStr = ["apple",
-            "banana",
-            "cherry",
-            "dragon fruit",
-            "elderberry",
-            "fig",
-            "grapes"]
+fruitStr = [("apple", 1),
+            ("banana", 2),
+            ("cherry", 5),
+            ("dragon fruit", 4),
+            ("elderberry", 3),
+            ("fig", 90),
+            ("grapes", 12)]
 
-riderStr = ["David",
-            "Anders",
-            "Grant",
-            "Brendan",
-            "Colby",
-            "Viggo",
-            "Eddy"]
+riderStr = [("David", 0),
+            ("Anders", 2),
+            ("Grant", 4),
+            ("Brendan", 6),
+            ("Colby", 8),
+            ("Viggo", 10),
+            ("Eddy", 12)]
 
-envirStr = ["LA",
-            "COS",
-            "San Juan",
-            "Paris"]
+envirStr = [("LA", 10),
+            ("COS", 9),
+            ("San Juan", 8),
+            ("Paris", 7)]
 
 simStr = ["10/8/23 COS Testing",
           "8/8/23 Worlds"]
