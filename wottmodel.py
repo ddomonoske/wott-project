@@ -199,7 +199,7 @@ class Rider(object):
                 case self.attributes.FIRSTNAME:
                     self.firstName = value
                 case self.attributes.LASTNAME:
-                    self.lastNAme = value
+                    self.lastName = value
                 case self.attributes.WEIGHT:
                     self.weight = value
                 case self.attributes.FTP:
@@ -215,7 +215,15 @@ class Rider(object):
 
     # calculate threshold and w' from set of power results
 
-    # get name
+    """ ------ getters ------ """
+    def getName(self) -> str:
+        return self.firstName + " " + self.lastName
+
+    def getID(self) -> int:
+        return self.riderID
+
+    def getNameID(self) -> tuple[str,int]:
+        return (self.getName, self.getID)
 
 class Environment(object):
     def __init__(self) -> None:
