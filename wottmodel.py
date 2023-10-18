@@ -9,6 +9,7 @@ defaultStorageDir = Path.home() / "Library/Application Support/wott_project"
 ridersFile = "riders_data"
 envirsFile = "envirs_data"
 simsFile = "sims_data"
+metaFile = "meta_data"
 
 class Model(object):
     def __init__(self, storageDir: str = str(defaultStorageDir)):
@@ -27,6 +28,7 @@ class Model(object):
         self.loadRiders()
         self.loadEnvirs()
         self.loadSims()
+        self.loadMetaData()
 
     # safely load riders
     def loadRiders(self):
@@ -73,6 +75,21 @@ class Model(object):
             if data and isinstance(data[0], Simulation):
                 self.sims = data
 
+    # safely load meta data
+    def loadMetaData(self):
+        filePath = self.storageDir / metaFile
+
+        # load raw data
+        data = self.loadObject(filePath)
+
+        # init as empty list of riders
+        self.metaData = WottMetaData()
+
+        # if data represents meta data, save to self.metaData
+        if isinstance(data, WottMetaData):
+            self.metaData = data
+
+
 
     # check file, load contents and return object. If file DNE, then return None
     def loadObject(self, filePath: Path) -> object:
@@ -94,6 +111,7 @@ class Model(object):
         self.saveRiders()
         self.saveEnvirs()
         self.saveSims()
+        self.saveMetaData()
 
     # save riders to file
     def saveRiders(self):
@@ -109,6 +127,11 @@ class Model(object):
     def saveSims(self):
         filePath = self.storageDir / simsFile
         self.saveObject(filePath, self.sims)
+
+    # save meta data to file
+    def saveMetaData(self):
+        filePath = self.storageDir / metaFile
+        self.saveObject(filePath, self.metaData)
 
     # save an object to a binary file using Pickle. Deletes and replaces the file if it exists
     def saveObject(self, filePath: str, obj: object):
@@ -206,3 +229,12 @@ class Simulation(object):
         pass
 
     # simulate race
+
+class WottMetaData(object):
+    def __init__(self,
+                 nextRiderID: int = 0,
+                 nextEnvirID: int = 0,
+                 nextSimID: int = 0) -> None:
+        self.nextRiderID = nextRiderID
+        self.nextEnvirID = nextEnvirID
+        self.nextSimID = nextSimID
