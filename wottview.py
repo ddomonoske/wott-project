@@ -75,7 +75,6 @@ class View(ctk.CTkFrame):
             self.controller.simBtnPress()
 
     """ ------ update view methods ------ """
-
     # TODO give this column a title, which would require different methods for rider, envir, and sim
     # to update entire view when top level buttons are clicked
     def updateSubSelectionFrame(self, list: List[str]):
