@@ -170,6 +170,7 @@ class Rider(object):
         POWERRESULTS = "powerResults"
 
     def __init__(self,
+                 riderID: int,
                  firstName: str = "",
                  lastName: str = "",
                  weight: float = 0,
@@ -178,6 +179,7 @@ class Rider(object):
                  CdA: float = 0,
                  powerResults: Dict[float, float] = {},
                  attributeDict: Dict[str, object] = {}) -> None:
+        self.riderID = riderID
         self.firstName = firstName
         self.lastName = lastName
         self.weight = weight
