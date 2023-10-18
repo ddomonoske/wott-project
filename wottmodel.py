@@ -154,7 +154,10 @@ class Model(object):
     # add environment
     # add simulation
 
-    # get list of strings for names
+    # get list of name-ID tuples for riders
+    def getNameIDs(self) -> List[tuple[str,int]]:
+        return [rider.getNameID() for rider in self.riders]
+
     # get list of strings for environments
     # get list of strings for simulations
 
