@@ -38,7 +38,7 @@ class Model(object):
         data = self.loadObject(filePath)
 
         # init as empty list of riders
-        self.riders = List[Rider]
+        self.riders: List[Rider] = []
 
         # if data represents list of riders, save to self.riders
         if isinstance(data, List):
@@ -53,7 +53,7 @@ class Model(object):
         data = self.loadObject(filePath)
 
         # init as empty list of environments
-        self.envirs = List[Environment]
+        self.envirs: List[Environment] = []
 
         # if data represents list of environments, save to self.envirs
         if isinstance(data, List):
@@ -68,7 +68,7 @@ class Model(object):
         data = self.loadObject(filePath)
 
         # init as empty list of simulations
-        self.sims = List[Simulation]
+        self.sims: List[Simulation] = []
 
         # if data represents list of simulations, save to self.sims
         if isinstance(data, List):
