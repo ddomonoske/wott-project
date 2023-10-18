@@ -127,7 +127,14 @@ class Model(object):
     # get specific environment, given a string
     # get specific simulation, given a string
 
+    """ ------ Add/Delete methods ------ """
     # add rider
+    def addRider(self, attributeDict: Dict[str, object]):
+        # TODO check that rider isn't already in the list
+        rider = Rider(attributeDict=attributeDict)
+        self.riders.append(rider)
+        # TODO maybe sort the list of riders (or instert above)
+
     # add environment
     # add simulation
 

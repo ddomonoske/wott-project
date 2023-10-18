@@ -30,5 +30,6 @@ class Controller(object):
     def saveRiderBtnPress(self, attributeDict: Dict[str, str] = {}):
         # TODO check that the attributes are good?
         # TODO add a new rider to the model's list of riders
+        self.model.addRider(attributeDict)
         # TODO call a view method that says either rider saved, updated, or invalid. look at the tutorial for how to do this
         print(attributeDict)
