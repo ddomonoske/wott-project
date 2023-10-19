@@ -9,9 +9,8 @@ class Controller(object):
 
     """ ------ View Action Callbacks ------ """
     def riderBtnPress(self):
-        # TODO get the list of riders from the model
-        riderStrList: List[tuple[str,id]] = []
-        self.view.updateSubSelectionFrame(riderStrList)
+        riderNameIDs = self.model.getRiderNameIDs()
+        self.view.updateSubSelectionFrame(riderNameIDs)
 
     def envirBtnPress(self):
         # TODO get the list of envirs from the model
