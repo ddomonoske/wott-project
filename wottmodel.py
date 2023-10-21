@@ -9,6 +9,7 @@ defaultStorageDir = Path.home() / "Library/Application Support/wott_project"
 ridersFile = "riders_data"
 envirsFile = "envirs_data"
 simsFile = "sims_data"
+metaFile = "meta_data"
 
 class Model(object):
     def __init__(self, storageDir: str = str(defaultStorageDir)):
@@ -27,6 +28,7 @@ class Model(object):
         self.loadRiders()
         self.loadEnvirs()
         self.loadSims()
+        self.loadMetaData()
 
     # safely load riders
     def loadRiders(self):
@@ -36,7 +38,7 @@ class Model(object):
         data = self.loadObject(filePath)
 
         # init as empty list of riders
-        self.riders = List[Rider]
+        self.riders: List[Rider] = []
 
         # if data represents list of riders, save to self.riders
         if isinstance(data, List):
@@ -51,7 +53,7 @@ class Model(object):
         data = self.loadObject(filePath)
 
         # init as empty list of environments
-        self.envirs = List[Environment]
+        self.envirs: List[Environment] = []
 
         # if data represents list of environments, save to self.envirs
         if isinstance(data, List):
@@ -66,12 +68,27 @@ class Model(object):
         data = self.loadObject(filePath)
 
         # init as empty list of simulations
-        self.sims = List[Simulation]
+        self.sims: List[Simulation] = []
 
         # if data represents list of simulations, save to self.sims
         if isinstance(data, List):
             if data and isinstance(data[0], Simulation):
                 self.sims = data
+
+    # safely load meta data
+    def loadMetaData(self):
+        filePath = self.storageDir / metaFile
+
+        # load raw data
+        data = self.loadObject(filePath)
+
+        # init as empty list of riders
+        self.metaData = WottMetaData()
+
+        # if data represents meta data, save to self.metaData
+        if isinstance(data, WottMetaData):
+            self.metaData = data
+
 
 
     # check file, load contents and return object. If file DNE, then return None
@@ -94,6 +111,7 @@ class Model(object):
         self.saveRiders()
         self.saveEnvirs()
         self.saveSims()
+        self.saveMetaData()
 
     # save riders to file
     def saveRiders(self):
@@ -110,6 +128,11 @@ class Model(object):
         filePath = self.storageDir / simsFile
         self.saveObject(filePath, self.sims)
 
+    # save meta data to file
+    def saveMetaData(self):
+        filePath = self.storageDir / metaFile
+        self.saveObject(filePath, self.metaData)
+
     # save an object to a binary file using Pickle. Deletes and replaces the file if it exists
     def saveObject(self, filePath: str, obj: object):
         # delete existing file
@@ -123,7 +146,15 @@ class Model(object):
         pickle.dump(obj, f)
 
 
-    # get specific rider, given a string
+    # get specific rider, given a riderID
+    # TODO why can't I write that this returns Rider without an error?
+    # TODO ie def getRider(self, riderID: int) -> Rider:
+    def getRider(self, riderID: int) -> object:
+        for rider in self.riders:
+            if rider.isRider():
+                return rider
+        return None
+
     # get specific environment, given a string
     # get specific simulation, given a string
 
@@ -138,7 +169,10 @@ class Model(object):
     # add environment
     # add simulation
 
-    # get list of strings for names
+    # get list of name-ID tuples for riders
+    def getRiderNameIDs(self) -> List[tuple[str,int]]:
+        return [rider.getNameID() for rider in self.riders]
+
     # get list of strings for environments
     # get list of strings for simulations
 
@@ -154,6 +188,7 @@ class Rider(object):
         POWERRESULTS = "powerResults"
 
     def __init__(self,
+                 riderID: int,
                  firstName: str = "",
                  lastName: str = "",
                  weight: float = 0,
@@ -162,6 +197,7 @@ class Rider(object):
                  CdA: float = 0,
                  powerResults: Dict[float, float] = {},
                  attributeDict: Dict[str, object] = {}) -> None:
+        self.riderID = riderID
         self.firstName = firstName
         self.lastName = lastName
         self.weight = weight
@@ -181,7 +217,7 @@ class Rider(object):
                 case self.attributes.FIRSTNAME:
                     self.firstName = value
                 case self.attributes.LASTNAME:
-                    self.lastNAme = value
+                    self.lastName = value
                 case self.attributes.WEIGHT:
                     self.weight = value
                 case self.attributes.FTP:
@@ -197,7 +233,18 @@ class Rider(object):
 
     # calculate threshold and w' from set of power results
 
-    # get name
+    """ ------ getters ------ """
+    def getName(self) -> str:
+        return self.firstName + " " + self.lastName
+
+    def getID(self) -> int:
+        return self.riderID
+
+    def getNameID(self) -> tuple[str,int]:
+        return (self.getName, self.getID)
+
+    def isRider(self, id: int):
+        return self.riderID == id
 
 class Environment(object):
     def __init__(self) -> None:
@@ -213,3 +260,12 @@ class Simulation(object):
         pass
 
     # simulate race
+
+class WottMetaData(object):
+    def __init__(self,
+                 nextRiderID: int = 0,
+                 nextEnvirID: int = 0,
+                 nextSimID: int = 0) -> None:
+        self.nextRiderID = nextRiderID
+        self.nextEnvirID = nextEnvirID
+        self.nextSimID = nextSimID

@@ -21,7 +21,7 @@ if __name__ == '__main__':
     view.grid(row=0, column=0, sticky="NSEW")
 
     app.mainloop()
-    
+
      # delete file and directory
     testDirectory.rmdir()
 

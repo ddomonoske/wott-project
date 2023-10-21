@@ -30,7 +30,7 @@ def test_Rider_valid_attributes() -> int:
             Rider.attributes.CDA: 0.19,
             Rider.attributes.WPRIME: 20
         }
-        rider = Rider(attributeDict=attributes)
+        rider = Rider(0, attributeDict=attributes)
         printSuccess("test_Rider_valid_attributes")
         return 0
     except:
@@ -48,7 +48,7 @@ def test_Rider_invalid_attributes() -> int:
             Rider.attributes.WPRIME: 20,
             "invalidAttribute": 0
         }
-        rider = Rider(attributeDict=attributes)
+        rider = Rider(1, attributeDict=attributes)
         printFailure("test_Rider_invalid_attributes")
         return 1
     except AttributeError:
@@ -80,7 +80,7 @@ def test_saveObject_loadObject() -> int:
         printFailure("test_saveObject_loadObject")
         return 1
 
-# TODO make these do more then the absolute barebones calls 
+# TODO make these do more then the absolute barebones calls
 def test_loadRiders() -> int:
     try:
         model = Model()
