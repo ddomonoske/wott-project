@@ -246,9 +246,7 @@ class Model(object):
 
 
     # get specific rider, given a riderID
-    # TODO why can't I write that this returns Rider without an error?
-    # TODO ie def getRider(self, riderID: int) -> Rider:
-    def getRider(self, riderID: int) -> object:
+    def getRider(self, riderID: int) -> Rider:
         for rider in self.riders:
             if rider.isRider():
                 return rider
