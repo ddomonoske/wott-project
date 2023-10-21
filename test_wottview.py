@@ -24,40 +24,55 @@ envirStr = [("LA", 10),
             ("San Juan", 8),
             ("Paris", 7)]
 
-simStr = ["10/8/23 COS Testing",
-          "8/8/23 Worlds"]
+simStr = [("10/8/23 COS Testing", 2),
+          ("8/8/23 Worlds", 4)]
 
 class BasicController():
     def __init__(self, view: ctk.CTkFrame = None) -> None:
         self.view = view
 
-    def subSelectBtnPress(self, name: str):
-        print(f"{name} button pressed")
+    def addRiderBtnPress(self):
+        print("add rider button pressed")
+
+    def addEnvirBtnPress(self):
+        print("add environment button pressed")
+
+    def addSimBtnPress(self):
+        print("add simulation button pressed")
+
+    def riderSelectBtnPress(self, id: int):
+        print(f"rider {id} button pressed")
+
+    def envirSelectBtnPress(self, id: int):
+        print(f"environment {id} button pressed")
+
+    def simSelectBtnPress(self, id: int):
+        print(f"simulation {id} button pressed")
 
     def riderBtnPress(self):
         if self.view:
-            self.view.updateSubSelectionFrame(riderStr)
+            self.view.showRiderSelectionList(riderStr)
 
     def envirBtnPress(self):
         if self.view:
-            self.view.updateSubSelectionFrame(envirStr)
+            self.view.showEnvirSelectionList(envirStr)
 
     def simBtnPress(self):
         if self.view:
-            self.view.updateSubSelectionFrame(simStr)
+            self.view.showSimSelectionList(simStr)
 
     def saveRiderBtnPress(self, attributeDict: Dict[str, str] = {}):
         print(attributeDict)
 
-# test SubSelectFrame with individual callbacks
-def test_SubSelectFrame(parent: ctk.CTkToplevel):
-    parent.title("SubSelectFrame Test")
+# test RiderSelectFrame with individual callbacks
+def test_RiderSelectFrame(parent: ctk.CTkToplevel):
+    parent.title("RiderSelectFrame Test")
     parent.grid_columnconfigure(0,weight=1)
     parent.grid_rowconfigure(0,weight=1)
 
     controller = BasicController()
 
-    ss_frame = SubSelectFrame(parent, fruitStr, controller)
+    ss_frame = RiderSelectFrame(parent, fruitStr, controller)
     ss_frame.grid(row=0, column=0, sticky="news")
 
 # test the Rider Frame
@@ -85,7 +100,7 @@ def test_View(parent: ctk.CTkToplevel):
     view.setController(controller)
 
 
-test_list = [test_SubSelectFrame,
+test_list = [test_RiderSelectFrame,
              test_RiderProfileFrame]
 
 # run all tests
