@@ -11,6 +11,105 @@ envirsFile = "envirs_data"
 simsFile = "sims_data"
 metaFile = "meta_data"
 
+""" ------ Rider ------ """
+class Rider(object):
+    # valid keys for setting Rider attributes
+    class attributes:
+        FIRSTNAME = "firstName"
+        LASTNAME = "lastName"
+        WEIGHT = "weight"
+        FTP = "FTP"
+        WPRIME = "wPrime"
+        CDA = "CdA"
+        POWERRESULTS = "powerResults"
+
+    def __init__(self,
+                 riderID: int,
+                 firstName: str = "",
+                 lastName: str = "",
+                 weight: float = 0,
+                 FTP: float = 0,
+                 wPrime: float = 0,
+                 CdA: float = 0,
+                 powerResults: Dict[float, float] = {},
+                 attributeDict: Dict[str, object] = {}) -> None:
+        self.riderID = riderID
+        self.firstName = firstName
+        self.lastName = lastName
+        self.weight = weight
+        self.FTP = FTP
+        self.wPrime = wPrime
+        self.CdA = CdA
+        self.powerResults = powerResults
+
+        if attributeDict:
+            self.setProperty(attributeDict)
+
+    # TODO check that the values are appropriate type and value
+    # TODO I think there's a more pythonic way to do this, but it works
+    def setProperty(self, attributeDict: Dict[str, object]):
+        for attribute, value in attributeDict.items():
+            match attribute:
+                case self.attributes.FIRSTNAME:
+                    self.firstName = value
+                case self.attributes.LASTNAME:
+                    self.lastName = value
+                case self.attributes.WEIGHT:
+                    self.weight = value
+                case self.attributes.FTP:
+                    self.FTP = value
+                case self.attributes.WPRIME:
+                    self.wPrime = value
+                case self.attributes.CDA:
+                    self.CdA = value
+                case self.attributes.POWERRESULTS:
+                    self.powerResults = value
+                case _:
+                    raise AttributeError(f"'{attribute}' is not a property of the Rider class")
+
+    # calculate threshold and w' from set of power results
+
+    """ ------ getters ------ """
+    def getName(self) -> str:
+        return self.firstName + " " + self.lastName
+
+    def getID(self) -> int:
+        return self.riderID
+
+    def getNameID(self) -> tuple[str,int]:
+        return (self.getName, self.getID)
+
+    def isRider(self, id: int):
+        return self.riderID == id
+
+""" ------ Environment ------ """
+class Environment(object):
+    def __init__(self) -> None:
+
+        pass
+
+""" ------ Simulation ------ """
+class Simulation(object):
+    def __init__(self) -> None:
+        # distance
+        self.rider: Rider = None
+        self.envir: Environment = None
+        # pacing strategy is a list of something
+        pass
+
+    # simulate race
+
+""" ------ Meta Data ------ """
+class WottMetaData(object):
+    def __init__(self,
+                 nextRiderID: int = 0,
+                 nextEnvirID: int = 0,
+                 nextSimID: int = 0) -> None:
+        self.nextRiderID = nextRiderID
+        self.nextEnvirID = nextEnvirID
+        self.nextSimID = nextSimID
+
+""" ------ Wott Model ------ """
 class Model(object):
     def __init__(self, storageDir: str = str(defaultStorageDir)):
         self.storageDir = Path(storageDir)
@@ -147,9 +246,7 @@ class Model(object):
 
 
     # get specific rider, given a riderID
-    # TODO why can't I write that this returns Rider without an error?
-    # TODO ie def getRider(self, riderID: int) -> Rider:
-    def getRider(self, riderID: int) -> object:
+    def getRider(self, riderID: int) -> Rider:
         for rider in self.riders:
             if rider.isRider():
                 return rider
@@ -175,97 +272,3 @@ class Model(object):
 
     # get list of strings for environments
     # get list of strings for simulations
-
-class Rider(object):
-    # valid keys for setting Rider attributes
-    class attributes:
-        FIRSTNAME = "firstName"
-        LASTNAME = "lastName"
-        WEIGHT = "weight"
-        FTP = "FTP"
-        WPRIME = "wPrime"
-        CDA = "CdA"
-        POWERRESULTS = "powerResults"
-
-    def __init__(self,
-                 riderID: int,
-                 firstName: str = "",
-                 lastName: str = "",
-                 weight: float = 0,
-                 FTP: float = 0,
-                 wPrime: float = 0,
-                 CdA: float = 0,
-                 powerResults: Dict[float, float] = {},
-                 attributeDict: Dict[str, object] = {}) -> None:
-        self.riderID = riderID
-        self.firstName = firstName
-        self.lastName = lastName
-        self.weight = weight
-        self.FTP = FTP
-        self.wPrime = wPrime
-        self.CdA = CdA
-        self.powerResults = powerResults
-
-        if attributeDict:
-            self.setProperty(attributeDict)
-
-    # TODO check that the values are appropriate type and value
-    # TODO I think there's a more pythonic way to do this, but it works
-    def setProperty(self, attributeDict: Dict[str, object]):
-        for attribute, value in attributeDict.items():
-            match attribute:
-                case self.attributes.FIRSTNAME:
-                    self.firstName = value
-                case self.attributes.LASTNAME:
-                    self.lastName = value
-                case self.attributes.WEIGHT:
-                    self.weight = value
-                case self.attributes.FTP:
-                    self.FTP = value
-                case self.attributes.WPRIME:
-                    self.wPrime = value
-                case self.attributes.CDA:
-                    self.CdA = value
-                case self.attributes.POWERRESULTS:
-                    self.powerResults = value
-                case _:
-                    raise AttributeError(f"'{attribute}' is not a property of the Rider class")
-
-    # calculate threshold and w' from set of power results
-
-    """ ------ getters ------ """
-    def getName(self) -> str:
-        return self.firstName + " " + self.lastName
-
-    def getID(self) -> int:
-        return self.riderID
-
-    def getNameID(self) -> tuple[str,int]:
-        return (self.getName, self.getID)
-
-    def isRider(self, id: int):
-        return self.riderID == id
-
-class Environment(object):
-    def __init__(self) -> None:
-
-        pass
-
-class Simulation(object):
-    def __init__(self) -> None:
-        # distance
-        self.rider: Rider = None
-        self.envir: Environment = None
-        # pacing strategy is a list of something
-        pass
-
-    # simulate race
-
-class WottMetaData(object):
-    def __init__(self,
-                 nextRiderID: int = 0,
-                 nextEnvirID: int = 0,
-                 nextSimID: int = 0) -> None:
-        self.nextRiderID = nextRiderID
-        self.nextEnvirID = nextEnvirID
-        self.nextSimID = nextSimID
