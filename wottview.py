@@ -1,6 +1,6 @@
 import tkinter as tk
 import customtkinter as ctk
-from typing import List, Dict
+from typing import List, Dict, Callable
 from functools import partial
 
 class View(ctk.CTkFrame):
@@ -77,9 +77,9 @@ class View(ctk.CTkFrame):
     """ ------ update view methods ------ """
     # TODO give this column a title, which would require different methods for rider, envir, and sim
     # to update entire view when top level buttons are clicked
-    def updateSubSelectionFrame(self, list: List[tuple[str,int]]):
+    def showRiderSelectionList(self, list: List[tuple[str,int]]):
         # show list of riders in sub selection frame
-        self.subSelect_frm = SubSelectFrame(self, list, self.controller)
+        self.subSelect_frm = RiderSelectFrame(self, list, self.controller)
         self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
         # TODO clear main content frame
 
@@ -95,23 +95,17 @@ class View(ctk.CTkFrame):
         # TODO show sim details in main content frame
         sim
 
-# TODO split SubSelectFrame into a more general scrollable list of buttons
-# General scrollable frame for riders, environments, or simulations
-class SubSelectFrame(ctk.CTkScrollableFrame):
-    def __init__(self, parent, nameIDs: List[tuple[str,int]], controller=None):
-        super().__init__(parent, fg_color=("gray70", "gray10"), width=1, corner_radius=0)
-
-        self.controller = controller
+# Generalized scrollable list of buttons
+class ScrollableBtnList(ctk.CTkScrollableFrame):
+    def __init__(self, parent, nameIDs: List[tuple[str,int]], callback: Callable[[int],None]=None, *args, **kwargs):
+        # TODO check this is the correct way to use args/kwargs
+        super().__init__(parent, fg_color=("gray70", "gray10"), width=1, corner_radius=0, *args, **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
         # list of btns for each name
         self.name_btns = []
-
-        # Add button
-        self.add_btn = ctk.CTkButton(self, text="Add New", fg_color="green", hover_color="dark green", width=50)
-        self.add_btn.grid(row=0, column=0, pady=(30,10))
 
         # get frame color for "transparent" border
         fg_color = self.cget("fg_color")
@@ -121,15 +115,40 @@ class SubSelectFrame(ctk.CTkScrollableFrame):
             name = idName[0]
             id = idName[1]
             btn = ctk.CTkButton(self, text=name, corner_radius=0, border_width=1, border_color=fg_color,
-                                command=partial(self.subSelectBtnPress, id))
+                                command=partial(callback, id))
             self.name_btns.append(btn)
             btn.grid(row=i, column=0, sticky="EW")
+
+class RiderSelectFrame(ctk.CTkFrame):
+    # TODO implement a kind of sub-controller that turns a generic button press into a rider btn press for the top level controller
+    def __init__(self, parent, nameIDs: List[tuple[str,int]], controller=None):
+        super().__init__(parent, fg_color=("gray70", "gray10"), width=1, corner_radius=0)
+
+        self.controller = controller
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
+
+        # Add button
+        # TODO connect a callback to this button
+        self.add_btn = ctk.CTkButton(self, text="Add Rider", fg_color="green", hover_color="dark green", width=50,
+                                     command=self.addRiderBtnPress)
+        self.add_btn.grid(row=0, column=0, pady=(30,10))
+
+        # Scroll list of riders
+        self.riders_list = ScrollableBtnList(self, nameIDs, self.scrollBtnPress)
+        self.riders_list.grid(row=1, column=0, sticky="NSEW")
 
     """ ------ connect controller ------ """
     def setController(self, controller):
         self.controller = controller
 
-    def subSelectBtnPress(self, id: int):
+    """ ------ button callbacks ------ """
+    def addRiderBtnPress(self):
+        if self.controller:
+            self.controller.addRiderBtnPress()
+
+    def scrollBtnPress(self, id: int):
         if self.controller:
             self.controller.subSelectBtnPress(id)
 
