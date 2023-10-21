@@ -268,13 +268,17 @@ class Model(object):
     # get specific simulation, given a string
 
     """ ------ Add/Delete methods ------ """
-    # add new rider
-    def addRider(self, attributeDict: Dict[str, object] = None):
+    # add new rider. Return the index of the new rider
+    def addRider(self, attributeDict: Dict[str, object] = None) -> int:
+        # get next riderID from metadata
         riderID = self.metaData.newRiderID()
 
+        # make new rider and append to model list
         rider = Rider(riderID, attributeDict=attributeDict)
         self.riders.append(rider)
         # TODO maybe sort the list of riders (or instert above)
+
+        return riderID
 
     # add environment
     # add simulation
