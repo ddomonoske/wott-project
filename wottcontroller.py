@@ -7,7 +7,7 @@ class Controller(object):
         self.view = view
         # TODO have some sort of state machine that remembers which page we're looking at
 
-    """ ------ View Action Callbacks ------ """
+    """ ------ Top Level Btn Callbacks ------ """
     def riderBtnPress(self):
         riderNameIDs = self.model.getRiderNameIDs()
         self.view.updateSubSelectionFrame(riderNameIDs)
@@ -22,10 +22,39 @@ class Controller(object):
         simStrList: List[tuple[str,id]] = []
         self.view.updateSubSelectionFrame(simStrList)
 
-    def subSelectBtnPress(self, name: str):
-        print(f"{name} button pressed")
-        # TODO use the state machine and the
+    """ ------ Add Data Btn Callbacks ------ """
+    def addRiderBtnPress(self):
+        # TODO create a new rider in the model
+        # TODO display the new (empty) rider in the view
+        print("add Rider button pressed")
 
+    def addEnvirBtnPress(self):
+        # TODO create a new environment in the model
+        # TODO display the new (empty) environment in the view
+        print("add Environment button pressed")
+
+    def addSimBtnPress(self):
+        # TODO create a new simulation in the model
+        # TODO display the new (empty) simulation in the view
+        print("add Simulation button pressed")
+
+    """ ------ Scroll List Btn Callbacks ------ """
+    def riderSelectBtnPress(self, id: int):
+        # TODO get rider from the model
+        # TODO display rider in the view
+        print(f"rider {id} selected")
+
+    def envirSelectBtnPress(self, id: int):
+        # TODO get environment from the model
+        # TODO display environment in the view
+        print(f"envir {id} selected")
+
+    def simSelectBtnPress(self, id: int):
+        # TODO get simulation from the model
+        # TODO display simulation in the view
+        print(f"sim {id} selected")
+
+    """ ------ Save Data Callbacks ------ """
     def saveRiderBtnPress(self, attributeDict: Dict[str, str] = {}):
         # TODO check that the attributes are good?
         # TODO add a new rider to the model's list of riders
