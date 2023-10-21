@@ -75,11 +75,24 @@ class View(ctk.CTkFrame):
             self.controller.simBtnPress()
 
     """ ------ update view methods ------ """
-    # TODO give this column a title, which would require different methods for rider, envir, and sim
-    # to update entire view when top level buttons are clicked
+    # update entire view when main Rider button is pressed
     def showRiderSelectionList(self, list: List[tuple[str,int]]):
         # show list of riders in sub selection frame
         self.subSelect_frm = RiderSelectFrame(self, list, self.controller)
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
+        # TODO clear main content frame
+
+    # update entire view when main Environment button is pressed
+    def showEnvirSelectionList(self, list: List[tuple[str,int]]):
+        # show list of environments in sub selection frame
+        self.subSelect_frm = EnvirSelectFrame(self, list, self.controller)
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
+        # TODO clear main content frame
+
+    # update entire view when main Simulation button is pressed
+    def showSimSelectionList(self, list: List[tuple[str,int]]):
+        # show list of simulations in sub selection frame
+        self.subSelect_frm = SimSelectFrame(self, list, self.controller)
         self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
         # TODO clear main content frame
 
@@ -120,17 +133,14 @@ class ScrollableBtnList(ctk.CTkScrollableFrame):
             btn.grid(row=i, column=0, sticky="EW")
 
 class RiderSelectFrame(ctk.CTkFrame):
-    # TODO implement a kind of sub-controller that turns a generic button press into a rider btn press for the top level controller
     def __init__(self, parent, nameIDs: List[tuple[str,int]], controller=None):
         super().__init__(parent, fg_color=("gray70", "gray10"), width=1, corner_radius=0)
-
         self.controller = controller
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
 
-        # Add button
-        # TODO connect a callback to this button
+        # Add rider button
         self.add_btn = ctk.CTkButton(self, text="Add Rider", fg_color="green", hover_color="dark green", width=50,
                                      command=self.addRiderBtnPress)
         self.add_btn.grid(row=0, column=0, pady=(30,10))
@@ -139,10 +149,6 @@ class RiderSelectFrame(ctk.CTkFrame):
         self.riders_list = ScrollableBtnList(self, nameIDs, self.scrollBtnPress)
         self.riders_list.grid(row=1, column=0, sticky="NSEW")
 
-    """ ------ connect controller ------ """
-    def setController(self, controller):
-        self.controller = controller
-
     """ ------ button callbacks ------ """
     def addRiderBtnPress(self):
         if self.controller:
@@ -150,7 +156,60 @@ class RiderSelectFrame(ctk.CTkFrame):
 
     def scrollBtnPress(self, id: int):
         if self.controller:
-            self.controller.subSelectBtnPress(id)
+            self.controller.riderSelectBtnPress(id)
+
+class EnvirSelectFrame(ctk.CTkFrame):
+    def __init__(self, parent, nameIDs: List[tuple[str,int]], controller=None):
+        super().__init__(parent, fg_color=("gray70", "gray10"), width=1, corner_radius=0)
+        self.controller = controller
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
+
+        # Add environment button
+        self.add_btn = ctk.CTkButton(self, text="Add Environment", fg_color="green", hover_color="dark green", width=50,
+                                     command=self.addEnvirBtnPress)
+        self.add_btn.grid(row=0, column=0, pady=(30,10))
+
+        # Scroll list of environments
+        self.envirs_list = ScrollableBtnList(self, nameIDs, self.scrollBtnPress)
+        self.envirs_list.grid(row=1, column=0, sticky="NSEW")
+
+        """ ------ button callbacks ------ """
+    def addEnvirBtnPress(self):
+        if self.controller:
+            self.controller.addEnvirBtnPress()
+
+    def scrollBtnPress(self, id: int):
+        if self.controller:
+            self.controller.envirSelectBtnPress(id)
+
+class SimSelectFrame(ctk.CTkFrame):
+    def __init__(self, parent, nameIDs: List[tuple[str,int]], controller=None):
+        super().__init__(parent, fg_color=("gray70", "gray10"), width=1, corner_radius=0)
+        self.controller = controller
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
+
+        # Add environment button
+        self.add_btn = ctk.CTkButton(self, text="Add Simulation", fg_color="green", hover_color="dark green", width=50,
+                                     command=self.addSimBtnPress)
+        self.add_btn.grid(row=0, column=0, pady=(30,10))
+
+        # Scroll list of environments
+        self.sims_list = ScrollableBtnList(self, nameIDs, self.scrollBtnPress)
+        self.sims_list.grid(row=1, column=0, sticky="NSEW")
+
+        """ ------ button callbacks ------ """
+    def addSimBtnPress(self):
+        if self.controller:
+            self.controller.addSimBtnPress()
+
+    def scrollBtnPress(self, id: int):
+        if self.controller:
+            self.controller.simSelectBtnPress(id)
+
 
 # Rider Profiles main content frame
 class RiderProfileFrame(ctk.CTkFrame):

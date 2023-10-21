@@ -80,7 +80,7 @@ def test_saveObject_loadObject() -> int:
         printFailure("test_saveObject_loadObject")
         return 1
 
-# TODO make these do more then the absolute barebones calls 
+# TODO make these do more then the absolute barebones calls
 def test_loadRiders() -> int:
     try:
         model = Model()
