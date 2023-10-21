@@ -10,17 +10,17 @@ class Controller(object):
     """ ------ Top Level Btn Callbacks ------ """
     def riderBtnPress(self):
         riderNameIDs = self.model.getRiderNameIDs()
-        self.view.updateSubSelectionFrame(riderNameIDs)
+        self.view.showRiderSelectionList(riderNameIDs)
 
     def envirBtnPress(self):
         # TODO get the list of envirs from the model
         envirStrList: List[tuple[str,id]] = []
-        self.view.updateSubSelectionFrame(envirStrList)
+        self.view.showEnvirSelectionList(envirStrList)
 
     def simBtnPress(self):
         # TODO get the list of sims from the model
         simStrList: List[tuple[str,id]] = []
-        self.view.updateSubSelectionFrame(simStrList)
+        self.view.showSimSelectionList(simStrList)
 
     """ ------ Add Data Btn Callbacks ------ """
     def addRiderBtnPress(self):
