@@ -109,6 +109,18 @@ class WottMetaData(object):
         self.nextEnvirID = nextEnvirID
         self.nextSimID = nextSimID
 
+    def newRiderID(self) -> int:
+        self.nextRiderID += 1
+        return self.nextRiderID - 1
+
+    def newEnvirID(self) -> int:
+        self.nextEnvirID += 1
+        return self.nextEnvirID - 1
+
+    def newSimID(self) -> int:
+        self.nextSimID += 1
+        return self.nextSimID - 1
+
 """ ------ Wott Model ------ """
 class Model(object):
     def __init__(self, storageDir: str = str(defaultStorageDir)):
@@ -256,10 +268,11 @@ class Model(object):
     # get specific simulation, given a string
 
     """ ------ Add/Delete methods ------ """
-    # add rider
-    def addRider(self, attributeDict: Dict[str, object]):
-        # TODO check that rider isn't already in the list
-        rider = Rider(attributeDict=attributeDict)
+    # add new rider
+    def addRider(self, attributeDict: Dict[str, object] = None):
+        riderID = self.metaData.newRiderID()
+
+        rider = Rider(riderID, attributeDict=attributeDict)
         self.riders.append(rider)
         # TODO maybe sort the list of riders (or instert above)
 
