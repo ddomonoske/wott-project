@@ -24,9 +24,8 @@ class Controller(object):
 
     """ ------ Add Data Btn Callbacks ------ """
     def addRiderBtnPress(self):
-        # TODO create a new rider in the model
-        # TODO display the new (empty) rider in the view
-        print("add Rider button pressed")
+        rider = self.model.addRider()
+        self.view.showRiderDetail(rider.getID(), rider.getStrAttributeDict())
 
     def addEnvirBtnPress(self):
         # TODO create a new environment in the model
@@ -39,10 +38,9 @@ class Controller(object):
         print("add Simulation button pressed")
 
     """ ------ Scroll List Btn Callbacks ------ """
-    def riderSelectBtnPress(self, id: int):
-        # TODO get rider from the model
-        # TODO display rider in the view
-        print(f"rider {id} selected")
+    def riderSelectBtnPress(self, riderID: int):
+        rider = self.model.getRider(riderID)
+        self.view.showRiderDetail(rider.getID(), rider.getStrAttributeDict())
 
     def envirSelectBtnPress(self, id: int):
         # TODO get environment from the model
@@ -55,9 +53,8 @@ class Controller(object):
         print(f"sim {id} selected")
 
     """ ------ Save Data Callbacks ------ """
-    def saveRiderBtnPress(self, attributeDict: Dict[str, str] = {}):
+    def saveRiderBtnPress(self, riderID: int=-1, attributeDict: Dict[str, str] = {}):
         # TODO check that the attributes are good?
-        # TODO add a new rider to the model's list of riders
-        self.model.addRider(attributeDict)
+        rider = self.model.getRider(riderID)
+        rider.setProperty(attributeDict)
         # TODO call a view method that says either rider saved, updated, or invalid. look at the tutorial for how to do this
-        print(attributeDict)
