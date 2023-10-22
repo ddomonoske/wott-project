@@ -23,6 +23,7 @@ def printFailure(text: str = "failure"):
 def test_Rider_valid_attributes() -> int:
     try:
         attributes = {
+            Rider.attributes.RIDERID: 1,
             Rider.attributes.FIRSTNAME: "David",
             Rider.attributes.LASTNAME: "Domonoske",
             Rider.attributes.WEIGHT: 90,
@@ -40,6 +41,7 @@ def test_Rider_valid_attributes() -> int:
 def test_Rider_invalid_attributes() -> int:
     try:
         attributes = {
+            Rider.attributes.RIDERID: 1,
             Rider.attributes.FIRSTNAME: "David",
             Rider.attributes.LASTNAME: "Domonoske",
             Rider.attributes.WEIGHT: 90,
@@ -61,6 +63,7 @@ def test_Rider_invalid_attributes() -> int:
 def test_Rider_getStrAttributeDict() -> int:
     try:
         attributes = {
+            Rider.attributes.RIDERID: 1,
             Rider.attributes.FIRSTNAME: "David",
             Rider.attributes.LASTNAME: "Domonoske",
             Rider.attributes.WEIGHT: 90,
