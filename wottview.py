@@ -215,6 +215,7 @@ class SimSelectFrame(ctk.CTkFrame):
 class RiderProfileFrame(ctk.CTkFrame):
     # same as wottmodel.Rider.attributes
     class attributes:
+        RIDERID = "riderID"
         FIRSTNAME = "firstName"
         LASTNAME = "lastName"
         WEIGHT = "weight"
@@ -224,6 +225,7 @@ class RiderProfileFrame(ctk.CTkFrame):
         POWERRESULTS = "powerResults"
 
     def __init__(self, parent, controller = None,
+                 riderID: int = -1,
                  firstName: str = "",
                  lastName: str = "",
                  weight: str = "",
@@ -238,6 +240,7 @@ class RiderProfileFrame(ctk.CTkFrame):
 
         self.grid_columnconfigure(0, weight=1)
 
+        self.riderID = riderID
         self.firstName = firstName
         self.lastName = lastName
         self.weight = weight
@@ -304,6 +307,8 @@ class RiderProfileFrame(ctk.CTkFrame):
         for attribute, value in attributeDict.items():
             match attribute:
                 # TODO change all of these to
+                case self.attributes.RIDERID:
+                    self.riderID = value
                 case self.attributes.FIRSTNAME:
                     self.firstName = value
                 case self.attributes.LASTNAME:
@@ -334,14 +339,14 @@ class RiderProfileFrame(ctk.CTkFrame):
         # send to controller
         if self.controller:
             attributeDict = {self.attributes.FIRSTNAME: self.firstName,
-                            self.attributes.LASTNAME: self.lastName,
-                            self.attributes.WEIGHT: self.weight,
-                            self.attributes.FTP: self.FTP,
-                            self.attributes.WPRIME: self.wPrime,
-                            self.attributes.CDA: self.CdA,
-                            self.attributes.POWERRESULTS: self.powerResults}
+                             self.attributes.LASTNAME: self.lastName,
+                             self.attributes.WEIGHT: self.weight,
+                             self.attributes.FTP: self.FTP,
+                             self.attributes.WPRIME: self.wPrime,
+                             self.attributes.CDA: self.CdA,
+                             self.attributes.POWERRESULTS: self.powerResults}
 
-            self.controller.saveRiderBtnPress(attributeDict)
+            self.controller.saveRiderBtnPress(self.riderID, attributeDict)
 
 # Environment Profiles main content frame
 class EnvironmentProfileFrame(ctk.CTkFrame):

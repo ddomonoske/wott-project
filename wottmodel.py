@@ -15,6 +15,7 @@ metaFile = "meta_data"
 class Rider(object):
     # valid keys for setting Rider attributes
     class attributes:
+        RIDERID = "riderID"
         FIRSTNAME = "firstName"
         LASTNAME = "lastName"
         WEIGHT = "weight"
@@ -24,6 +25,7 @@ class Rider(object):
         POWERRESULTS = "powerResults"
 
     keyList = [
+        attributes.RIDERID,
         attributes.FIRSTNAME,
         attributes.LASTNAME,
         attributes.WEIGHT,
@@ -60,6 +62,8 @@ class Rider(object):
     def setProperty(self, attributeDict: Dict[str, object]):
         for attribute, value in attributeDict.items():
             match attribute:
+                case self.attributes.RIDERID:
+                    self.riderID = value
                 case self.attributes.FIRSTNAME:
                     self.firstName = value
                 case self.attributes.LASTNAME:
@@ -94,6 +98,7 @@ class Rider(object):
 
     def getStrAttributeDict(self) -> Dict[str,object]:
         attributes = {
+            Rider.attributes.RIDERID: self.riderID,
             Rider.attributes.FIRSTNAME: self.firstName,
             Rider.attributes.LASTNAME: self.lastName,
             Rider.attributes.WEIGHT: str(self.weight),
