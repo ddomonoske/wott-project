@@ -58,6 +58,27 @@ def test_Rider_invalid_attributes() -> int:
         printFailure("test_Rider_invalid_attributes")
         return 1
 
+def test_Rider_getStrAttributeDict() -> int:
+    try:
+        attributes = {
+            Rider.attributes.FIRSTNAME: "David",
+            Rider.attributes.LASTNAME: "Domonoske",
+            Rider.attributes.WEIGHT: 90,
+            Rider.attributes.FTP: 380,
+            Rider.attributes.CDA: 0.19,
+            Rider.attributes.WPRIME: 20
+        }
+        rider = Rider(0, attributeDict=attributes)
+        strDict = rider.getStrAttributeDict()
+        if all(key in strDict for key in Rider.keyList):
+            printSuccess("test_Rider_getStrAttributeDict")
+            return 0
+        else:
+            raise Exception
+    except:
+        printFailure("test_Rider_getStrAttributeDict")
+        return 1
+
 def test_saveObject_loadObject() -> int:
     # instanciate model with a test directory
     testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
@@ -164,6 +185,7 @@ def test_saveModel() -> int:
 
 test_list = [test_Rider_valid_attributes,
              test_Rider_invalid_attributes,
+             test_Rider_getStrAttributeDict,
              test_saveObject_loadObject,
              test_loadRiders,
              test_loadEnvirs,

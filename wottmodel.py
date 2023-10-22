@@ -23,6 +23,16 @@ class Rider(object):
         CDA = "CdA"
         POWERRESULTS = "powerResults"
 
+    keyList = [
+        attributes.FIRSTNAME,
+        attributes.LASTNAME,
+        attributes.WEIGHT,
+        attributes.FTP,
+        attributes.WPRIME,
+        attributes.CDA,
+        attributes.POWERRESULTS
+    ]
+
     def __init__(self,
                  riderID: int,
                  firstName: str = "",
@@ -81,6 +91,18 @@ class Rider(object):
 
     def isRider(self, id: int):
         return self.riderID == id
+
+    def getStrAttributeDict(self) -> Dict[str,object]:
+        attributes = {
+            Rider.attributes.FIRSTNAME: self.firstName,
+            Rider.attributes.LASTNAME: self.lastName,
+            Rider.attributes.WEIGHT: str(self.weight),
+            Rider.attributes.FTP: str(self.FTP),
+            Rider.attributes.CDA: str(self.CdA),
+            Rider.attributes.WPRIME: str(self.wPrime),
+            Rider.attributes.POWERRESULTS: self.powerResults
+        }
+        return attributes
 
 """ ------ Environment ------ """
 class Environment(object):
@@ -268,8 +290,8 @@ class Model(object):
     # get specific simulation, given a string
 
     """ ------ Add/Delete methods ------ """
-    # add new rider. Return the index of the new rider
-    def addRider(self, attributeDict: Dict[str, object] = None) -> int:
+    # add new rider. Returns the new rider
+    def addRider(self, attributeDict: Dict[str, object] = None) -> Rider:
         # get next riderID from metadata
         riderID = self.metaData.newRiderID()
 
@@ -278,7 +300,7 @@ class Model(object):
         self.riders.append(rider)
         # TODO maybe sort the list of riders (or instert above)
 
-        return riderID
+        return rider
 
     # add environment
     # add simulation
