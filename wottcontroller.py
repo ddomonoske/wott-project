@@ -9,8 +9,10 @@ class Controller(object):
 
     """ ------ Top Level Btn Callbacks ------ """
     def riderBtnPress(self):
-        riderNameIDs = self.model.getRiderNameIDs()
-        self.view.showRiderSelectionList(riderNameIDs)
+        riderList = self.model.getRiderNameIDs()
+        riderList = Controller.replaceEmptyName(riderList, "New Rider")
+        self.view.showRiderSelectionList(riderList)
+        # TODO clear the main frame
 
     def envirBtnPress(self):
         # TODO get the list of envirs from the model
@@ -24,8 +26,12 @@ class Controller(object):
 
     """ ------ Add Data Btn Callbacks ------ """
     def addRiderBtnPress(self):
+        # add new rider and display rider detial
         rider = self.model.addRider()
         self.view.showRiderDetail(rider.getID(), rider.getStrAttributeDict())
+
+        # update the selection menu to include new rider
+        self.view.showRiderSelectionList(Controller.replaceEmptyName(self.model.getRiderNameIDs(), "New Rider"))
 
     def addEnvirBtnPress(self):
         # TODO create a new environment in the model
@@ -57,4 +63,17 @@ class Controller(object):
         # TODO check that the attributes are good?
         rider = self.model.getRider(riderID)
         rider.setProperty(attributeDict)
+
+        # update the subselection menu in case the name changed
+        self.view.showRiderSelectionList(Controller.replaceEmptyName(self.model.getRiderNameIDs(), "New Rider"))
         # TODO call a view method that says either rider saved, updated, or invalid. look at the tutorial for how to do this
+
+    def replaceEmptyName(nameIDs: List[tuple[str,int]], replacement: str = "New") -> List[tuple[str,int]]:
+        newNameIDs: List[tuple[str,int]] = []
+        for nameID in nameIDs:
+            if nameID[0] == " ":
+                newNameID = (replacement, nameID[1])
+                newNameIDs.append(newNameID)
+            else:
+                newNameIDs.append(nameID)
+        return newNameIDs
