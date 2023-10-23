@@ -1,24 +1,7 @@
 from wottmodel import *
 from pathlib import Path
+from test_helpers import *
 
-# colors from blender
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    EMPH = BOLD+UNDERLINE
-
-def printSuccess(text: str = "success"):
-    print(f"{bcolors.OKGREEN}{text}{bcolors.ENDC}")
-
-def printFailure(text: str = "failure"):
-    print(f"{bcolors.FAIL}{text}{bcolors.ENDC}")
 
 def test_Rider_valid_attributes() -> int:
     try:
