@@ -15,6 +15,7 @@ metaFile = "meta_data"
 class Rider(object):
     # valid keys for setting Rider attributes
     class attributes:
+        RIDERID = "riderID"
         FIRSTNAME = "firstName"
         LASTNAME = "lastName"
         WEIGHT = "weight"
@@ -22,6 +23,17 @@ class Rider(object):
         WPRIME = "wPrime"
         CDA = "CdA"
         POWERRESULTS = "powerResults"
+
+    keyList = [
+        attributes.RIDERID,
+        attributes.FIRSTNAME,
+        attributes.LASTNAME,
+        attributes.WEIGHT,
+        attributes.FTP,
+        attributes.WPRIME,
+        attributes.CDA,
+        attributes.POWERRESULTS
+    ]
 
     def __init__(self,
                  riderID: int,
@@ -50,6 +62,8 @@ class Rider(object):
     def setProperty(self, attributeDict: Dict[str, object]):
         for attribute, value in attributeDict.items():
             match attribute:
+                case self.attributes.RIDERID:
+                    self.riderID = value
                 case self.attributes.FIRSTNAME:
                     self.firstName = value
                 case self.attributes.LASTNAME:
@@ -77,10 +91,23 @@ class Rider(object):
         return self.riderID
 
     def getNameID(self) -> tuple[str,int]:
-        return (self.getName, self.getID)
+        return (self.getName(), self.getID())
 
     def isRider(self, id: int):
         return self.riderID == id
+
+    def getStrAttributeDict(self) -> Dict[str,object]:
+        attributes = {
+            Rider.attributes.RIDERID: self.riderID,
+            Rider.attributes.FIRSTNAME: self.firstName,
+            Rider.attributes.LASTNAME: self.lastName,
+            Rider.attributes.WEIGHT: str(self.weight),
+            Rider.attributes.FTP: str(self.FTP),
+            Rider.attributes.CDA: str(self.CdA),
+            Rider.attributes.WPRIME: str(self.wPrime),
+            Rider.attributes.POWERRESULTS: self.powerResults
+        }
+        return attributes
 
 """ ------ Environment ------ """
 class Environment(object):
@@ -108,6 +135,18 @@ class WottMetaData(object):
         self.nextRiderID = nextRiderID
         self.nextEnvirID = nextEnvirID
         self.nextSimID = nextSimID
+
+    def newRiderID(self) -> int:
+        self.nextRiderID += 1
+        return self.nextRiderID - 1
+
+    def newEnvirID(self) -> int:
+        self.nextEnvirID += 1
+        return self.nextEnvirID - 1
+
+    def newSimID(self) -> int:
+        self.nextSimID += 1
+        return self.nextSimID - 1
 
 """ ------ Wott Model ------ """
 class Model(object):
@@ -248,14 +287,26 @@ class Model(object):
     # get specific rider, given a riderID
     def getRider(self, riderID: int) -> Rider:
         for rider in self.riders:
-            if rider.isRider():
+            if rider.isRider(riderID):
                 return rider
         return None
 
     # get specific environment, given a string
     # get specific simulation, given a string
 
-    # add rider
+    """ ------ Add/Delete methods ------ """
+    # add new rider. Returns the new rider
+    def addRider(self, attributeDict: Dict[str, object] = None) -> Rider:
+        # get next riderID from metadata
+        riderID = self.metaData.newRiderID()
+
+        # make new rider and append to model list
+        rider = Rider(riderID, attributeDict=attributeDict)
+        self.riders.append(rider)
+        # TODO maybe sort the list of riders (or instert above)
+
+        return rider
+
     # add environment
     # add simulation
 

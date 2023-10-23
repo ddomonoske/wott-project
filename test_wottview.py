@@ -61,8 +61,8 @@ class BasicController():
         if self.view:
             self.view.showSimSelectionList(simStr)
 
-    def saveRiderBtnPress(self, attributeDict: Dict[str, str] = {}):
-        print(attributeDict)
+    def saveRiderBtnPress(self, riderID=-1, attributeDict: Dict[str, str] = {}):
+        print(f"rider {riderID} updated:" + str(attributeDict))
 
 # test RiderSelectFrame with individual callbacks
 def test_RiderSelectFrame(parent: ctk.CTkToplevel):
@@ -83,7 +83,7 @@ def test_RiderProfileFrame(parent: ctk.CTkToplevel):
 
     controller = BasicController()
 
-    rp_frame = RiderProfileFrame(parent, controller)
+    rp_frame = RiderProfileFrame(parent, controller, riderID=3)
     rp_frame.grid(row=0, column=0, sticky="NSEW")
 
 # test the entire View

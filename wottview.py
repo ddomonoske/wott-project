@@ -48,15 +48,6 @@ class View(ctk.CTkFrame):
         self.mainContent_frm = ctk.CTkFrame(self, corner_radius=0)
         self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="news")
 
-        # rider frame
-        self.rider_frm = RiderProfileFrame(self)
-
-        # create environment frame
-        self.envir_frm = EnvironmentProfileFrame(self)
-
-        # create simulations frame
-        self.sim_frm = SimulationProfileFrame(self)
-
     """ ------ connect controller ------ """
     def setController(self, controller):
         self.controller = controller
@@ -96,15 +87,15 @@ class View(ctk.CTkFrame):
         self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
         # TODO clear main content frame
 
-    def showRiderDetail(rider):
-        # TODO show rider details in main content frame
-        rider
+    def showRiderDetail(self, riderID: int, attributeDict: Dict[str,object]):
+        self.mainContent_frm = RiderProfileFrame(self, self.controller, riderID, attributeDict=attributeDict)
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="news")
 
-    def showEnvirDetail(envir):
+    def showEnvirDetail(self, envir):
         # TODO show environment details in main content frame
         envir
 
-    def showSimDetail(sim):
+    def showSimDetail(self, sim):
         # TODO show sim details in main content frame
         sim
 
@@ -175,7 +166,7 @@ class EnvirSelectFrame(ctk.CTkFrame):
         self.envirs_list = ScrollableBtnList(self, nameIDs, self.scrollBtnPress)
         self.envirs_list.grid(row=1, column=0, sticky="NSEW")
 
-        """ ------ button callbacks ------ """
+    """ ------ button callbacks ------ """
     def addEnvirBtnPress(self):
         if self.controller:
             self.controller.addEnvirBtnPress()
@@ -201,7 +192,7 @@ class SimSelectFrame(ctk.CTkFrame):
         self.sims_list = ScrollableBtnList(self, nameIDs, self.scrollBtnPress)
         self.sims_list.grid(row=1, column=0, sticky="NSEW")
 
-        """ ------ button callbacks ------ """
+    """ ------ button callbacks ------ """
     def addSimBtnPress(self):
         if self.controller:
             self.controller.addSimBtnPress()
@@ -215,6 +206,7 @@ class SimSelectFrame(ctk.CTkFrame):
 class RiderProfileFrame(ctk.CTkFrame):
     # same as wottmodel.Rider.attributes
     class attributes:
+        RIDERID = "riderID"
         FIRSTNAME = "firstName"
         LASTNAME = "lastName"
         WEIGHT = "weight"
@@ -224,6 +216,7 @@ class RiderProfileFrame(ctk.CTkFrame):
         POWERRESULTS = "powerResults"
 
     def __init__(self, parent, controller = None,
+                 riderID: int = -1,
                  firstName: str = "",
                  lastName: str = "",
                  weight: str = "",
@@ -238,6 +231,7 @@ class RiderProfileFrame(ctk.CTkFrame):
 
         self.grid_columnconfigure(0, weight=1)
 
+        self.riderID = riderID
         self.firstName = firstName
         self.lastName = lastName
         self.weight = weight
@@ -249,7 +243,6 @@ class RiderProfileFrame(ctk.CTkFrame):
         if attributeDict:
             self.setAttribute(attributeDict)
 
-
         """ ------ set up the geometry ------ """
         # Name section
         self.nameFrm = ctk.CTkFrame(self)
@@ -259,11 +252,13 @@ class RiderProfileFrame(ctk.CTkFrame):
         self.nameLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.firstNameLbl = ctk.CTkLabel(self.nameFrm, text="First Name:")
         self.firstNameLbl.grid(row=1, column=0, padx=(15,5), pady=(10,10))
-        self.firstNameEnt = ctk.CTkEntry(self.nameFrm, textvariable=self.firstName)
+        self.firstNameEnt = ctk.CTkEntry(self.nameFrm)
+        self.firstNameEnt.insert(0,self.firstName)
         self.firstNameEnt.grid(row=1, column=1, padx=(5,25), pady=(10,10))
         self.lastNameLbl = ctk.CTkLabel(self.nameFrm, text="Last Name:")
         self.lastNameLbl.grid(row=1, column=2, padx=(25,5), pady=(10,10))
-        self.lastNameEnt = ctk.CTkEntry(self.nameFrm, textvariable=lastName)
+        self.lastNameEnt = ctk.CTkEntry(self.nameFrm)
+        self.lastNameEnt.insert(0, self.lastName)
         self.lastNameEnt.grid(row=1, column=3, padx=(5,25), pady=(10,10))
 
         # Physical stats section
@@ -273,11 +268,13 @@ class RiderProfileFrame(ctk.CTkFrame):
         self.statsLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.weightLbl = ctk.CTkLabel(self.statsFrm, text="Weight (kg):")
         self.weightLbl.grid(row=1, column=0, padx=(15,5), pady=(10,10))
-        self.weightEnt = ctk.CTkEntry(self.statsFrm, textvariable=self.weight)
+        self.weightEnt = ctk.CTkEntry(self.statsFrm)
+        self.weightEnt.insert(0, self.weight)
         self.weightEnt.grid(row=1, column=1, padx=(5,25), pady=(10,10))
         self.CdALbl = ctk.CTkLabel(self.statsFrm, text=f"CdA (m\N{SUPERSCRIPT TWO}):")
         self.CdALbl.grid(row=1, column=2, padx=(25,5), pady=(10,10))
-        self.CdAEnt = ctk.CTkEntry(self.statsFrm, textvariable=self.CdA)
+        self.CdAEnt = ctk.CTkEntry(self.statsFrm)
+        self.CdAEnt.insert(0, self.CdA)
         self.CdAEnt.grid(row=1, column=3, padx=(5,25), pady=(10,10))
 
         # FTP and wPrime section
@@ -287,11 +284,13 @@ class RiderProfileFrame(ctk.CTkFrame):
         self.powerLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.FTPLbl = ctk.CTkLabel(self.powerFrm, text="FTP (Watts):")
         self.FTPLbl.grid(row=1, column=0, padx=(15,5), pady=(10,10))
-        self.FTPEnt = ctk.CTkEntry(self.powerFrm, textvariable=self.FTP)
+        self.FTPEnt = ctk.CTkEntry(self.powerFrm)
+        self.FTPEnt.insert(0, self.FTP)
         self.FTPEnt.grid(row=1, column=1, padx=(5,25), pady=(10,10))
         self.wPrimeLbl = ctk.CTkLabel(self.powerFrm, text="wPrime (kJ):")
         self.wPrimeLbl.grid(row=1, column=2, padx=(25,5), pady=(10,10))
-        self.wPrimeEnt = ctk.CTkEntry(self.powerFrm, textvariable=self.wPrime)
+        self.wPrimeEnt = ctk.CTkEntry(self.powerFrm)
+        self.wPrimeEnt.insert(0, self.wPrime)
         self.wPrimeEnt.grid(row=1, column=3, padx=(5,25), pady=(10,10))
 
         # Save Rider button
@@ -304,6 +303,8 @@ class RiderProfileFrame(ctk.CTkFrame):
         for attribute, value in attributeDict.items():
             match attribute:
                 # TODO change all of these to
+                case self.attributes.RIDERID:
+                    self.riderID = value
                 case self.attributes.FIRSTNAME:
                     self.firstName = value
                 case self.attributes.LASTNAME:
@@ -334,14 +335,14 @@ class RiderProfileFrame(ctk.CTkFrame):
         # send to controller
         if self.controller:
             attributeDict = {self.attributes.FIRSTNAME: self.firstName,
-                            self.attributes.LASTNAME: self.lastName,
-                            self.attributes.WEIGHT: self.weight,
-                            self.attributes.FTP: self.FTP,
-                            self.attributes.WPRIME: self.wPrime,
-                            self.attributes.CDA: self.CdA,
-                            self.attributes.POWERRESULTS: self.powerResults}
+                             self.attributes.LASTNAME: self.lastName,
+                             self.attributes.WEIGHT: self.weight,
+                             self.attributes.FTP: self.FTP,
+                             self.attributes.WPRIME: self.wPrime,
+                             self.attributes.CDA: self.CdA,
+                             self.attributes.POWERRESULTS: self.powerResults}
 
-            self.controller.saveRiderBtnPress(attributeDict)
+            self.controller.saveRiderBtnPress(self.riderID, attributeDict)
 
 # Environment Profiles main content frame
 class EnvironmentProfileFrame(ctk.CTkFrame):
