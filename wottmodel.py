@@ -91,7 +91,7 @@ class Rider(object):
         return self.riderID
 
     def getNameID(self) -> tuple[str,int]:
-        return (self.getName, self.getID)
+        return (self.getName(), self.getID())
 
     def isRider(self, id: int):
         return self.riderID == id
@@ -287,7 +287,7 @@ class Model(object):
     # get specific rider, given a riderID
     def getRider(self, riderID: int) -> Rider:
         for rider in self.riders:
-            if rider.isRider():
+            if rider.isRider(riderID):
                 return rider
         return None
 
