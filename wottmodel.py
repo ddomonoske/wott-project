@@ -55,38 +55,59 @@ class Rider(object):
         self.powerResults = powerResults
 
         if attributeDict:
-            self.setProperty(attributeDict)
+            self.setProperty(attributeDict, nullAllowed=True)
 
     # TODO check that the values are appropriate type and value
     # TODO I think there's a more pythonic way to do this, but it works
-    def setProperty(self, attributeDict: Dict[str, object]):
+    def setProperty(self, attributeDict: Dict[str, object], nullAllowed: bool = False):
+        # get the current attributes
+        tmp_riderID = self.riderID
+        tmp_firstName = self.firstName
+        tmp_lastName = self.lastName
+        tmp_weight = self.weight
+        tmp_FTP = self.FTP
+        tmp_wPrime = self.wPrime
+        tmp_CdA = self.CdA
+        tmp_powerResults = self.powerResults
+
         for attribute, value in attributeDict.items():
             try:
                 match attribute:
                     case self.attributes.RIDERID:
-                        self.riderID = int(value)
+                        tmp_riderID = int(value)
                     case self.attributes.FIRSTNAME:
-                        self.firstName = str(value)
+                        tmp_firstName = str(value)
                     case self.attributes.LASTNAME:
-                        self.lastName = str(value)
+                        tmp_lastName = str(value)
                     case self.attributes.WEIGHT:
-                        self.weight = float(value)
+                        tmp_weight = float(value)
                     case self.attributes.FTP:
-                        self.FTP = float(value)
+                        tmp_FTP = float(value)
                     case self.attributes.WPRIME:
-                        self.wPrime = float(value)
+                        tmp_wPrime = float(value)
                     case self.attributes.CDA:
-                        self.CdA = float(value)
+                        tmp_CdA = float(value)
                     case self.attributes.POWERRESULTS:
                         # TODO parse power results
-                        self.powerResults = value
+                        tmp_powerResults = value
                     case _:
                         raise AttributeError(f"'{attribute}' is not a property of the Rider class")
             except (TypeError,ValueError) as e:
                 raise TypeError(f"'{attribute}' entry is not valid")
 
-        if not (self.firstName or self.lastName):
+        if not (nullAllowed or tmp_firstName or tmp_lastName):
             raise AttributeError("firstName or lastName must be set")
+
+        # if no errors thrown, save to model
+        self.riderID = tmp_riderID
+        self.firstName = tmp_firstName
+        self.lastName = tmp_lastName
+        self.weight = tmp_weight
+        self.FTP = tmp_FTP
+        self.wPrime = tmp_wPrime
+        self.CdA = tmp_CdA
+        self.powerResults = tmp_powerResults
+
     # calculate threshold and w' from set of power results
 
     """ ------ getters ------ """
