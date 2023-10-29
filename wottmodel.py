@@ -125,7 +125,7 @@ class Rider(object):
 
     def getStrAttributeDict(self) -> Dict[str,object]:
         attributes = {
-            Rider.attributes.RIDERID: self.riderID,
+            Rider.attributes.RIDERID: str(self.riderID),
             Rider.attributes.FIRSTNAME: self.firstName,
             Rider.attributes.LASTNAME: self.lastName,
             Rider.attributes.WEIGHT: str(self.weight) if self.weight else "",
@@ -138,9 +138,98 @@ class Rider(object):
 
 """ ------ Environment ------ """
 class Environment(object):
-    def __init__(self) -> None:
+    # valid keys for setting Rider attributes
+    class attributes:
+        ENVIRID = "envirID"
+        ENVIRNAME = "envirName"
+        AIRDENSITY = "airDensity"
+        CRR = "Crr"
+        MECHLOSSES = "mechLosses"
 
-        pass
+    keyList = [
+        attributes.ENVIRID,
+        attributes.ENVIRNAME,
+        attributes.AIRDENSITY,
+        attributes.CRR,
+        attributes.MECHLOSSES
+    ]
+
+    def __init__(self,
+                 envirID: int,
+                 envirName: str = "",
+                 airDensity: float = None,
+                 Crr: float = None,
+                 mechLosses: float = None,
+                 attributeDict: Dict[str, object] = {}) -> None:
+        self.envirID = envirID
+        self.envirName = envirName
+        self.airDensity = airDensity
+        self.Crr = Crr
+        self.mechLosses = mechLosses
+
+        if attributeDict:
+            self.setProperty(attributeDict, nullAllowed=True)
+
+    # TODO check that the values are appropriate type and value
+    # TODO I think there's a more pythonic way to do this, but it works
+    def setProperty(self, attributeDict: Dict[str, object], nullAllowed: bool = False):
+        # get the current attributes
+        tmp_envirID = self.envirID
+        tmp_envirName = self.envirName
+        tmp_airDensity = self.airDensity
+        tmp_Crr = self.Crr
+        tmp_mechLosses = self.mechLosses
+
+        for attribute, value in attributeDict.items():
+            try:
+                match attribute:
+                    case self.attributes.ENVIRID:
+                        tmp_envirID = int(value)
+                    case self.attributes.ENVIRNAME:
+                        tmp_envirName = str(value)
+                    case self.attributes.AIRDENSITY:
+                        tmp_airDensity = float(value)
+                    case self.attributes.CRR:
+                        tmp_Crr = float(value)
+                    case self.attributes.MECHLOSSES:
+                        tmp_mechLosses = float(value)
+                    case _:
+                        raise AttributeError(f"'{attribute}' is not a property of the Rider class")
+            except (TypeError,ValueError) as e:
+                raise TypeError(f"'{attribute}' entry is not valid")
+
+        if not (nullAllowed or tmp_envirName):
+            raise AttributeError("envirName must be set")
+
+        # if no errors thrown, save to model
+        self.envirID = tmp_envirID
+        self.envirName = tmp_envirName
+        self.airDensity = tmp_airDensity
+        self.Crr = tmp_Crr
+        self.mechLosses = tmp_mechLosses
+
+    """ ------ getters ------ """
+    def getName(self) -> str:
+        return self.envirName
+
+    def getID(self) -> int:
+        return self.envirID
+
+    def getNameID(self) -> tuple[str,int]:
+        return (self.getName(), self.getID())
+
+    def isEnvir(self, id: int):
+        return self.envirID == id
+
+    def getStrAttributeDict(self) -> Dict[str,object]:
+        attributes = {
+            Environment.attributes.ENVIRID: str(self.envirID),
+            Environment.attributes.ENVIRNAME: self.envirName,
+            Environment.attributes.AIRDENSITY: str(self.airDensity) if self.airDensity else "",
+            Environment.attributes.CRR: str(self.Crr) if self.Crr else "",
+            Environment.attributes.MECHLOSSES: str(self.mechLosses) if self.mechLosses else ""
+        }
+        return attributes
 
 """ ------ Simulation ------ """
 class Simulation(object):
