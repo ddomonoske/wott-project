@@ -39,10 +39,10 @@ class Rider(object):
                  riderID: int,
                  firstName: str = "",
                  lastName: str = "",
-                 weight: float = 0,
-                 FTP: float = 0,
-                 wPrime: float = 0,
-                 CdA: float = 0,
+                 weight: float = None,
+                 FTP: float = None,
+                 wPrime: float = None,
+                 CdA: float = None,
                  powerResults: Dict[float, float] = {},
                  attributeDict: Dict[str, object] = {}) -> None:
         self.riderID = riderID
@@ -61,26 +61,29 @@ class Rider(object):
     # TODO I think there's a more pythonic way to do this, but it works
     def setProperty(self, attributeDict: Dict[str, object]):
         for attribute, value in attributeDict.items():
-            match attribute:
-                case self.attributes.RIDERID:
-                    self.riderID = value
-                case self.attributes.FIRSTNAME:
-                    self.firstName = value
-                case self.attributes.LASTNAME:
-                    self.lastName = value
-                case self.attributes.WEIGHT:
-                    self.weight = value
-                case self.attributes.FTP:
-                    self.FTP = value
-                case self.attributes.WPRIME:
-                    self.wPrime = value
-                case self.attributes.CDA:
-                    self.CdA = value
-                case self.attributes.POWERRESULTS:
-                    self.powerResults = value
-                case _:
-                    raise AttributeError(f"'{attribute}' is not a property of the Rider class")
-
+            try:
+                match attribute:
+                    case self.attributes.RIDERID:
+                        self.riderID = int(value)
+                    case self.attributes.FIRSTNAME:
+                        self.firstName = str(value)
+                    case self.attributes.LASTNAME:
+                        self.lastName = str(value)
+                    case self.attributes.WEIGHT:
+                        self.weight = float(value)
+                    case self.attributes.FTP:
+                        self.FTP = float(value)
+                    case self.attributes.WPRIME:
+                        self.wPrime = float(value)
+                    case self.attributes.CDA:
+                        self.CdA = float(value)
+                    case self.attributes.POWERRESULTS:
+                        # TODO parse power results
+                        self.powerResults = value
+                    case _:
+                        raise AttributeError(f"'{attribute}' is not a property of the Rider class")
+            except (TypeError,ValueError) as e:
+                raise TypeError(f"'{attribute}' entry is not valid")
     # calculate threshold and w' from set of power results
 
     """ ------ getters ------ """
@@ -101,10 +104,10 @@ class Rider(object):
             Rider.attributes.RIDERID: self.riderID,
             Rider.attributes.FIRSTNAME: self.firstName,
             Rider.attributes.LASTNAME: self.lastName,
-            Rider.attributes.WEIGHT: str(self.weight),
-            Rider.attributes.FTP: str(self.FTP),
-            Rider.attributes.CDA: str(self.CdA),
-            Rider.attributes.WPRIME: str(self.wPrime),
+            Rider.attributes.WEIGHT: str(self.weight) if self.weight else "",
+            Rider.attributes.FTP: str(self.FTP) if self.FTP else "",
+            Rider.attributes.CDA: str(self.CdA) if self.CdA else "",
+            Rider.attributes.WPRIME: str(self.wPrime) if self.wPrime else "",
             Rider.attributes.POWERRESULTS: self.powerResults
         }
         return attributes
