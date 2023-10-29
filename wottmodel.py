@@ -84,6 +84,9 @@ class Rider(object):
                         raise AttributeError(f"'{attribute}' is not a property of the Rider class")
             except (TypeError,ValueError) as e:
                 raise TypeError(f"'{attribute}' entry is not valid")
+
+        if not (self.firstName or self.lastName):
+            raise AttributeError("firstName or lastName must be set")
     # calculate threshold and w' from set of power results
 
     """ ------ getters ------ """
