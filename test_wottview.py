@@ -39,6 +39,29 @@ def test_RiderProfileFrame_Alert(parent: ctk.CTkToplevel):
 
     repeatSuccessAlert(rp_frame)
 
+# test the Environment Frame
+def test_EnvironmentProfileFrame(parent: ctk.CTkToplevel):
+    parent.title("Environment Frame Test")
+    parent.grid_columnconfigure(0,weight=1)
+    parent.grid_rowconfigure(0,weight=1)
+
+    controller = BasicController()
+
+    rp_frame = EnvironmentProfileFrame(parent, controller, envirID=3)
+    rp_frame.grid(row=0, column=0, sticky="NSEW")
+
+def test_EnvironmentProfileFrame_Alert(parent: ctk.CTkToplevel):
+    parent.title("Environment Frame Alert Test")
+    parent.grid_columnconfigure(0,weight=1)
+    parent.grid_rowconfigure(0,weight=1)
+
+    controller = BasicController()
+
+    ep_frame = EnvironmentProfileFrame(parent, controller, envirID=3)
+    ep_frame.grid(row=0, column=0, sticky="NSEW")
+
+    repeatSuccessAlert(ep_frame)
+
 # test the entire View
 def test_View(parent: ctk.CTkToplevel):
     parent.title("View Test")
@@ -55,7 +78,9 @@ def test_View(parent: ctk.CTkToplevel):
 
 test_list = [test_RiderSelectFrame,
              test_RiderProfileFrame,
-             test_RiderProfileFrame_Alert]
+             test_RiderProfileFrame_Alert,
+             test_EnvironmentProfileFrame,
+             test_EnvironmentProfileFrame_Alert]
 
 # run all tests
 if __name__ == '__main__':
