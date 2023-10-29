@@ -71,7 +71,7 @@ class Controller(object):
             
             # show success message
             self.view.showRiderSaveSuccess("Rider saved")
-        except TypeError as error:
+        except (TypeError,AttributeError) as error:
             # show error message
             self.view.showRiderSaveError(error)
 
