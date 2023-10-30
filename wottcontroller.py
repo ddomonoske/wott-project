@@ -15,13 +15,14 @@ class Controller(object):
         # TODO clear the main frame
 
     def envirBtnPress(self):
-        # TODO get the list of envirs from the model
-        envirStrList: List[tuple[str,id]] = []
-        self.view.showEnvirSelectionList(envirStrList)
+        envirList = self.model.getEnvirNameIDs()
+        envirList = Controller.replaceEmptyName(envirList, "New Environment")
+        self.view.showEnvirSelectionList(envirList)
+        # TODO clear the main frame
 
     def simBtnPress(self):
         # TODO get the list of sims from the model
-        simStrList: List[tuple[str,id]] = []
+        simStrList: List[tuple[str,int]] = []
         self.view.showSimSelectionList(simStrList)
 
     """ ------ Add Data Btn Callbacks ------ """
@@ -34,9 +35,12 @@ class Controller(object):
         self.view.showRiderSelectionList(Controller.replaceEmptyName(self.model.getRiderNameIDs(), "New Rider"))
 
     def addEnvirBtnPress(self):
-        # TODO create a new environment in the model
-        # TODO display the new (empty) environment in the view
-        print("add Environment button pressed")
+        # add new environment and display environment detail
+        envir = self.model.addEnvironment()
+        self.view.showEnvirDetail(envir.getID(), envir.getStrAttributeDict())
+
+        # update the selection menu to include new environment
+        self.view.showEnvirSelectionList(Controller.replaceEmptyName(self.model.getEnvirNameIDs(), "New Environment"))
 
     def addSimBtnPress(self):
         # TODO create a new simulation in the model
@@ -48,10 +52,9 @@ class Controller(object):
         rider = self.model.getRider(riderID)
         self.view.showRiderDetail(rider.getID(), rider.getStrAttributeDict())
 
-    def envirSelectBtnPress(self, id: int):
-        # TODO get environment from the model
-        # TODO display environment in the view
-        print(f"envir {id} selected")
+    def envirSelectBtnPress(self, envirID: int):
+        envir = self.model.getEnvir(envirID)
+        self.view.showEnvirDetail(envir.getID(), envir.getStrAttributeDict())
 
     def simSelectBtnPress(self, id: int):
         # TODO get simulation from the model
@@ -68,17 +71,33 @@ class Controller(object):
 
             # update the subselection menu in case the name changed
             self.view.showRiderSelectionList(Controller.replaceEmptyName(self.model.getRiderNameIDs(), "New Rider"))
-            
+
             # show success message
-            self.view.showRiderSaveSuccess("Rider saved")
+            self.view.showDetailSaveSuccess("Rider saved")
         except (TypeError,AttributeError) as error:
             # show error message
-            self.view.showRiderSaveError(error)
+            self.view.showDetailSaveError(error)
 
-    def replaceEmptyName(nameIDs: List[tuple[str,int]], replacement: str = "New") -> List[tuple[str,int]]:
+    def saveEnvirBtnPress(self, envirID: int=-1, attributeDict: Dict[str, str] = {}):
+        # TODO check that the attributes are good?
+        envir = self.model.getEnvir(envirID)
+
+        try:
+            envir.setProperty(attributeDict)
+
+            # update the subselection menu in case the name changed
+            self.view.showEnvirSelectionList(Controller.replaceEmptyName(self.model.getEnvirNameIDs(), "New Environment"))
+
+            # show success message
+            self.view.showDetailSaveSuccess("Environment saved")
+        except (TypeError,AttributeError) as error:
+            # show error message
+            self.view.showDetailSaveError(error)
+
+    def replaceEmptyName(nameIDs: List[tuple[str,int]], replacement: str = "Empty") -> List[tuple[str,int]]:
         newNameIDs: List[tuple[str,int]] = []
         for nameID in nameIDs:
-            if nameID[0] == " ":
+            if nameID[0] == "":
                 newNameID = (replacement, nameID[1])
                 newNameIDs.append(newNameID)
             else:
