@@ -65,6 +65,62 @@ def test_Rider_getStrAttributeDict() -> int:
         printFailure("test_Rider_getStrAttributeDict")
         return 1
 
+def test_Environment_valid_attributes() -> int:
+    try:
+        attributes = {
+            Environment.attributes.ENVIRID: 1,
+            Environment.attributes.ENVIRNAME: "Panam Games Santiago",
+            Environment.attributes.AIRDENSITY: "1.105",
+            Environment.attributes.CRR: 0.0015,
+            Environment.attributes.MECHLOSSES: 0.02
+        }
+        envir = Environment(0, attributeDict=attributes)
+        printSuccess("test_Environment_valid_attributes")
+        return 0
+    except:
+        printFailure("test_Environment_valid_attributes")
+        return 1
+
+def test_Environment_invalid_attributes() -> int:
+    try:
+        attributes = {
+            Environment.attributes.ENVIRID: 1,
+            Environment.attributes.ENVIRNAME: "Panam Games Santiago",
+            Environment.attributes.AIRDENSITY: "1.105",
+            Environment.attributes.CRR: 0.0015,
+            Environment.attributes.MECHLOSSES: 0.02,
+            "invalidAttribute": 0
+        }
+        envir = Environment(0, attributeDict=attributes)
+        printFailure("test_Environment_invalid_attributes")
+        return 1
+    except AttributeError:
+        printSuccess("test_Environment_invalid_attributes")
+        return 0
+    except:
+        printFailure("test_Environment_invalid_attributes")
+        return 1
+
+def test_Environment_getStrAttributeDict() -> int:
+    try:
+        attributes = {
+            Environment.attributes.ENVIRID: 1,
+            Environment.attributes.ENVIRNAME: "Panam Games Santiago",
+            Environment.attributes.AIRDENSITY: "1.105",
+            Environment.attributes.CRR: 0.0015,
+            Environment.attributes.MECHLOSSES: 0.02
+        }
+        envir = Environment(0, attributeDict=attributes)
+        strDict = envir.getStrAttributeDict()
+        if all(key in strDict for key in Environment.keyList):
+            printSuccess("test_Environment_getStrAttributeDict")
+            return 0
+        else:
+            raise Exception
+    except:
+        printFailure("test_Environment_getStrAttributeDict")
+        return 1
+
 def test_saveObject_loadObject() -> int:
     # instanciate model with a test directory
     testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
@@ -172,6 +228,9 @@ def test_saveModel() -> int:
 test_list = [test_Rider_valid_attributes,
              test_Rider_invalid_attributes,
              test_Rider_getStrAttributeDict,
+             test_Environment_valid_attributes,
+             test_Environment_invalid_attributes,
+             test_Environment_getStrAttributeDict,
              test_saveObject_loadObject,
              test_loadRiders,
              test_loadEnvirs,
