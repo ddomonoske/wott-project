@@ -62,11 +62,18 @@ class Controller(object):
     def saveRiderBtnPress(self, riderID: int=-1, attributeDict: Dict[str, str] = {}):
         # TODO check that the attributes are good?
         rider = self.model.getRider(riderID)
-        rider.setProperty(attributeDict)
 
-        # update the subselection menu in case the name changed
-        self.view.showRiderSelectionList(Controller.replaceEmptyName(self.model.getRiderNameIDs(), "New Rider"))
-        # TODO call a view method that says either rider saved, updated, or invalid. look at the tutorial for how to do this
+        try:
+            rider.setProperty(attributeDict)
+
+            # update the subselection menu in case the name changed
+            self.view.showRiderSelectionList(Controller.replaceEmptyName(self.model.getRiderNameIDs(), "New Rider"))
+            
+            # show success message
+            self.view.showRiderSaveSuccess("Rider saved")
+        except TypeError as error:
+            # show error message
+            self.view.showRiderSaveError(error)
 
     def replaceEmptyName(nameIDs: List[tuple[str,int]], replacement: str = "New") -> List[tuple[str,int]]:
         newNameIDs: List[tuple[str,int]] = []

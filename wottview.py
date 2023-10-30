@@ -99,6 +99,12 @@ class View(ctk.CTkFrame):
         # TODO show sim details in main content frame
         sim
 
+    def showRiderSaveError(self, message: str):
+        self.mainContent_frm.showAlertError(message)
+
+    def showRiderSaveSuccess(self, message: str):
+        self.mainContent_frm.showAlertSuccess(message)
+
 # Generalized scrollable list of buttons
 class ScrollableBtnList(ctk.CTkScrollableFrame):
     def __init__(self, parent, nameIDs: List[tuple[str,int]], callback: Callable[[int],None]=None, *args, **kwargs):
@@ -298,6 +304,10 @@ class RiderProfileFrame(ctk.CTkFrame):
                                      command=self.saveRiderBtnPress)
         self.saveBtn.grid(row=3, column=0, padx=(10,10), pady=(10,10))
 
+        # success/warning alert label
+        self.alertLbl = ctk.CTkLabel(self, text="")
+        self.alertLbl.grid(row=4, column=0, padx=(10,10), pady=(5,10))
+
     # exactly the same as wottmodel.Rider.setProperty
     def setAttribute(self, attributeDict: Dict[str, object]):
         for attribute, value in attributeDict.items():
@@ -343,6 +353,18 @@ class RiderProfileFrame(ctk.CTkFrame):
                              self.attributes.POWERRESULTS: self.powerResults}
 
             self.controller.saveRiderBtnPress(self.riderID, attributeDict)
+
+    """ ------ alert label methods ------ """
+    def hideAlert(self):
+        self.alertLbl.configure(text = "")
+
+    def showAlertError(self, message: str = "Error", ms: int = 3000):
+        self.alertLbl.configure(text = message, text_color = 'red')
+        self.alertLbl.after(ms, self.hideAlert)
+
+    def showAlertSuccess(self, message: str = "Success", ms: int = 3000):
+        self.alertLbl.configure(text = message, text_color = 'green')
+        self.alertLbl.after(ms, self.hideAlert)
 
 # Environment Profiles main content frame
 class EnvironmentProfileFrame(ctk.CTkFrame):
