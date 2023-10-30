@@ -89,20 +89,20 @@ class View(ctk.CTkFrame):
 
     def showRiderDetail(self, riderID: int, attributeDict: Dict[str,object]):
         self.mainContent_frm = RiderProfileFrame(self, self.controller, riderID, attributeDict=attributeDict)
-        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="news")
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
 
-    def showEnvirDetail(self, envir):
-        # TODO show environment details in main content frame
-        envir
+    def showEnvirDetail(self, envirID: int, attributeDict: Dict[str,object]):
+        self.mainContent_frm = EnvironmentProfileFrame(self, self.controller, envirID, attributeDict=attributeDict)
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
 
     def showSimDetail(self, sim):
         # TODO show sim details in main content frame
         sim
 
-    def showRiderSaveError(self, message: str):
+    def showDetailSaveError(self, message: str):
         self.mainContent_frm.showAlertError(message)
 
-    def showRiderSaveSuccess(self, message: str):
+    def showDetailSaveSuccess(self, message: str):
         self.mainContent_frm.showAlertSuccess(message)
 
 # Generalized scrollable list of buttons
@@ -314,19 +314,19 @@ class RiderProfileFrame(ctk.CTkFrame):
             match attribute:
                 # TODO change all of these to
                 case self.attributes.RIDERID:
-                    self.riderID = value
+                    self.riderID = int(value)
                 case self.attributes.FIRSTNAME:
-                    self.firstName = value
+                    self.firstName = str(value)
                 case self.attributes.LASTNAME:
-                    self.lastName = value
+                    self.lastName = str(value)
                 case self.attributes.WEIGHT:
-                    self.weight = value
+                    self.weight = str(value)
                 case self.attributes.FTP:
-                    self.FTP = value
+                    self.FTP = str(value)
                 case self.attributes.WPRIME:
-                    self.wPrime = value
+                    self.wPrime = str(value)
                 case self.attributes.CDA:
-                    self.CdA = value
+                    self.CdA = str(value)
                 case self.attributes.POWERRESULTS:
                     self.powerResults = value
                 case _:
@@ -368,12 +368,14 @@ class RiderProfileFrame(ctk.CTkFrame):
 
 # Environment Profiles main content frame
 class EnvironmentProfileFrame(ctk.CTkFrame):
+    # same as wottmodel.Environment.attributes
     class attributes:
         ENVIRID = "envirID"
         ENVIRNAME = "envirName"
         AIRDENSITY = "airDensity"
         CRR = "Crr"
         MECHLOSSES = "mechLosses"
+
     def __init__(self, parent, controller = None,
                  envirID: int = -1,
                  envirName: str = "",
@@ -449,15 +451,15 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
             match attribute:
                 # TODO change all of these to
                 case self.attributes.ENVIRID:
-                    self.envirID = value
+                    self.envirID = int(value)
                 case self.attributes.ENVIRNAME:
-                    self.envirName = value
+                    self.envirName = str(value)
                 case self.attributes.AIRDENSITY:
-                    self.airDensity = value
+                    self.airDensity = str(value)
                 case self.attributes.CRR:
-                    self.Crr = value
+                    self.Crr = str(value)
                 case self.attributes.MECHLOSSES:
-                    self.mechLosses = value
+                    self.mechLosses = str(value)
                 case _:
                     pass
 
