@@ -78,16 +78,19 @@ class BasicController():
     def saveRiderBtnPress(self, riderID=-1, attributeDict: Dict[str, str] = {}):
         print(f"rider {riderID} updated:" + str(attributeDict))
 
+    def saveEnvirBtnPress(self, envirID=-1, attributeDict: Dict[str, str] = {}):
+        print(f"environment {envirID} updated:" + str(attributeDict))
+
 def printSuccess(text: str = "success"):
     print(f"{bcolors.OKGREEN}{text}{bcolors.ENDC}")
 
 def printFailure(text: str = "failure"):
     print(f"{bcolors.FAIL}{text}{bcolors.ENDC}")
 
-def repeatSuccessAlert(rp_frame: RiderProfileFrame):
-    rp_frame.showAlertSuccess("Success Alert Message", 1000)
-    rp_frame.after(2000, partial(repeatErrorAlert, rp_frame))
+def repeatSuccessAlert(detail_frame: RiderProfileFrame|EnvironmentProfileFrame):
+    detail_frame.showAlertSuccess("Success Alert Message", 1000)
+    detail_frame.after(2000, partial(repeatErrorAlert, detail_frame))
 
-def repeatErrorAlert(rp_frame: RiderProfileFrame):
-    rp_frame.showAlertError("Error Alert Message", 1000)
-    rp_frame.after(2000, partial(repeatSuccessAlert, rp_frame))
+def repeatErrorAlert(detail_frame: RiderProfileFrame|EnvironmentProfileFrame):
+    detail_frame.showAlertError("Error Alert Message", 1000)
+    detail_frame.after(2000, partial(repeatSuccessAlert, detail_frame))
