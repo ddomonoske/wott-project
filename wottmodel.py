@@ -112,7 +112,8 @@ class Rider(object):
 
     """ ------ getters ------ """
     def getName(self) -> str:
-        return self.firstName + " " + self.lastName
+        name = self.firstName + " " + self.lastName
+        return name.strip()
 
     def getID(self) -> int:
         return self.riderID
@@ -125,7 +126,7 @@ class Rider(object):
 
     def getStrAttributeDict(self) -> Dict[str,object]:
         attributes = {
-            Rider.attributes.RIDERID: str(self.riderID),
+            Rider.attributes.RIDERID: self.riderID,
             Rider.attributes.FIRSTNAME: self.firstName,
             Rider.attributes.LASTNAME: self.lastName,
             Rider.attributes.WEIGHT: str(self.weight) if self.weight else "",
@@ -223,7 +224,7 @@ class Environment(object):
 
     def getStrAttributeDict(self) -> Dict[str,object]:
         attributes = {
-            Environment.attributes.ENVIRID: str(self.envirID),
+            Environment.attributes.ENVIRID: self.envirID,
             Environment.attributes.ENVIRNAME: self.envirName,
             Environment.attributes.AIRDENSITY: str(self.airDensity) if self.airDensity else "",
             Environment.attributes.CRR: str(self.Crr) if self.Crr else "",
@@ -408,6 +409,11 @@ class Model(object):
         return None
 
     # get specific environment, given a string
+    def getEnvir(self, envirID: int) -> Environment:
+        for envir in self.envirs:
+            if envir.isEnvir(envirID):
+                return envir
+        return None
     # get specific simulation, given a string
 
     """ ------ Add/Delete methods ------ """
@@ -419,16 +425,30 @@ class Model(object):
         # make new rider and append to model list
         rider = Rider(riderID, attributeDict=attributeDict)
         self.riders.append(rider)
-        # TODO maybe sort the list of riders (or instert above)
+        # TODO maybe sort the list of riders (or insert above)
 
         return rider
 
-    # add environment
+    # add new environment. Returns the new environment
+    def addEnvironment(self, attributeDict: Dict[str, object] = None) -> Rider:
+        # get next envirID from metadata
+        envirID = self.metaData.newEnvirID()
+
+        # make new environment and appent to model list
+        envir = Environment(envirID, attributeDict=attributeDict)
+        self.envirs.append(envir)
+        # TODO maybe sort the list of riders (or insert above)
+
+        return envir
+
     # add simulation
 
     # get list of name-ID tuples for riders
     def getRiderNameIDs(self) -> List[tuple[str,int]]:
         return [rider.getNameID() for rider in self.riders]
+
+    def getEnvirNameIDs(self) -> List[tuple[str,int]]:
+        return [envir.getNameID() for envir in self.envirs]
 
     # get list of strings for environments
     # get list of strings for simulations
