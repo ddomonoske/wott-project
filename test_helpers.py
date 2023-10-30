@@ -18,7 +18,7 @@ riderStr = [("David", 0),
             ("Colby", 8),
             ("Viggo", 10),
             ("Eddy", 12),
-            (" ", 13)]
+            ("", 13)]
 
 envirStr = [("LA", 10),
             ("COS", 9),

@@ -8,7 +8,7 @@ def test_Controller_replaceEmptyName() -> int:
     try:
         newStrs = Controller.replaceEmptyName(riderStr)
         for nameID in newStrs:
-            if nameID[0] == " ":
+            if nameID[0] == "":
                 raise Exception
         printSuccess("test_Controller_replaceEmptyName")
         return 0
