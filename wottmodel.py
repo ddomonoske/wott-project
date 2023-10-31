@@ -195,7 +195,7 @@ class Environment(object):
                     case self.attributes.MECHLOSSES:
                         tmp_mechLosses = float(value)
                     case _:
-                        raise AttributeError(f"'{attribute}' is not a property of the Rider class")
+                        raise AttributeError(f"'{attribute}' is not a property of the Environment class")
             except (TypeError,ValueError) as e:
                 raise TypeError(f"'{attribute}' entry is not valid")
 
@@ -234,12 +234,88 @@ class Environment(object):
 
 """ ------ Simulation ------ """
 class Simulation(object):
-    def __init__(self) -> None:
-        # distance
-        self.rider: Rider = None
-        self.envir: Environment = None
-        # pacing strategy is a list of something
-        pass
+    class attributes:
+        SIMID = "simID"
+        SIMNAME = "simName"
+        RIDER = "rider"
+        ENVIR = "envir"
+
+    keyList = [
+        attributes.SIMID,
+        attributes.SIMNAME,
+        attributes.RIDER,
+        attributes.ENVIR
+    ]
+
+    def __init__(self,
+                 simID: int,
+                 simName: str = "",
+                 rider: Rider = None,
+                 envir: Environment = None,
+                 attributeDict: Dict[str, object] = {}) -> None:
+        self.simID = simID
+        self.simName = simName
+        self.rider = rider
+        self.envir = envir
+
+        # TODO pacing strategy is a list of something, probably its own object, maybe even its own file
+
+    def setProperty(self, attributeDict: Dict[str, object], nullAllowed: bool = False):
+        # get the current attributes
+        tmp_simID = self.simID
+        tmp_simName = self.simName
+        tmp_rider = self.rider
+        tmp_envir = self.envir
+
+        for attribute, value in attributeDict.items():
+            try:
+                match attribute:
+                    case self.attributes.SIMID:
+                        tmp_simID = int(value)
+                    case self.attributes.SIMNAME:
+                        tmp_simName = str(value)
+                    case self.attributes.RIDER:
+                        tmp_rider = value
+                    case self.attributes.ENVIR:
+                        tmp_envir = value
+                    case _:
+                        raise AttributeError(f"'{attribute}' is not a property of the Simulation class")
+            except (TypeError,ValueError) as e:
+                raise TypeError(f"'{attribute}' entry is not valid")
+
+        if not (nullAllowed or tmp_simName):
+            raise AttributeError("simName must be set")
+
+        # if no errors thrown, save to model
+        self.simID = tmp_simID
+        self.simName = tmp_simName
+        self.rider = tmp_rider
+        self.envir = tmp_envir
+
+    """ ------ getters and setters ------ """
+    def setRider(self, rider: Rider):
+        self.rider = rider
+
+    def setEnvir(self, envir: Environment):
+        self.envir = envir
+
+    def getName(self) -> str:
+        return self.simName
+
+    def getID(self) -> int:
+        return self.simID
+
+    def getNameID(self) -> tuple[str,int]:
+        return (self.getName(), self.getID())
+
+    def getRider(self) -> Rider:
+        return self.rider
+
+    def getEnvir(self) -> Environment:
+        return self.envir
+
+    def isSim(self, id: int) -> bool:
+        return self.simID == id
 
     # simulate race
 
@@ -400,7 +476,7 @@ class Model(object):
         # TODO check that this worked
         pickle.dump(obj, f)
 
-
+    """ ------ rider/envir/sim getters ------ """
     # get specific rider, given a riderID
     def getRider(self, riderID: int) -> Rider:
         for rider in self.riders:
@@ -414,7 +490,13 @@ class Model(object):
             if envir.isEnvir(envirID):
                 return envir
         return None
+
     # get specific simulation, given a string
+    def getSim(self, simID: int) -> Simulation:
+        for sim in self.sims:
+            if sim.isSim(simID):
+                return sim
+        return None
 
     """ ------ Add/Delete methods ------ """
     # add new rider. Returns the new rider
@@ -434,14 +516,22 @@ class Model(object):
         # get next envirID from metadata
         envirID = self.metaData.newEnvirID()
 
-        # make new environment and appent to model list
+        # make new environment and append to model list
         envir = Environment(envirID, attributeDict=attributeDict)
         self.envirs.append(envir)
-        # TODO maybe sort the list of riders (or insert above)
+        # TODO maybe sort the list of environments (or insert above)
 
         return envir
 
-    # add simulation
+    # add new simulation. Returns the new simulation
+    def addSimulation(self, attributeDict: Dict[str, object] = None) -> Simulation:
+        # get next simID from metadata
+        simID = self.metaData.newSimID()
+
+        # make new simulation and append to model list
+        sim = Simulation(simID, attributeDict=attributeDict)
+        self.sims.append(sim)
+        # TODO maybe sort the list of simulations (or insert above)
 
     # get list of name-ID tuples for riders
     def getRiderNameIDs(self) -> List[tuple[str,int]]:
@@ -449,6 +539,9 @@ class Model(object):
 
     def getEnvirNameIDs(self) -> List[tuple[str,int]]:
         return [envir.getNameID() for envir in self.envirs]
+
+    def getSimNameIDs(self) -> List[tuple[str,int]]:
+        return [sim.getNameID() for sim in self.sims]
 
     # get list of strings for environments
     # get list of strings for simulations
