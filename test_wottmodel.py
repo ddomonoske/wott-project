@@ -121,6 +121,59 @@ def test_Environment_getStrAttributeDict() -> int:
         printFailure("test_Environment_getStrAttributeDict")
         return 1
 
+def test_Simulation_valid_attributes() -> int:
+    try:
+        attributes = {
+            Simulation.attributes.SIMID: 1,
+            Simulation.attributes.SIMNAME: "Dave Panams IP",
+            Simulation.attributes.RIDER: Rider(0, firstName="David"),
+            Simulation.attributes.ENVIR: Environment(0, envirName="Santiago")
+        }
+        sim = Simulation(0, attributeDict=attributes)
+        printSuccess("test_Simulation_valid_attributes")
+        return 0
+    except:
+        printFailure("test_Simulation_valid_attributes")
+        return 1
+
+def test_Simulation_invalid_attributes() -> int:
+    try:
+        attributes = {
+            Simulation.attributes.SIMID: 1,
+            Simulation.attributes.SIMNAME: "Dave Panams IP",
+            Simulation.attributes.RIDER: Rider(0, firstName="David"),
+            Simulation.attributes.ENVIR: Environment(0, envirName="Santiago"),
+            "invalidAttribute": 0
+        }
+        sim = Simulation(0, attributeDict=attributes)
+        printFailure("test_Simulation_invalid_attributes")
+        return 1
+    except AttributeError:
+        printSuccess("test_Simulation_invalid_attributes")
+        return 0
+    except:
+        printFailure("test_Simulation_invalid_attributes")
+        return 1
+
+def test_Simulation_getStrAttributeDict() -> int:
+    try:
+        attributes = {
+            Simulation.attributes.SIMID: 1,
+            Simulation.attributes.SIMNAME: "Dave Panams IP",
+            Simulation.attributes.RIDER: Rider(0, firstName="David"),
+            Simulation.attributes.ENVIR: Environment(0, envirName="Santiago")
+        }
+        sim = Simulation(0, attributeDict=attributes)
+        strDict = sim.getStrAttributeDict()
+        if all(key in strDict for key in Simulation.keyList):
+            printSuccess("test_Simulation_getStrAttributeDict")
+            return 0
+        else:
+            raise Exception
+    except:
+        printFailure("test_Simulation_getStrAttributeDict")
+        return 1
+
 def test_saveObject_loadObject() -> int:
     # instanciate model with a test directory
     testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
@@ -231,6 +284,9 @@ test_list = [test_Rider_valid_attributes,
              test_Environment_valid_attributes,
              test_Environment_invalid_attributes,
              test_Environment_getStrAttributeDict,
+             test_Simulation_valid_attributes,
+             test_Simulation_invalid_attributes,
+             test_Simulation_getStrAttributeDict,
              test_saveObject_loadObject,
              test_loadRiders,
              test_loadEnvirs,
