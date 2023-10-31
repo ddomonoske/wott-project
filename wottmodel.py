@@ -258,6 +258,9 @@ class Simulation(object):
         self.rider = rider
         self.envir = envir
 
+        if attributeDict:
+            self.setProperty(attributeDict, nullAllowed=True)
+
         # TODO pacing strategy is a list of something, probably its own object, maybe even its own file
 
     def setProperty(self, attributeDict: Dict[str, object], nullAllowed: bool = False):
@@ -328,7 +331,7 @@ class Simulation(object):
             Simulation.attributes.SIMID: self.simID,
             Simulation.attributes.SIMNAME: self.simName,
             Simulation.attributes.RIDER: str(self.rider.getName()) if self.rider else "",
-            Simulation.attributes.CRR: str(self.envir.getName()) if self.envir else ""
+            Simulation.attributes.ENVIR: str(self.envir.getName()) if self.envir else ""
         }
         return attributes
 
