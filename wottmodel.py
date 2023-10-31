@@ -323,6 +323,15 @@ class Simulation(object):
     def isSim(self, id: int) -> bool:
         return self.simID == id
 
+    def getStrAttributeDict(self) -> Dict[str,object]:
+        attributes = {
+            Simulation.attributes.SIMID: self.simID,
+            Simulation.attributes.SIMNAME: self.simName,
+            Simulation.attributes.RIDER: str(self.rider.getName()) if self.rider else "",
+            Simulation.attributes.CRR: str(self.envir.getName()) if self.envir else ""
+        }
+        return attributes
+
     # simulate race
 
 """ ------ Meta Data ------ """
