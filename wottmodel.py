@@ -275,9 +275,15 @@ class Simulation(object):
                     case self.attributes.SIMNAME:
                         tmp_simName = str(value)
                     case self.attributes.RIDER:
-                        tmp_rider = value
+                        if (type(value)==Rider):
+                            tmp_rider = value
+                        else:
+                            raise TypeError(f"'{attribute}' must be of Rider type")
                     case self.attributes.ENVIR:
-                        tmp_envir = value
+                        if (type(value)==Environment):
+                            tmp_envir = value
+                        else:
+                            raise TypeError(f"'{attribute}' must be of Environment type")
                     case _:
                         raise AttributeError(f"'{attribute}' is not a property of the Simulation class")
             except (TypeError,ValueError) as e:
