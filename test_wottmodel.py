@@ -242,7 +242,7 @@ test_list = [test_Rider_valid_attributes,
              test_saveModel]
 
 # run all tests
-if __name__ == '__main__':
+def main():
     failedTests = 0
     for test in test_list:
         if test():
@@ -253,3 +253,6 @@ if __name__ == '__main__':
         printSuccess(f"{bcolors.EMPH}{len(test_list)-failedTests} test(s) passed")
     else:
         printSuccess(f"{bcolors.EMPH}\nAll {len(test_list)} tests passed")
+
+if __name__ == '__main__':
+    main()
