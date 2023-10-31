@@ -21,7 +21,7 @@ test_list = [
 ]
 
 # run all tests
-if __name__ == '__main__':
+def main():
     # run the non-GUI tests
     failedTests = 0
     for test in test_list:
@@ -36,6 +36,7 @@ if __name__ == '__main__':
 
     # run the GUI test
     ctk.set_default_color_theme("blue")
+    ctk.set_appearance_mode("system")
     app = ctk.CTk()
     app.wm_state("zoomed")
     app.grid_columnconfigure(0,weight=1)
@@ -55,3 +56,5 @@ if __name__ == '__main__':
      # delete file and directory
     testDirectory.rmdir()
 
+if __name__ == '__main__':
+    main()

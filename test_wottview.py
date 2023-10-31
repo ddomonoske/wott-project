@@ -83,7 +83,7 @@ test_list = [test_RiderSelectFrame,
              test_EnvironmentProfileFrame_Alert]
 
 # run all tests
-if __name__ == '__main__':
+def main():
     ctk.set_appearance_mode("Light")  # Modes: "System" (standard), "Dark", "Light"
     ctk.set_default_color_theme("blue")  # ["blue", "green", "dark-blue", "sweetkind"]
 
@@ -97,3 +97,6 @@ if __name__ == '__main__':
         test(top)
 
     root.mainloop()
+
+if __name__ == '__main__':
+    main()
