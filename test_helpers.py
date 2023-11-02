@@ -9,7 +9,8 @@ fruitStr = [("apple", 1),
             ("dragon fruit", 4),
             ("elderberry", 3),
             ("fig", 90),
-            ("grapes", 12)]
+            ("grapes", 12),
+            ("apple", 7)]
 
 riderStr = [("David", 0),
             ("Anders", 2),
