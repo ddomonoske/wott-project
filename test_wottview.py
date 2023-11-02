@@ -5,6 +5,15 @@ from typing import Dict
 from test_helpers import *
 
 
+# test NameIDOptionMenu 
+def test_NameIDOptionMenu(parent: ctk.CTkToplevel):
+    parent.title("NameIDOptionMenu Test")
+
+    controller = BasicController()
+
+    menu = NameIDOptionMenu(parent, fruitStr, fruitStr[2][1]) # just grab a random entry for the selection
+    menu.grid(row=0, column=0, pady=(20,20), padx=(40,40))
+
 # test RiderSelectFrame with individual callbacks
 def test_RiderSelectFrame(parent: ctk.CTkToplevel):
     parent.title("RiderSelectFrame Test")
@@ -76,7 +85,8 @@ def test_View(parent: ctk.CTkToplevel):
     view.setController(controller)
 
 
-test_list = [test_RiderSelectFrame,
+test_list = [test_NameIDOptionMenu,
+             test_RiderSelectFrame,
              test_RiderProfileFrame,
              test_RiderProfileFrame_Alert,
              test_EnvironmentProfileFrame,
@@ -84,7 +94,7 @@ test_list = [test_RiderSelectFrame,
 
 # run all tests
 def main():
-    ctk.set_appearance_mode("Light")  # Modes: "System" (standard), "Dark", "Light"
+    ctk.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
     ctk.set_default_color_theme("blue")  # ["blue", "green", "dark-blue", "sweetkind"]
 
     # run the main View fullscreen
