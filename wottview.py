@@ -129,6 +129,36 @@ class ScrollableBtnList(ctk.CTkScrollableFrame):
             self.name_btns.append(btn)
             btn.grid(row=i, column=0, sticky="EW")
 
+# Generalized optionmenu
+class NameIDOptionMenu(ctk.CTkOptionMenu):
+    def __init__(self, parent,
+                 nameIDs: List[tuple[str,int]],
+                 selection: int = None,
+                 callback: Callable[[int],None]=None,
+                 *args, **kwargs):
+
+        self.nameIDs = nameIDs
+        self.selection = selection
+        self.callback = callback
+
+        # separate list of strings and IDs
+        self.names: List[str] = []
+        self.ids: List[int] = []
+        for nameID in nameIDs:
+            self.names.append(nameID[0])
+            self.ids.append(nameID[1])
+
+        # TODO check this is the correct way to use args/kwargs
+        super().__init__(parent, values=self.names, *args, **kwargs)
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+    def grid(self, *args, **kwargs):
+        super().grid(*args, **kwargs)
+
+
+
 class RiderSelectFrame(ctk.CTkFrame):
     def __init__(self, parent, nameIDs: List[tuple[str,int]], controller=None):
         super().__init__(parent, fg_color=("gray70", "gray10"), width=1, corner_radius=0)
