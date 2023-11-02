@@ -129,34 +129,41 @@ class ScrollableBtnList(ctk.CTkScrollableFrame):
             self.name_btns.append(btn)
             btn.grid(row=i, column=0, sticky="EW")
 
-# Generalized optionmenu
+# Generalized optionmenu. Calls the provided callback
 class NameIDOptionMenu(ctk.CTkOptionMenu):
     def __init__(self, parent,
                  nameIDs: List[tuple[str,int]],
-                 selection: int = None,
+                 selection: tuple[str,int] = None,
                  callback: Callable[[int],None]=None,
-                 *args, **kwargs):
+                 **kwargs):
 
         self.nameIDs = nameIDs
-        self.selection = selection
         self.callback = callback
 
-        # separate list of strings and IDs
-        self.names: List[str] = []
-        self.ids: List[int] = []
+        # IDs are guaranteed to be unique, but names aren't. So append a unique integer for name duplicates
+        self.nameIDsMap: Dict[str,int] = {}
         for nameID in nameIDs:
-            self.names.append(nameID[0])
-            self.ids.append(nameID[1])
+            appendInt = 0
+            while (True):
+                nameStr = nameID[0] + (str(appendInt) if appendInt else "")
+                if nameStr in self.nameIDsMap:
+                    appendInt = appendInt + 1
+                    continue
+                else:
+                    break
+            self.nameIDsMap[nameStr] = nameID[1]
+
+            # set the selection to updated str/id pair
+            if selection[1] == nameID[1]:
+                self.selection = (nameStr, selection[1])
 
         # TODO check this is the correct way to use args/kwargs
-        super().__init__(parent, values=self.names, *args, **kwargs)
+        super().__init__(parent, values=list(self.nameIDsMap.keys()), command=self.menuCallback, **kwargs)
+        self.set(self.selection[0])
 
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-
-    def grid(self, *args, **kwargs):
-        super().grid(*args, **kwargs)
-
+    def menuCallback(self, name: str):
+        if self.callback:
+            self.callback(self.nameIDsMap[name])
 
 
 class RiderSelectFrame(ctk.CTkFrame):
