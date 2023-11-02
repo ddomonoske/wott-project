@@ -523,8 +523,131 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
 
 # Simulation Profiles main content frame
 class SimulationProfileFrame(ctk.CTkFrame):
-    def __init__(self, parent):
+    """
+    NOT THE SAME as wottmodel.Simulation.attributes
+    TODO finish this. It's mostly still just copied from EnvironmentProfileFrame
+    """
+    class attributes:
+        SIMID = "simID"
+        SIMNAME = "simName"
+        RIDER = "rider"
+        ENVIR = "envir"
+
+    def __init__(self, parent, controller = None,
+                 simID: int = -1,
+                 simName: str = "",
+                 riderID: int = -1,
+                 riderList: List[tuple[str,int]] = [],
+                 envirID: int = -1,
+                 envirList: List[tuple[str,int]] = [],
+                 attributeDict: Dict[str, object] = {}):
         super().__init__(parent)
+
+        self.controller = controller
+
+        self.grid_columnconfigure(0, weight=1)
+
+        self.envirID = envirID
+        self.envirName = envirName
+        self.airDensity = airDensity
+        self.Crr = Crr
+        self.mechLosses = mechLosses
+
+        if attributeDict:
+            self.setAttribute(attributeDict)
+
+        """ ------ set up the geometry ------ """
+        # Name section
+        self.nameFrm = ctk.CTkFrame(self)
+        self.nameFrm.columnconfigure(4, weight=1)
+        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.nameLbl = SectionLabel(self.nameFrm, "Environment Name")
+        self.nameLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
+        self.envirNameEnt = ctk.CTkEntry(self.nameFrm, width=300)
+        self.envirNameEnt.insert(0,self.envirName)
+        self.envirNameEnt.grid(row=1, column=1, padx=(10,25), pady=(10,10))
+
+        # Atmospheric conditions section
+        self.atmosFrm = ctk.CTkFrame(self)
+        self.atmosFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.atmosLbl = SectionLabel(self.atmosFrm, "Atmospheric Conditions")
+        self.atmosLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
+        self.airDensityLbl = ctk.CTkLabel(self.atmosFrm, text=f"Air Density (kg/m\N{SUPERSCRIPT THREE}):")
+        self.airDensityLbl.grid(row=1, column=0, padx=(15,5), pady=(10,10))
+        self.airDensityEnt = ctk.CTkEntry(self.atmosFrm)
+        self.airDensityEnt.insert(0, self.airDensity)
+        self.airDensityEnt.grid(row=1, column=1, padx=(5,25), pady=(10,10))
+
+        # Equipment section
+        self.equipmentFrm = ctk.CTkFrame(self)
+        self.equipmentFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.EquipmentLbl = SectionLabel(self.equipmentFrm, "Equipment Characteristics")
+        self.EquipmentLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
+        self.CrrLbl = ctk.CTkLabel(self.equipmentFrm, text="Crr:")
+        self.CrrLbl.grid(row=1, column=0, padx=(15,5), pady=(10,10))
+        self.CrrEnt = ctk.CTkEntry(self.equipmentFrm)
+        self.CrrEnt.insert(0, self.Crr)
+        self.CrrEnt.grid(row=1, column=1, padx=(5,25), pady=(10,10))
+        self.mechLossesLbl = ctk.CTkLabel(self.equipmentFrm, text="Mechanical Losses:")
+        self.mechLossesLbl.grid(row=1, column=2, padx=(25,5), pady=(10,10))
+        self.mechLossesEnt = ctk.CTkEntry(self.equipmentFrm)
+        self.mechLossesEnt.insert(0, self.mechLosses)
+        self.mechLossesEnt.grid(row=1, column=3, padx=(5,25), pady=(10,10))
+
+        # Save Environment button
+        self.saveBtn = ctk.CTkButton(self, text="Save", fg_color="green", hover_color="dark green",
+                                     command=self.saveEnvirBtnPress)
+        self.saveBtn.grid(row=3, column=0, padx=(10,10), pady=(10,10))
+
+        # success/warning alert label
+        self.alertLbl = ctk.CTkLabel(self, text="")
+        self.alertLbl.grid(row=4, column=0, padx=(10,10), pady=(5,10))
+
+    # exactly the same as wottmodel.Environment.setProperty
+    def setAttribute(self, attributeDict: Dict[str, object]):
+        for attribute, value in attributeDict.items():
+            match attribute:
+                # TODO change all of these to
+                case self.attributes.ENVIRID:
+                    self.envirID = int(value)
+                case self.attributes.ENVIRNAME:
+                    self.envirName = str(value)
+                case self.attributes.AIRDENSITY:
+                    self.airDensity = str(value)
+                case self.attributes.CRR:
+                    self.Crr = str(value)
+                case self.attributes.MECHLOSSES:
+                    self.mechLosses = str(value)
+                case _:
+                    pass
+
+    def saveEnvirBtnPress(self):
+        # update the internal variables
+        self.envirName = self.envirNameEnt.get()
+        self.airDensity = self.airDensityEnt.get()
+        self.Crr = self.CrrEnt.get()
+        self.mechLosses = self.mechLossesEnt.get()
+
+        # send to controller
+        if self.controller:
+            attributeDict = {self.attributes.ENVIRNAME: self.envirName,
+                             self.attributes.AIRDENSITY: self.airDensity,
+                             self.attributes.CRR: self.Crr,
+                             self.attributes.MECHLOSSES: self.mechLosses}
+
+            self.controller.saveEnvirBtnPress(self.envirID, attributeDict)
+
+    """ ------ alert label methods ------ """
+    def hideAlert(self):
+        self.alertLbl.configure(text = "")
+
+    def showAlertError(self, message: str = "Error", ms: int = 3000):
+        self.alertLbl.configure(text = message, text_color = 'red')
+        self.alertLbl.after(ms, self.hideAlert)
+
+    def showAlertSuccess(self, message: str = "Success", ms: int = 3000):
+        self.alertLbl.configure(text = message, text_color = 'green')
+        self.alertLbl.after(ms, self.hideAlert)
 
 class SectionLabel(ctk.CTkLabel):
     def __init__(self, parent, text: str = ""):
