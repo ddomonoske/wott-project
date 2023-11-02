@@ -11,7 +11,7 @@ def test_NameIDOptionMenu(parent: ctk.CTkToplevel):
 
     controller = BasicController()
 
-    menu = NameIDOptionMenu(parent, fruitStr, fruitStr[2][1]) # just grab a random entry for the selection
+    menu = NameIDOptionMenu(parent, fruitStr, fruitStr[2], callback=controller.riderSelectBtnPress) # just grab a random entry for the selection
     menu.grid(row=0, column=0, pady=(20,20), padx=(40,40))
 
 # test RiderSelectFrame with individual callbacks
