@@ -5,7 +5,7 @@ from typing import Dict
 from test_helpers import *
 
 
-# test NameIDOptionMenu 
+# test NameIDOptionMenu
 def test_NameIDOptionMenu(parent: ctk.CTkToplevel):
     parent.title("NameIDOptionMenu Test")
 
@@ -71,6 +71,20 @@ def test_EnvironmentProfileFrame_Alert(parent: ctk.CTkToplevel):
 
     repeatSuccessAlert(ep_frame)
 
+def test_SimulationProfileFrame(parent: ctk.CTkToplevel):
+    parent.title("Simulation Frame Test")
+    parent.grid_columnconfigure(0,weight=1)
+    parent.grid_rowconfigure(0,weight=1)
+
+    controller = BasicController()
+
+    sp_frame = SimulationProfileFrame(parent, controller, simID=2,
+                                      envirList=envirStr,
+                                      riderList=riderStr,
+                                      rider = riderStr[2],
+                                      envir=envirStr[1])
+    sp_frame.grid(row=0, column=0, sticky="NSEW")
+
 # test the entire View
 def test_View(parent: ctk.CTkToplevel):
     parent.title("View Test")
@@ -90,7 +104,8 @@ test_list = [test_NameIDOptionMenu,
              test_RiderProfileFrame,
              test_RiderProfileFrame_Alert,
              test_EnvironmentProfileFrame,
-             test_EnvironmentProfileFrame_Alert]
+             test_EnvironmentProfileFrame_Alert,
+             test_SimulationProfileFrame]
 
 # run all tests
 def main():
