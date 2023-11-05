@@ -9,7 +9,8 @@ fruitStr = [("apple", 1),
             ("dragon fruit", 4),
             ("elderberry", 3),
             ("fig", 90),
-            ("grapes", 12)]
+            ("grapes", 12),
+            ("apple", 7)]
 
 riderStr = [("David", 0),
             ("Anders", 2),
@@ -80,6 +81,9 @@ class BasicController():
 
     def saveEnvirBtnPress(self, envirID=-1, attributeDict: Dict[str, str] = {}):
         print(f"environment {envirID} updated:" + str(attributeDict))
+
+    def saveSimBtnPress(self, simID=-1, attributeDict: Dict[str, str] = {}):
+        print(f"simulation {simID} updated:" + str(attributeDict))
 
 def printSuccess(text: str = "success"):
     print(f"{bcolors.OKGREEN}{text}{bcolors.ENDC}")

@@ -95,9 +95,9 @@ class View(ctk.CTkFrame):
         self.mainContent_frm = EnvironmentProfileFrame(self, self.controller, envirID, attributeDict=attributeDict)
         self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
 
-    def showSimDetail(self, sim):
-        # TODO show sim details in main content frame
-        sim
+    def showSimDetail(self, simID: int, attributeDict: Dict[str,object]):
+        self.mainContent_frm = SimulationProfileFrame(self, self.controller, simID, attributeDict=attributeDict)
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
 
     def showDetailSaveError(self, message: str):
         self.mainContent_frm.showAlertError(message)
@@ -128,6 +128,44 @@ class ScrollableBtnList(ctk.CTkScrollableFrame):
                                 command=partial(callback, id))
             self.name_btns.append(btn)
             btn.grid(row=i, column=0, sticky="EW")
+
+# Generalized optionmenu. Calls the provided callback
+class NameIDOptionMenu(ctk.CTkOptionMenu):
+    def __init__(self, parent,
+                 nameIDs: List[tuple[str,int]],
+                 selection: tuple[str,int] = ("",-1),
+                 callback: Callable[[int],None]=None,
+                 **kwargs):
+
+        self.nameIDs = nameIDs
+        self.callback = callback
+        self.selection = selection
+
+        # IDs are guaranteed to be unique, but names aren't. So append a unique integer for name duplicates
+        self.nameIDsMap: Dict[str,int] = {}
+        for nameID in nameIDs:
+            appendInt = 0
+            while (True):
+                nameStr = nameID[0] + (str(appendInt) if appendInt else "")
+                if nameStr in self.nameIDsMap:
+                    appendInt = appendInt + 1
+                    continue
+                else:
+                    break
+            self.nameIDsMap[nameStr] = nameID[1]
+
+            # set the selection to updated str/id pair
+            if selection[1] == nameID[1]:
+                self.selection = (nameStr, selection[1])
+
+        # TODO check this is the correct way to use args/kwargs
+        super().__init__(parent, values=list(self.nameIDsMap.keys()), command=self.menuCallback, **kwargs)
+        self.set(self.selection[0])
+
+    def menuCallback(self, name: str):
+        if self.callback:
+            self.callback(self.nameIDsMap[name])
+
 
 class RiderSelectFrame(ctk.CTkFrame):
     def __init__(self, parent, nameIDs: List[tuple[str,int]], controller=None):
@@ -493,8 +531,106 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
 
 # Simulation Profiles main content frame
 class SimulationProfileFrame(ctk.CTkFrame):
-    def __init__(self, parent):
+    """
+    NOT THE SAME as wottmodel.Simulation.attributes
+    TODO finish this. It's mostly still just copied from EnvironmentProfileFrame
+    """
+    class attributes:
+        SIMID = "simID"
+        SIMNAME = "simName"
+        RIDER = "rider"
+        ENVIR = "envir"
+        RIDERLIST = "riderList"
+        ENVIRLIST = "envirList"
+
+    def __init__(self, parent, controller = None,
+                 simID: int = -1,
+                 simName: str = "",
+                 rider: tuple[str,int] = ("",-1),
+                 riderList: List[tuple[str,int]] = [],
+                 envir: tuple[str,int] = ("",-1),
+                 envirList: List[tuple[str,int]] = [],
+                 attributeDict: Dict[str, object] = {}):
         super().__init__(parent)
+
+        self.controller = controller
+
+        self.grid_columnconfigure(0, weight=1)
+
+        self.simID = simID
+        self.simName = simName
+        self.rider = rider
+        self.riderList = riderList
+        self.envir = envir
+        self.envirList = envirList
+
+        if attributeDict:
+            self.setAttribute(attributeDict)
+
+        """ ------ set up the geometry ------ """
+        # Rider and Environment section
+        self.selectFrm = ctk.CTkFrame(self)
+        self.selectFrm.columnconfigure(4, weight=1)
+        self.selectFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.titleLbl = SectionLabel(self.selectFrm, "Rider and Environment")
+        self.titleLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
+        self.riderLbl = ctk.CTkLabel(self.selectFrm, text="Rider:")
+        self.riderLbl.grid(row=1, column=0, padx=(15,5), pady=(10,10))
+        self.riderOpt = NameIDOptionMenu(self.selectFrm, self.riderList, self.rider)
+        self.riderOpt.grid(row=1, column=1, padx=(5,25), pady=(10,10))
+        self.envirLbl = ctk.CTkLabel(self.selectFrm, text="Envir:")
+        self.envirLbl.grid(row=1, column=2, padx=(25,5), pady=(10,10))
+        self.envirOpt = NameIDOptionMenu(self.selectFrm, self.envirList, self.envir)
+        self.envirOpt.grid(row=1, column=3, padx=(5,25), pady=(10,10))
+
+        # Save Environment button
+        self.saveBtn = ctk.CTkButton(self, text="Save", fg_color="green", hover_color="dark green",
+                                     command=self.saveSimBtnPress)
+        self.saveBtn.grid(row=3, column=0, padx=(10,10), pady=(10,10))
+
+        # success/warning alert label
+        self.alertLbl = ctk.CTkLabel(self, text="")
+        self.alertLbl.grid(row=4, column=0, padx=(10,10), pady=(5,10))
+
+    # exactly the same as wottmodel.Environment.setProperty
+    def setAttribute(self, attributeDict: Dict[str, object]):
+        for attribute, value in attributeDict.items():
+            match attribute:
+                # TODO change all of these to
+                case self.attributes.SIMID:
+                    self.simID = int(value)
+                case self.attributes.SIMNAME:
+                    self.simName = str(value)
+                case self.attributes.RIDER:
+                    self.rider = value
+                case self.attributes.ENVIR:
+                    self.envir = value
+                case self.attributes.RIDERLIST:
+                    self.riderList = value
+                case self.attributes.ENVIRLIST:
+                    self.envirList = value
+                case _:
+                    pass
+
+    def saveSimBtnPress(self):
+        # send to controller
+        if self.controller:
+            attributeDict = {self.attributes.RIDER: self.rider,
+                             self.attributes.ENVIR: self.envir}
+
+            self.controller.saveSimBtnPress(self.simID, attributeDict)
+
+    """ ------ alert label methods ------ """
+    def hideAlert(self):
+        self.alertLbl.configure(text = "")
+
+    def showAlertError(self, message: str = "Error", ms: int = 3000):
+        self.alertLbl.configure(text = message, text_color = 'red')
+        self.alertLbl.after(ms, self.hideAlert)
+
+    def showAlertSuccess(self, message: str = "Success", ms: int = 3000):
+        self.alertLbl.configure(text = message, text_color = 'green')
+        self.alertLbl.after(ms, self.hideAlert)
 
 class SectionLabel(ctk.CTkLabel):
     def __init__(self, parent, text: str = ""):
