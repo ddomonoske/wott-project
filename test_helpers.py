@@ -82,6 +82,9 @@ class BasicController():
     def saveEnvirBtnPress(self, envirID=-1, attributeDict: Dict[str, str] = {}):
         print(f"environment {envirID} updated:" + str(attributeDict))
 
+    def saveSimBtnPress(self, simID=-1, attributeDict: Dict[str, str] = {}):
+        print(f"simulation {simID} updated:" + str(attributeDict))
+
 def printSuccess(text: str = "success"):
     print(f"{bcolors.OKGREEN}{text}{bcolors.ENDC}")
 
