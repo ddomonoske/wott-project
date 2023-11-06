@@ -551,6 +551,8 @@ class Model(object):
         self.sims.append(sim)
         # TODO maybe sort the list of simulations (or insert above)
 
+        return sim
+
     # get list of name-ID tuples for riders
     def getRiderNameIDs(self) -> List[tuple[str,int]]:
         return [rider.getNameID() for rider in self.riders]
