@@ -250,8 +250,8 @@ class Simulation(object):
     def __init__(self,
                  simID: int,
                  simName: str = "",
-                 rider: Rider = ("",-1),
-                 envir: Environment = ("",-1),
+                 rider: Rider = None,
+                 envir: Environment = None,
                  attributeDict: Dict[str, object] = {}) -> None:
         self.simID = simID
         self.simName = simName
