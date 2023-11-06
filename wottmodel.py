@@ -239,12 +239,18 @@ class Simulation(object):
         SIMNAME = "simName"
         RIDER = "rider"
         ENVIR = "envir"
+        RIDERLIST = "riderList"
+        ENVIRLIST = "envirList"
+        MODEL = "model"
 
     keyList = [
         attributes.SIMID,
         attributes.SIMNAME,
         attributes.RIDER,
-        attributes.ENVIR
+        attributes.ENVIR,
+        attributes.RIDERLIST,
+        attributes.ENVIRLIST,
+        attributes.MODEL
     ]
 
     def __init__(self,
@@ -252,8 +258,10 @@ class Simulation(object):
                  simName: str = "",
                  rider: Rider = None,
                  envir: Environment = None,
+                 model = None,
                  attributeDict: Dict[str, object] = {}) -> None:
         self.simID = simID
+        self.model = model
         self.simName = simName
         self.rider = rider
         self.envir = envir
@@ -269,6 +277,7 @@ class Simulation(object):
         tmp_simName = self.simName
         tmp_rider = self.rider
         tmp_envir = self.envir
+        tmp_model = self.model
 
         for attribute, value in attributeDict.items():
             try:
@@ -287,6 +296,11 @@ class Simulation(object):
                             tmp_envir = value
                         else:
                             raise TypeError(f"'{attribute}' must be of Environment type")
+                    case self.attributes.MODEL:
+                        if (type(value)==Model):
+                            tmp_model = value
+                        else:
+                            raise TypeError(f"'{attribute}' must be of Model type")
                     case _:
                         raise AttributeError(f"'{attribute}' is not a property of the Simulation class")
             except (TypeError,ValueError) as e:
@@ -300,6 +314,7 @@ class Simulation(object):
         self.simName = tmp_simName
         self.rider = tmp_rider
         self.envir = tmp_envir
+        self.model = tmp_model
 
     """ ------ getters and setters ------ """
     def setRider(self, rider: Rider):
@@ -325,13 +340,21 @@ class Simulation(object):
 
     def isSim(self, id: int) -> bool:
         return self.simID == id
+    
+    def getRiderList(self) -> List[tuple[str,int]]:
+        return self.model.getRiderNameIDs() if self.model else []
+    
+    def getEnvirList(self) -> List[tuple[str,int]]:
+        return self.model.getEnvirNameIDs() if self.model else []
 
     def getStrAttributeDict(self) -> Dict[str,object]:
         attributes = {
             Simulation.attributes.SIMID: self.simID,
             Simulation.attributes.SIMNAME: self.simName,
             Simulation.attributes.RIDER: str(self.rider.getNameID()) if self.rider else ("",-1),
-            Simulation.attributes.ENVIR: str(self.envir.getNameID()) if self.envir else ("",-1)
+            Simulation.attributes.ENVIR: str(self.envir.getNameID()) if self.envir else ("",-1),
+            Simulation.attributes.RIDERLIST: self.getRiderList(),
+            Simulation.attributes.ENVIRLIST: self.getEnvirList()
         }
         return attributes
 
@@ -547,7 +570,7 @@ class Model(object):
         simID = self.metaData.newSimID()
 
         # make new simulation and append to model list
-        sim = Simulation(simID, attributeDict=attributeDict)
+        sim = Simulation(simID, model=self, attributeDict=attributeDict)
         self.sims.append(sim)
         # TODO maybe sort the list of simulations (or insert above)
 
