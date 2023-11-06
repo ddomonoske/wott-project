@@ -104,7 +104,7 @@ class Controller(object):
             sim.setProperty(attributeDict)
 
             # update the subselection menu in case the name changed
-            self.view.showEnvirSelectionList(Controller.replaceEmptyName(self.model.getSimNameIDs(), "New Simulation"))
+            self.view.showSimSelectionList(Controller.replaceEmptyName(self.model.getSimNameIDs(), "New Simulation"))
 
             # show success message
             self.view.showDetailSaveSuccess("Simulation saved")
