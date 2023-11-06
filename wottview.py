@@ -166,6 +166,12 @@ class NameIDOptionMenu(ctk.CTkOptionMenu):
         if self.callback:
             self.callback(self.nameIDsMap[name])
 
+    def get(self) -> tuple[str,int]:
+        name = super().get()
+        id = self.nameIDsMap.get(name)
+
+        return (name,id)
+
 
 class RiderSelectFrame(ctk.CTkFrame):
     def __init__(self, parent, nameIDs: List[tuple[str,int]], controller=None):
