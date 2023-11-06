@@ -43,9 +43,12 @@ class Controller(object):
         self.view.showEnvirSelectionList(Controller.replaceEmptyName(self.model.getEnvirNameIDs(), "New Environment"))
 
     def addSimBtnPress(self):
-        # TODO create a new simulation in the model
-        # TODO display the new (empty) simulation in the view
-        print("add Simulation button pressed")
+        # add new simulation and display simulation detail
+        sim = self.model.addSimulation()
+        self.view.showSimDetail(sim.getID(), sim.getStrAttributeDict())
+
+        # update the selection menu to include new simulation
+        self.view.showSimSelectionList(Controller.replaceEmptyName(self.model.getSimNameIDs(), "New Simulation"))
 
     """ ------ Scroll List Btn Callbacks ------ """
     def riderSelectBtnPress(self, riderID: int):
