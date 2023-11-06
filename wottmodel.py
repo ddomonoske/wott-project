@@ -250,8 +250,8 @@ class Simulation(object):
     def __init__(self,
                  simID: int,
                  simName: str = "",
-                 rider: Rider = None,
-                 envir: Environment = None,
+                 rider: Rider = ("",-1),
+                 envir: Environment = ("",-1),
                  attributeDict: Dict[str, object] = {}) -> None:
         self.simID = simID
         self.simName = simName
@@ -330,8 +330,8 @@ class Simulation(object):
         attributes = {
             Simulation.attributes.SIMID: self.simID,
             Simulation.attributes.SIMNAME: self.simName,
-            Simulation.attributes.RIDER: str(self.rider.getName()) if self.rider else "",
-            Simulation.attributes.ENVIR: str(self.envir.getName()) if self.envir else ""
+            Simulation.attributes.RIDER: str(self.rider.getNameID()) if self.rider else ("",-1),
+            Simulation.attributes.ENVIR: str(self.envir.getNameID()) if self.envir else ("",-1)
         }
         return attributes
 
