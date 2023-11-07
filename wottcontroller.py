@@ -21,9 +21,9 @@ class Controller(object):
         # TODO clear the main frame
 
     def simBtnPress(self):
-        # TODO get the list of sims from the model
-        simStrList: List[tuple[str,int]] = []
-        self.view.showSimSelectionList(simStrList)
+        simList = self.model.getSimNameIDs()
+        simList = Controller.replaceEmptyName(simList, "New Simulation")
+        self.view.showSimSelectionList(simList)
 
     """ ------ Add Data Btn Callbacks ------ """
     def addRiderBtnPress(self):
@@ -43,9 +43,12 @@ class Controller(object):
         self.view.showEnvirSelectionList(Controller.replaceEmptyName(self.model.getEnvirNameIDs(), "New Environment"))
 
     def addSimBtnPress(self):
-        # TODO create a new simulation in the model
-        # TODO display the new (empty) simulation in the view
-        print("add Simulation button pressed")
+        # add new simulation and display simulation detail
+        sim = self.model.addSimulation()
+        self.view.showSimDetail(sim.getID(), sim.getStrAttributeDict())
+
+        # update the selection menu to include new simulation
+        self.view.showSimSelectionList(Controller.replaceEmptyName(self.model.getSimNameIDs(), "New Simulation"))
 
     """ ------ Scroll List Btn Callbacks ------ """
     def riderSelectBtnPress(self, riderID: int):
@@ -56,10 +59,9 @@ class Controller(object):
         envir = self.model.getEnvir(envirID)
         self.view.showEnvirDetail(envir.getID(), envir.getStrAttributeDict())
 
-    def simSelectBtnPress(self, id: int):
-        # TODO get simulation from the model
-        # TODO display simulation in the view
-        print(f"sim {id} selected")
+    def simSelectBtnPress(self, simID: int):
+        sim = self.model.getSim(simID)
+        self.view.showSimDetail(sim.getID(), sim.getStrAttributeDict())
 
     """ ------ Save Data Callbacks ------ """
     def saveRiderBtnPress(self, riderID: int=-1, attributeDict: Dict[str, str] = {}):
@@ -90,6 +92,22 @@ class Controller(object):
 
             # show success message
             self.view.showDetailSaveSuccess("Environment saved")
+        except (TypeError,AttributeError) as error:
+            # show error message
+            self.view.showDetailSaveError(error)
+
+    def saveSimBtnPress(self, simID: int=-1, attributeDict: Dict[str, str] = {}):
+        # TODO check that the attributes are good?
+        sim = self.model.getSim(simID)
+
+        try:
+            sim.setProperty(attributeDict)
+
+            # update the subselection menu in case the name changed
+            self.view.showSimSelectionList(Controller.replaceEmptyName(self.model.getSimNameIDs(), "New Simulation"))
+
+            # show success message
+            self.view.showDetailSaveSuccess("Simulation saved")
         except (TypeError,AttributeError) as error:
             # show error message
             self.view.showDetailSaveError(error)

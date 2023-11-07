@@ -239,12 +239,18 @@ class Simulation(object):
         SIMNAME = "simName"
         RIDER = "rider"
         ENVIR = "envir"
+        RIDERLIST = "riderList"
+        ENVIRLIST = "envirList"
+        MODEL = "model"
 
     keyList = [
         attributes.SIMID,
         attributes.SIMNAME,
         attributes.RIDER,
-        attributes.ENVIR
+        attributes.ENVIR,
+        attributes.RIDERLIST,
+        attributes.ENVIRLIST,
+        attributes.MODEL
     ]
 
     def __init__(self,
@@ -252,8 +258,10 @@ class Simulation(object):
                  simName: str = "",
                  rider: Rider = None,
                  envir: Environment = None,
+                 model = None,
                  attributeDict: Dict[str, object] = {}) -> None:
         self.simID = simID
+        self.model = model
         self.simName = simName
         self.rider = rider
         self.envir = envir
@@ -269,6 +277,7 @@ class Simulation(object):
         tmp_simName = self.simName
         tmp_rider = self.rider
         tmp_envir = self.envir
+        tmp_model = self.model
 
         for attribute, value in attributeDict.items():
             try:
@@ -280,17 +289,32 @@ class Simulation(object):
                     case self.attributes.RIDER:
                         if (type(value)==Rider):
                             tmp_rider = value
+                        elif (type(value)==tuple and type(value[1])==int):
+                            if self.model:
+                                tmp_rider = self.model.getRider(value[1])
+                            else:
+                                raise ValueError(f"no model to look up rider '{value}'")
                         else:
                             raise TypeError(f"'{attribute}' must be of Rider type")
                     case self.attributes.ENVIR:
                         if (type(value)==Environment):
                             tmp_envir = value
+                        elif (type(value)==tuple and type(value[1])==int):
+                            if self.model:
+                                tmp_envir = self.model.getEnvir(value[1])
+                            else:
+                                raise ValueError(f"no model to look up environment '{value}'")
                         else:
                             raise TypeError(f"'{attribute}' must be of Environment type")
+                    case self.attributes.MODEL:
+                        if (type(value)==Model):
+                            tmp_model = value
+                        else:
+                            raise TypeError(f"'{attribute}' must be of Model type")
                     case _:
                         raise AttributeError(f"'{attribute}' is not a property of the Simulation class")
-            except (TypeError,ValueError) as e:
-                raise TypeError(f"'{attribute}' entry is not valid")
+            except (TypeError,ValueError) as error:
+                raise TypeError(f"{error}; '{attribute}' entry is not valid")
 
         if not (nullAllowed or tmp_simName):
             raise AttributeError("simName must be set")
@@ -300,6 +324,7 @@ class Simulation(object):
         self.simName = tmp_simName
         self.rider = tmp_rider
         self.envir = tmp_envir
+        self.model = tmp_model
 
     """ ------ getters and setters ------ """
     def setRider(self, rider: Rider):
@@ -326,12 +351,20 @@ class Simulation(object):
     def isSim(self, id: int) -> bool:
         return self.simID == id
 
+    def getRiderList(self) -> List[tuple[str,int]]:
+        return self.model.getRiderNameIDs() if self.model else []
+
+    def getEnvirList(self) -> List[tuple[str,int]]:
+        return self.model.getEnvirNameIDs() if self.model else []
+
     def getStrAttributeDict(self) -> Dict[str,object]:
         attributes = {
             Simulation.attributes.SIMID: self.simID,
             Simulation.attributes.SIMNAME: self.simName,
-            Simulation.attributes.RIDER: str(self.rider.getName()) if self.rider else "",
-            Simulation.attributes.ENVIR: str(self.envir.getName()) if self.envir else ""
+            Simulation.attributes.RIDER: self.rider.getNameID() if self.rider else ("",-1),
+            Simulation.attributes.ENVIR: self.envir.getNameID() if self.envir else ("",-1),
+            Simulation.attributes.RIDERLIST: self.getRiderList(),
+            Simulation.attributes.ENVIRLIST: self.getEnvirList()
         }
         return attributes
 
@@ -547,9 +580,11 @@ class Model(object):
         simID = self.metaData.newSimID()
 
         # make new simulation and append to model list
-        sim = Simulation(simID, attributeDict=attributeDict)
+        sim = Simulation(simID, model=self, attributeDict=attributeDict)
         self.sims.append(sim)
         # TODO maybe sort the list of simulations (or insert above)
+
+        return sim
 
     # get list of name-ID tuples for riders
     def getRiderNameIDs(self) -> List[tuple[str,int]]:
