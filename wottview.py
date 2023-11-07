@@ -568,10 +568,20 @@ class SimulationProfileFrame(ctk.CTkFrame):
             self.setAttribute(attributeDict)
 
         """ ------ set up the geometry ------ """
+        # Name section
+        self.nameFrm = ctk.CTkFrame(self)
+        self.nameFrm.columnconfigure(4, weight=1)
+        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.nameLbl = SectionLabel(self.nameFrm, "Simulation Name")
+        self.nameLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
+        self.simNameEnt = ctk.CTkEntry(self.nameFrm, width=300)
+        self.simNameEnt.insert(0,self.simName)
+        self.simNameEnt.grid(row=1, column=1, padx=(10,25), pady=(10,10))
+
         # Rider and Environment section
         self.selectFrm = ctk.CTkFrame(self)
         self.selectFrm.columnconfigure(4, weight=1)
-        self.selectFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.selectFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
         self.titleLbl = SectionLabel(self.selectFrm, "Rider and Environment")
         self.titleLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.riderLbl = ctk.CTkLabel(self.selectFrm, text="Rider:")
@@ -586,11 +596,11 @@ class SimulationProfileFrame(ctk.CTkFrame):
         # Save Environment button
         self.saveBtn = ctk.CTkButton(self, text="Save", fg_color="green", hover_color="dark green",
                                      command=self.saveSimBtnPress)
-        self.saveBtn.grid(row=3, column=0, padx=(10,10), pady=(10,10))
+        self.saveBtn.grid(row=2, column=0, padx=(10,10), pady=(10,10))
 
         # success/warning alert label
         self.alertLbl = ctk.CTkLabel(self, text="")
-        self.alertLbl.grid(row=4, column=0, padx=(10,10), pady=(5,10))
+        self.alertLbl.grid(row=3, column=0, padx=(10,10), pady=(5,10))
 
     # exactly the same as wottmodel.Environment.setProperty
     def setAttribute(self, attributeDict: Dict[str, object]):
@@ -613,9 +623,15 @@ class SimulationProfileFrame(ctk.CTkFrame):
                     pass
 
     def saveSimBtnPress(self):
+        # update the internal variables
+        self.simName = self.simNameEnt.get()
+        self.rider = self.riderOpt.get()
+        self.envir = self.envirOpt.get()
+
         # send to controller
         if self.controller:
-            attributeDict = {self.attributes.RIDER: self.rider,
+            attributeDict = {self.attributes.SIMNAME: self.simName,
+                             self.attributes.RIDER: self.rider,
                              self.attributes.ENVIR: self.envir}
 
             self.controller.saveSimBtnPress(self.simID, attributeDict)
