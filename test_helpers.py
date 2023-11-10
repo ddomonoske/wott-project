@@ -76,8 +76,8 @@ class BasicController():
         if self.view:
             self.view.showSimSelectionList(simStr)
 
-    def saveRiderBtnPress(self, riderID=-1, attributeDict: Dict[str, str] = {}):
-        print(f"rider {riderID} updated:" + str(attributeDict))
+    def saveRiderBtnPress(self, riderID=-1, **kwargs):
+        print(f"rider {riderID} updated:" + str(kwargs))
 
     def saveEnvirBtnPress(self, envirID=-1, attributeDict: Dict[str, str] = {}):
         print(f"environment {envirID} updated:" + str(attributeDict))

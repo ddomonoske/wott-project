@@ -64,12 +64,12 @@ class Controller(object):
         self.view.showSimDetail(sim.getID(), sim.getStrAttributeDict())
 
     """ ------ Save Data Callbacks ------ """
-    def saveRiderBtnPress(self, riderID: int=-1, attributeDict: Dict[str, str] = {}):
+    def saveRiderBtnPress(self, riderID: int=-1, **kwargs):
         # TODO check that the attributes are good?
         rider = self.model.getRider(riderID)
 
         try:
-            rider.setProperty(attributeDict)
+            rider.setProperty(**kwargs)
 
             # update the subselection menu in case the name changed
             self.view.showRiderSelectionList(Controller.replaceEmptyName(self.model.getRiderNameIDs(), "New Rider"))

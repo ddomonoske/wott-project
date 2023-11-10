@@ -24,42 +24,21 @@ class Rider(object):
         CDA = "CdA"
         POWERRESULTS = "powerResults"
 
-    keyList = [
-        attributes.RIDERID,
-        attributes.FIRSTNAME,
-        attributes.LASTNAME,
-        attributes.WEIGHT,
-        attributes.FTP,
-        attributes.WPRIME,
-        attributes.CDA,
-        attributes.POWERRESULTS
-    ]
-
-    def __init__(self,
-                 riderID: int,
-                 firstName: str = "",
-                 lastName: str = "",
-                 weight: float = None,
-                 FTP: float = None,
-                 wPrime: float = None,
-                 CdA: float = None,
-                 powerResults: Dict[float, float] = {},
-                 attributeDict: Dict[str, object] = {}) -> None:
+    def __init__(self, riderID: int, **kwargs) -> None:
+        # init riderID, everything else gets defaults
         self.riderID = riderID
-        self.firstName = firstName
-        self.lastName = lastName
-        self.weight = weight
-        self.FTP = FTP
-        self.wPrime = wPrime
-        self.CdA = CdA
-        self.powerResults = powerResults
+        self.firstName = ""
+        self.lastName = ""
+        self.weight = None
+        self.FTP = None
+        self.wPrime = None
+        self.CdA = None
+        self.powerResults = {}
 
-        if attributeDict:
-            self.setProperty(attributeDict, nullAllowed=True)
+        self.setProperty(nullAllowed=True, **kwargs)
 
-    # TODO check that the values are appropriate type and value
-    # TODO I think there's a more pythonic way to do this, but it works
-    def setProperty(self, attributeDict: Dict[str, object], nullAllowed: bool = False):
+    # TODO do more thorough value checking
+    def setProperty(self, nullAllowed: bool = False, **kwargs):
         # get the current attributes
         tmp_riderID = self.riderID
         tmp_firstName = self.firstName
@@ -70,9 +49,9 @@ class Rider(object):
         tmp_CdA = self.CdA
         tmp_powerResults = self.powerResults
 
-        for attribute, value in attributeDict.items():
+        for keyword, value in kwargs.items():
             try:
-                match attribute:
+                match keyword:
                     case self.attributes.RIDERID:
                         tmp_riderID = int(value)
                     case self.attributes.FIRSTNAME:
@@ -91,9 +70,9 @@ class Rider(object):
                         # TODO parse power results
                         tmp_powerResults = value
                     case _:
-                        raise AttributeError(f"'{attribute}' is not a property of the Rider class")
+                        raise AttributeError(f"'{keyword}' is not a property of the Rider class")
             except (TypeError,ValueError) as e:
-                raise TypeError(f"'{attribute}' entry is not valid")
+                raise TypeError(f"'{keyword}' entry is not valid")
 
         if not (nullAllowed or tmp_firstName or tmp_lastName):
             raise AttributeError("firstName or lastName must be set")
@@ -146,14 +125,6 @@ class Environment(object):
         AIRDENSITY = "airDensity"
         CRR = "Crr"
         MECHLOSSES = "mechLosses"
-
-    keyList = [
-        attributes.ENVIRID,
-        attributes.ENVIRNAME,
-        attributes.AIRDENSITY,
-        attributes.CRR,
-        attributes.MECHLOSSES
-    ]
 
     def __init__(self,
                  envirID: int,
@@ -242,16 +213,6 @@ class Simulation(object):
         RIDERLIST = "riderList"
         ENVIRLIST = "envirList"
         MODEL = "model"
-
-    keyList = [
-        attributes.SIMID,
-        attributes.SIMNAME,
-        attributes.RIDER,
-        attributes.ENVIR,
-        attributes.RIDERLIST,
-        attributes.ENVIRLIST,
-        attributes.MODEL
-    ]
 
     def __init__(self,
                  simID: int,
@@ -551,12 +512,12 @@ class Model(object):
 
     """ ------ Add/Delete methods ------ """
     # add new rider. Returns the new rider
-    def addRider(self, attributeDict: Dict[str, object] = None) -> Rider:
+    def addRider(self, **kwargs) -> Rider:
         # get next riderID from metadata
         riderID = self.metaData.newRiderID()
 
         # make new rider and append to model list
-        rider = Rider(riderID, attributeDict=attributeDict)
+        rider = Rider(riderID, **kwargs)
         self.riders.append(rider)
         # TODO maybe sort the list of riders (or insert above)
 

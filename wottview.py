@@ -396,7 +396,7 @@ class RiderProfileFrame(ctk.CTkFrame):
                              self.attributes.CDA: self.CdA,
                              self.attributes.POWERRESULTS: self.powerResults}
 
-            self.controller.saveRiderBtnPress(self.riderID, attributeDict)
+            self.controller.saveRiderBtnPress(self.riderID, **attributeDict)
 
     """ ------ alert label methods ------ """
     def hideAlert(self):

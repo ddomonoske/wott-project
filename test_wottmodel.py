@@ -14,7 +14,7 @@ def test_Rider_valid_attributes() -> int:
             Rider.attributes.CDA: 0.19,
             Rider.attributes.WPRIME: 20
         }
-        rider = Rider(0, attributeDict=attributes)
+        rider = Rider(**attributes)
         printSuccess("test_Rider_valid_attributes")
         return 0
     except:
@@ -33,7 +33,7 @@ def test_Rider_invalid_attributes() -> int:
             Rider.attributes.WPRIME: 20,
             "invalidAttribute": 0
         }
-        rider = Rider(1, attributeDict=attributes)
+        rider = Rider(**attributes)
         printFailure("test_Rider_invalid_attributes")
         return 1
     except AttributeError:
@@ -54,14 +54,14 @@ def test_Rider_getStrAttributeDict() -> int:
             Rider.attributes.CDA: 0.19,
             Rider.attributes.WPRIME: 20
         }
-        rider = Rider(0, attributeDict=attributes)
+        rider = Rider(**attributes)
         strDict = rider.getStrAttributeDict()
-        if all(key in strDict for key in Rider.keyList):
+        if all(key in strDict for key in attributes.keys()):
             printSuccess("test_Rider_getStrAttributeDict")
             return 0
         else:
             raise Exception
-    except:
+    except TabError:
         printFailure("test_Rider_getStrAttributeDict")
         return 1
 
@@ -112,7 +112,7 @@ def test_Environment_getStrAttributeDict() -> int:
         }
         envir = Environment(0, attributeDict=attributes)
         strDict = envir.getStrAttributeDict()
-        if all(key in strDict for key in Environment.keyList):
+        if all(key in strDict for key in attributes.keys()):
             printSuccess("test_Environment_getStrAttributeDict")
             return 0
         else:
@@ -161,16 +161,16 @@ def test_Simulation_getStrAttributeDict() -> int:
             Simulation.attributes.SIMID: 1,
             Simulation.attributes.SIMNAME: "Dave Panams IP",
             Simulation.attributes.RIDER: Rider(0, firstName="David"),
-            Simulation.attributes.ENVIR: Environment(0, envirName="Santiago")
+            Simulation.attributes.ENVIR: Environment(8, envirName="San Juan")
         }
         sim = Simulation(0, attributeDict=attributes)
         strDict = sim.getStrAttributeDict()
-        if all(key in strDict for key in Simulation.keyList):
+        if all(key in strDict for key in attributes.keys()):
             printSuccess("test_Simulation_getStrAttributeDict")
             return 0
         else:
             raise Exception
-    except:
+    except TabError:
         printFailure("test_Simulation_getStrAttributeDict")
         return 1
 
