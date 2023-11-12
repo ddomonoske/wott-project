@@ -119,8 +119,7 @@ class Environment(object):
         self.setProperty(nullAllowed=True, **kwargs)
 
     # TODO check that the values are appropriate type and value
-    # TODO I think there's a more pythonic way to do this, but it works
-    def setProperty(self, attributeDict: Dict[str, object], nullAllowed: bool = False):
+    def setProperty(self, nullAllowed: bool = False, **kwargs):
         # get the current attributes
         tmp_envirID = self.envirID
         tmp_envirName = self.envirName
@@ -128,7 +127,7 @@ class Environment(object):
         tmp_Crr = self.Crr
         tmp_mechLosses = self.mechLosses
 
-        for attribute, value in attributeDict.items():
+        for attribute, value in kwargs.items():
             try:
                 match attribute:
                     case EnvirAttributes.ENVIRID:
@@ -181,25 +180,19 @@ class Environment(object):
 
 """ ------ Simulation ------ """
 class Simulation(object):
-    def __init__(self,
-                 simID: int,
-                 simName: str = "",
-                 rider: Rider = None,
-                 envir: Environment = None,
-                 model = None,
-                 attributeDict: Dict[str, object] = {}) -> None:
+    def __init__(self, simID: int, **kwargs) -> None:
         self.simID = simID
-        self.model = model
-        self.simName = simName
-        self.rider = rider
-        self.envir = envir
+        self.simName = ""
+        self.rider = None
+        self.envir = None
+        self.model = None
 
-        if attributeDict:
-            self.setProperty(attributeDict, nullAllowed=True)
+        self.setProperty(nullAllowed=True, **kwargs)
 
         # TODO pacing strategy is a list of something, probably its own object, maybe even its own file
 
-    def setProperty(self, attributeDict: Dict[str, object], nullAllowed: bool = False):
+    # TODO do more thorough value checking
+    def setProperty(self, nullAllowed: bool = False, **kwargs):
         # get the current attributes
         tmp_simID = self.simID
         tmp_simName = self.simName
@@ -207,7 +200,7 @@ class Simulation(object):
         tmp_envir = self.envir
         tmp_model = self.model
 
-        for attribute, value in attributeDict.items():
+        for attribute, value in kwargs.items():
             try:
                 match attribute:
                     case SimAttributes.SIMID:
@@ -491,24 +484,24 @@ class Model(object):
         return rider
 
     # add new environment. Returns the new environment
-    def addEnvironment(self, attributeDict: Dict[str, object] = None) -> Rider:
+    def addEnvironment(self, **kwargs) -> Rider:
         # get next envirID from metadata
         envirID = self.metaData.newEnvirID()
 
         # make new environment and append to model list
-        envir = Environment(envirID, attributeDict=attributeDict)
+        envir = Environment(envirID, **kwargs)
         self.envirs.append(envir)
         # TODO maybe sort the list of environments (or insert above)
 
         return envir
 
     # add new simulation. Returns the new simulation
-    def addSimulation(self, attributeDict: Dict[str, object] = None) -> Simulation:
+    def addSimulation(self, **kwargs) -> Simulation:
         # get next simID from metadata
         simID = self.metaData.newSimID()
 
         # make new simulation and append to model list
-        sim = Simulation(simID, model=self, attributeDict=attributeDict)
+        sim = Simulation(simID, model=self, **kwargs)
         self.sims.append(sim)
         # TODO maybe sort the list of simulations (or insert above)
 

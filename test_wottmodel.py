@@ -62,7 +62,7 @@ def test_Rider_getStrAttributeDict() -> int:
             return 0
         else:
             raise Exception
-    except TabError:
+    except:
         printFailure("test_Rider_getStrAttributeDict")
         return 1
 
@@ -75,7 +75,7 @@ def test_Environment_valid_attributes() -> int:
             EnvirAttributes.CRR: 0.0015,
             EnvirAttributes.MECHLOSSES: 0.02
         }
-        envir = Environment(0, attributeDict=attributes)
+        envir = Environment(**attributes)
         printSuccess("test_Environment_valid_attributes")
         return 0
     except:
@@ -92,7 +92,7 @@ def test_Environment_invalid_attributes() -> int:
             EnvirAttributes.MECHLOSSES: 0.02,
             "invalidAttribute": 0
         }
-        envir = Environment(0, attributeDict=attributes)
+        envir = Environment(**attributes)
         printFailure("test_Environment_invalid_attributes")
         return 1
     except AttributeError:
@@ -111,7 +111,7 @@ def test_Environment_getStrAttributeDict() -> int:
             EnvirAttributes.CRR: 0.0015,
             EnvirAttributes.MECHLOSSES: 0.02
         }
-        envir = Environment(0, attributeDict=attributes)
+        envir = Environment(**attributes)
         strDict = envir.getStrAttributeDict()
         if all(key in strDict for key in attributes.keys()):
             printSuccess("test_Environment_getStrAttributeDict")
@@ -130,7 +130,7 @@ def test_Simulation_valid_attributes() -> int:
             SimAttributes.RIDER: Rider(0, firstName="David"),
             SimAttributes.ENVIR: Environment(0, envirName="Santiago")
         }
-        sim = Simulation(0, attributeDict=attributes)
+        sim = Simulation(**attributes)
         printSuccess("test_Simulation_valid_attributes")
         return 0
     except:
@@ -146,7 +146,7 @@ def test_Simulation_invalid_attributes() -> int:
             SimAttributes.ENVIR: Environment(0, envirName="Santiago"),
             "invalidAttribute": 0
         }
-        sim = Simulation(0, attributeDict=attributes)
+        sim = Simulation(**attributes)
         printFailure("test_Simulation_invalid_attributes")
         return 1
     except AttributeError:
@@ -164,14 +164,14 @@ def test_Simulation_getStrAttributeDict() -> int:
             SimAttributes.RIDER: Rider(0, firstName="David"),
             SimAttributes.ENVIR: Environment(8, envirName="San Juan")
         }
-        sim = Simulation(0, attributeDict=attributes)
+        sim = Simulation(**attributes)
         strDict = sim.getStrAttributeDict()
         if all(key in strDict for key in attributes.keys()):
             printSuccess("test_Simulation_getStrAttributeDict")
             return 0
         else:
             raise Exception
-    except TabError:
+    except:
         printFailure("test_Simulation_getStrAttributeDict")
         return 1
 

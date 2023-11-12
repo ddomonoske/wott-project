@@ -503,7 +503,7 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
                              EnvirAttributes.CRR: self.Crr,
                              EnvirAttributes.MECHLOSSES: self.mechLosses}
 
-            self.controller.saveEnvirBtnPress(self.envirID, attributeDict)
+            self.controller.saveEnvirBtnPress(self.envirID, **attributeDict)
 
     """ ------ alert label methods ------ """
     def hideAlert(self):
@@ -610,7 +610,7 @@ class SimulationProfileFrame(ctk.CTkFrame):
                              SimAttributes.RIDER: self.rider,
                              SimAttributes.ENVIR: self.envir}
 
-            self.controller.saveSimBtnPress(self.simID, attributeDict)
+            self.controller.saveSimBtnPress(self.simID, **attributeDict)
 
     """ ------ alert label methods ------ """
     def hideAlert(self):

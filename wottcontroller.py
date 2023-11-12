@@ -80,12 +80,12 @@ class Controller(object):
             # show error message
             self.view.showDetailSaveError(error)
 
-    def saveEnvirBtnPress(self, envirID: int=-1, attributeDict: Dict[str, str] = {}):
+    def saveEnvirBtnPress(self, envirID: int=-1, **kwargs):
         # TODO check that the attributes are good?
         envir = self.model.getEnvir(envirID)
 
         try:
-            envir.setProperty(attributeDict)
+            envir.setProperty(**kwargs)
 
             # update the subselection menu in case the name changed
             self.view.showEnvirSelectionList(Controller.replaceEmptyName(self.model.getEnvirNameIDs(), "New Environment"))
@@ -96,12 +96,12 @@ class Controller(object):
             # show error message
             self.view.showDetailSaveError(error)
 
-    def saveSimBtnPress(self, simID: int=-1, attributeDict: Dict[str, str] = {}):
+    def saveSimBtnPress(self, simID: int=-1, **kwargs):
         # TODO check that the attributes are good?
         sim = self.model.getSim(simID)
 
         try:
-            sim.setProperty(attributeDict)
+            sim.setProperty(**kwargs)
 
             # update the subselection menu in case the name changed
             self.view.showSimSelectionList(Controller.replaceEmptyName(self.model.getSimNameIDs(), "New Simulation"))
