@@ -2,6 +2,7 @@ import tkinter as tk
 import customtkinter as ctk
 from typing import List, Dict, Callable
 from functools import partial
+from wottattributes import *
 
 class View(ctk.CTkFrame):
     def __init__(self, parent):
@@ -254,17 +255,6 @@ class SimSelectFrame(ctk.CTkFrame):
 
 # Rider Profiles main content frame
 class RiderProfileFrame(ctk.CTkFrame):
-    # same as wottmodel.Rider.attributes
-    class attributes:
-        RIDERID = "riderID"
-        FIRSTNAME = "firstName"
-        LASTNAME = "lastName"
-        WEIGHT = "weight"
-        FTP = "FTP"
-        WPRIME = "wPrime"
-        CDA = "CdA"
-        POWERRESULTS = "powerResults"
-
     def __init__(self, parent, controller = None,
                  riderID: int = -1,
                  firstName: str = "",
@@ -357,21 +347,21 @@ class RiderProfileFrame(ctk.CTkFrame):
         for attribute, value in attributeDict.items():
             match attribute:
                 # TODO change all of these to
-                case self.attributes.RIDERID:
+                case RiderAttributes.RIDERID:
                     self.riderID = int(value)
-                case self.attributes.FIRSTNAME:
+                case RiderAttributes.FIRSTNAME:
                     self.firstName = str(value)
-                case self.attributes.LASTNAME:
+                case RiderAttributes.LASTNAME:
                     self.lastName = str(value)
-                case self.attributes.WEIGHT:
+                case RiderAttributes.WEIGHT:
                     self.weight = str(value)
-                case self.attributes.FTP:
+                case RiderAttributes.FTP:
                     self.FTP = str(value)
-                case self.attributes.WPRIME:
+                case RiderAttributes.WPRIME:
                     self.wPrime = str(value)
-                case self.attributes.CDA:
+                case RiderAttributes.CDA:
                     self.CdA = str(value)
-                case self.attributes.POWERRESULTS:
+                case RiderAttributes.POWERRESULTS:
                     self.powerResults = value
                 case _:
                     pass
@@ -388,13 +378,13 @@ class RiderProfileFrame(ctk.CTkFrame):
 
         # send to controller
         if self.controller:
-            attributeDict = {self.attributes.FIRSTNAME: self.firstName,
-                             self.attributes.LASTNAME: self.lastName,
-                             self.attributes.WEIGHT: self.weight,
-                             self.attributes.FTP: self.FTP,
-                             self.attributes.WPRIME: self.wPrime,
-                             self.attributes.CDA: self.CdA,
-                             self.attributes.POWERRESULTS: self.powerResults}
+            attributeDict = {RiderAttributes.FIRSTNAME: self.firstName,
+                             RiderAttributes.LASTNAME: self.lastName,
+                             RiderAttributes.WEIGHT: self.weight,
+                             RiderAttributes.FTP: self.FTP,
+                             RiderAttributes.WPRIME: self.wPrime,
+                             RiderAttributes.CDA: self.CdA,
+                             RiderAttributes.POWERRESULTS: self.powerResults}
 
             self.controller.saveRiderBtnPress(self.riderID, **attributeDict)
 
@@ -412,14 +402,6 @@ class RiderProfileFrame(ctk.CTkFrame):
 
 # Environment Profiles main content frame
 class EnvironmentProfileFrame(ctk.CTkFrame):
-    # same as wottmodel.Environment.attributes
-    class attributes:
-        ENVIRID = "envirID"
-        ENVIRNAME = "envirName"
-        AIRDENSITY = "airDensity"
-        CRR = "Crr"
-        MECHLOSSES = "mechLosses"
-
     def __init__(self, parent, controller = None,
                  envirID: int = -1,
                  envirName: str = "",
@@ -494,15 +476,15 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
         for attribute, value in attributeDict.items():
             match attribute:
                 # TODO change all of these to
-                case self.attributes.ENVIRID:
+                case EnvirAttributes.ENVIRID:
                     self.envirID = int(value)
-                case self.attributes.ENVIRNAME:
+                case EnvirAttributes.ENVIRNAME:
                     self.envirName = str(value)
-                case self.attributes.AIRDENSITY:
+                case EnvirAttributes.AIRDENSITY:
                     self.airDensity = str(value)
-                case self.attributes.CRR:
+                case EnvirAttributes.CRR:
                     self.Crr = str(value)
-                case self.attributes.MECHLOSSES:
+                case EnvirAttributes.MECHLOSSES:
                     self.mechLosses = str(value)
                 case _:
                     pass
@@ -516,10 +498,10 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
 
         # send to controller
         if self.controller:
-            attributeDict = {self.attributes.ENVIRNAME: self.envirName,
-                             self.attributes.AIRDENSITY: self.airDensity,
-                             self.attributes.CRR: self.Crr,
-                             self.attributes.MECHLOSSES: self.mechLosses}
+            attributeDict = {EnvirAttributes.ENVIRNAME: self.envirName,
+                             EnvirAttributes.AIRDENSITY: self.airDensity,
+                             EnvirAttributes.CRR: self.Crr,
+                             EnvirAttributes.MECHLOSSES: self.mechLosses}
 
             self.controller.saveEnvirBtnPress(self.envirID, attributeDict)
 
@@ -537,18 +519,6 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
 
 # Simulation Profiles main content frame
 class SimulationProfileFrame(ctk.CTkFrame):
-    """
-    NOT THE SAME as wottmodel.Simulation.attributes
-    TODO finish this. It's mostly still just copied from EnvironmentProfileFrame
-    """
-    class attributes:
-        SIMID = "simID"
-        SIMNAME = "simName"
-        RIDER = "rider"
-        ENVIR = "envir"
-        RIDERLIST = "riderList"
-        ENVIRLIST = "envirList"
-
     def __init__(self, parent, controller = None,
                  simID: int = -1,
                  simName: str = "",
@@ -613,17 +583,17 @@ class SimulationProfileFrame(ctk.CTkFrame):
         for attribute, value in attributeDict.items():
             match attribute:
                 # TODO change all of these to
-                case self.attributes.SIMID:
+                case SimAttributes.SIMID:
                     self.simID = int(value)
-                case self.attributes.SIMNAME:
+                case SimAttributes.SIMNAME:
                     self.simName = str(value)
-                case self.attributes.RIDER:
+                case SimAttributes.RIDER:
                     self.rider = value
-                case self.attributes.ENVIR:
+                case SimAttributes.ENVIR:
                     self.envir = value
-                case self.attributes.RIDERLIST:
+                case SimAttributes.RIDERLIST:
                     self.riderList = value
-                case self.attributes.ENVIRLIST:
+                case SimAttributes.ENVIRLIST:
                     self.envirList = value
                 case _:
                     pass
@@ -636,9 +606,9 @@ class SimulationProfileFrame(ctk.CTkFrame):
 
         # send to controller
         if self.controller:
-            attributeDict = {self.attributes.SIMNAME: self.simName,
-                             self.attributes.RIDER: self.rider,
-                             self.attributes.ENVIR: self.envir}
+            attributeDict = {SimAttributes.SIMNAME: self.simName,
+                             SimAttributes.RIDER: self.rider,
+                             SimAttributes.ENVIR: self.envir}
 
             self.controller.saveSimBtnPress(self.simID, attributeDict)
 

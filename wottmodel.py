@@ -1,6 +1,7 @@
 import pickle
 from typing import List, Dict
 from pathlib import Path
+from wottattributes import *
 
 
 # TODO check file stuff
@@ -13,17 +14,6 @@ metaFile = "meta_data"
 
 """ ------ Rider ------ """
 class Rider(object):
-    # valid keys for setting Rider attributes
-    class attributes:
-        RIDERID = "riderID"
-        FIRSTNAME = "firstName"
-        LASTNAME = "lastName"
-        WEIGHT = "weight"
-        FTP = "FTP"
-        WPRIME = "wPrime"
-        CDA = "CdA"
-        POWERRESULTS = "powerResults"
-
     def __init__(self, riderID: int, **kwargs) -> None:
         # init riderID, everything else gets defaults
         self.riderID = riderID
@@ -52,21 +42,21 @@ class Rider(object):
         for keyword, value in kwargs.items():
             try:
                 match keyword:
-                    case self.attributes.RIDERID:
+                    case RiderAttributes.RIDERID:
                         tmp_riderID = int(value)
-                    case self.attributes.FIRSTNAME:
+                    case RiderAttributes.FIRSTNAME:
                         tmp_firstName = str(value)
-                    case self.attributes.LASTNAME:
+                    case RiderAttributes.LASTNAME:
                         tmp_lastName = str(value)
-                    case self.attributes.WEIGHT:
+                    case RiderAttributes.WEIGHT:
                         tmp_weight = float(value)
-                    case self.attributes.FTP:
+                    case RiderAttributes.FTP:
                         tmp_FTP = float(value)
-                    case self.attributes.WPRIME:
+                    case RiderAttributes.WPRIME:
                         tmp_wPrime = float(value)
-                    case self.attributes.CDA:
+                    case RiderAttributes.CDA:
                         tmp_CdA = float(value)
-                    case self.attributes.POWERRESULTS:
+                    case RiderAttributes.POWERRESULTS:
                         # TODO parse power results
                         tmp_powerResults = value
                     case _:
@@ -105,42 +95,28 @@ class Rider(object):
 
     def getStrAttributeDict(self) -> Dict[str,object]:
         attributes = {
-            Rider.attributes.RIDERID: self.riderID,
-            Rider.attributes.FIRSTNAME: self.firstName,
-            Rider.attributes.LASTNAME: self.lastName,
-            Rider.attributes.WEIGHT: str(self.weight) if self.weight else "",
-            Rider.attributes.FTP: str(self.FTP) if self.FTP else "",
-            Rider.attributes.CDA: str(self.CdA) if self.CdA else "",
-            Rider.attributes.WPRIME: str(self.wPrime) if self.wPrime else "",
-            Rider.attributes.POWERRESULTS: self.powerResults
+            RiderAttributes.RIDERID: self.riderID,
+            RiderAttributes.FIRSTNAME: self.firstName,
+            RiderAttributes.LASTNAME: self.lastName,
+            RiderAttributes.WEIGHT: str(self.weight) if self.weight else "",
+            RiderAttributes.FTP: str(self.FTP) if self.FTP else "",
+            RiderAttributes.CDA: str(self.CdA) if self.CdA else "",
+            RiderAttributes.WPRIME: str(self.wPrime) if self.wPrime else "",
+            RiderAttributes.POWERRESULTS: self.powerResults
         }
         return attributes
 
 """ ------ Environment ------ """
 class Environment(object):
-    # valid keys for setting Rider attributes
-    class attributes:
-        ENVIRID = "envirID"
-        ENVIRNAME = "envirName"
-        AIRDENSITY = "airDensity"
-        CRR = "Crr"
-        MECHLOSSES = "mechLosses"
-
-    def __init__(self,
-                 envirID: int,
-                 envirName: str = "",
-                 airDensity: float = None,
-                 Crr: float = None,
-                 mechLosses: float = None,
-                 attributeDict: Dict[str, object] = {}) -> None:
+    def __init__(self, envirID: int, **kwargs) -> None:
+        # init envirID, everything else gets defaults
         self.envirID = envirID
-        self.envirName = envirName
-        self.airDensity = airDensity
-        self.Crr = Crr
-        self.mechLosses = mechLosses
+        self.envirName = ""
+        self.airDensity = None
+        self.Crr = None
+        self.mechLosses = None
 
-        if attributeDict:
-            self.setProperty(attributeDict, nullAllowed=True)
+        self.setProperty(nullAllowed=True, **kwargs)
 
     # TODO check that the values are appropriate type and value
     # TODO I think there's a more pythonic way to do this, but it works
@@ -155,15 +131,15 @@ class Environment(object):
         for attribute, value in attributeDict.items():
             try:
                 match attribute:
-                    case self.attributes.ENVIRID:
+                    case EnvirAttributes.ENVIRID:
                         tmp_envirID = int(value)
-                    case self.attributes.ENVIRNAME:
+                    case EnvirAttributes.ENVIRNAME:
                         tmp_envirName = str(value)
-                    case self.attributes.AIRDENSITY:
+                    case EnvirAttributes.AIRDENSITY:
                         tmp_airDensity = float(value)
-                    case self.attributes.CRR:
+                    case EnvirAttributes.CRR:
                         tmp_Crr = float(value)
-                    case self.attributes.MECHLOSSES:
+                    case EnvirAttributes.MECHLOSSES:
                         tmp_mechLosses = float(value)
                     case _:
                         raise AttributeError(f"'{attribute}' is not a property of the Environment class")
@@ -195,25 +171,16 @@ class Environment(object):
 
     def getStrAttributeDict(self) -> Dict[str,object]:
         attributes = {
-            Environment.attributes.ENVIRID: self.envirID,
-            Environment.attributes.ENVIRNAME: self.envirName,
-            Environment.attributes.AIRDENSITY: str(self.airDensity) if self.airDensity else "",
-            Environment.attributes.CRR: str(self.Crr) if self.Crr else "",
-            Environment.attributes.MECHLOSSES: str(self.mechLosses) if self.mechLosses else ""
+            EnvirAttributes.ENVIRID: self.envirID,
+            EnvirAttributes.ENVIRNAME: self.envirName,
+            EnvirAttributes.AIRDENSITY: str(self.airDensity) if self.airDensity else "",
+            EnvirAttributes.CRR: str(self.Crr) if self.Crr else "",
+            EnvirAttributes.MECHLOSSES: str(self.mechLosses) if self.mechLosses else ""
         }
         return attributes
 
 """ ------ Simulation ------ """
 class Simulation(object):
-    class attributes:
-        SIMID = "simID"
-        SIMNAME = "simName"
-        RIDER = "rider"
-        ENVIR = "envir"
-        RIDERLIST = "riderList"
-        ENVIRLIST = "envirList"
-        MODEL = "model"
-
     def __init__(self,
                  simID: int,
                  simName: str = "",
@@ -243,11 +210,11 @@ class Simulation(object):
         for attribute, value in attributeDict.items():
             try:
                 match attribute:
-                    case self.attributes.SIMID:
+                    case SimAttributes.SIMID:
                         tmp_simID = int(value)
-                    case self.attributes.SIMNAME:
+                    case SimAttributes.SIMNAME:
                         tmp_simName = str(value)
-                    case self.attributes.RIDER:
+                    case SimAttributes.RIDER:
                         if (type(value)==Rider):
                             tmp_rider = value
                         elif (type(value)==tuple and type(value[1])==int):
@@ -257,7 +224,7 @@ class Simulation(object):
                                 raise ValueError(f"no model to look up rider '{value}'")
                         else:
                             raise TypeError(f"'{attribute}' must be of Rider type")
-                    case self.attributes.ENVIR:
+                    case SimAttributes.ENVIR:
                         if (type(value)==Environment):
                             tmp_envir = value
                         elif (type(value)==tuple and type(value[1])==int):
@@ -267,7 +234,7 @@ class Simulation(object):
                                 raise ValueError(f"no model to look up environment '{value}'")
                         else:
                             raise TypeError(f"'{attribute}' must be of Environment type")
-                    case self.attributes.MODEL:
+                    case SimAttributes.MODEL:
                         if (type(value)==Model):
                             tmp_model = value
                         else:
@@ -320,12 +287,12 @@ class Simulation(object):
 
     def getStrAttributeDict(self) -> Dict[str,object]:
         attributes = {
-            Simulation.attributes.SIMID: self.simID,
-            Simulation.attributes.SIMNAME: self.simName,
-            Simulation.attributes.RIDER: self.rider.getNameID() if self.rider else ("",-1),
-            Simulation.attributes.ENVIR: self.envir.getNameID() if self.envir else ("",-1),
-            Simulation.attributes.RIDERLIST: self.getRiderList(),
-            Simulation.attributes.ENVIRLIST: self.getEnvirList()
+            SimAttributes.SIMID: self.simID,
+            SimAttributes.SIMNAME: self.simName,
+            SimAttributes.RIDER: self.rider.getNameID() if self.rider else ("",-1),
+            SimAttributes.ENVIR: self.envir.getNameID() if self.envir else ("",-1),
+            SimAttributes.RIDERLIST: self.getRiderList(),
+            SimAttributes.ENVIRLIST: self.getEnvirList()
         }
         return attributes
 
