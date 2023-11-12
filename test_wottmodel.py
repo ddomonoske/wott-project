@@ -1,20 +1,21 @@
 from wottmodel import *
 from pathlib import Path
 from test_helpers import *
+from wottattributes import *
 
 
 def test_Rider_valid_attributes() -> int:
     try:
         attributes = {
-            Rider.attributes.RIDERID: 1,
-            Rider.attributes.FIRSTNAME: "David",
-            Rider.attributes.LASTNAME: "Domonoske",
-            Rider.attributes.WEIGHT: 90,
-            Rider.attributes.FTP: 380,
-            Rider.attributes.CDA: 0.19,
-            Rider.attributes.WPRIME: 20
+            RiderAttributes.RIDERID: 1,
+            RiderAttributes.FIRSTNAME: "David",
+            RiderAttributes.LASTNAME: "Domonoske",
+            RiderAttributes.WEIGHT: 90,
+            RiderAttributes.FTP: 380,
+            RiderAttributes.CDA: 0.19,
+            RiderAttributes.WPRIME: 20
         }
-        rider = Rider(0, attributeDict=attributes)
+        rider = Rider(**attributes)
         printSuccess("test_Rider_valid_attributes")
         return 0
     except:
@@ -24,16 +25,16 @@ def test_Rider_valid_attributes() -> int:
 def test_Rider_invalid_attributes() -> int:
     try:
         attributes = {
-            Rider.attributes.RIDERID: 1,
-            Rider.attributes.FIRSTNAME: "David",
-            Rider.attributes.LASTNAME: "Domonoske",
-            Rider.attributes.WEIGHT: 90,
-            Rider.attributes.FTP: 380,
-            Rider.attributes.CDA: 0.19,
-            Rider.attributes.WPRIME: 20,
+            RiderAttributes.RIDERID: 1,
+            RiderAttributes.FIRSTNAME: "David",
+            RiderAttributes.LASTNAME: "Domonoske",
+            RiderAttributes.WEIGHT: 90,
+            RiderAttributes.FTP: 380,
+            RiderAttributes.CDA: 0.19,
+            RiderAttributes.WPRIME: 20,
             "invalidAttribute": 0
         }
-        rider = Rider(1, attributeDict=attributes)
+        rider = Rider(**attributes)
         printFailure("test_Rider_invalid_attributes")
         return 1
     except AttributeError:
@@ -46,17 +47,17 @@ def test_Rider_invalid_attributes() -> int:
 def test_Rider_getStrAttributeDict() -> int:
     try:
         attributes = {
-            Rider.attributes.RIDERID: 1,
-            Rider.attributes.FIRSTNAME: "David",
-            Rider.attributes.LASTNAME: "Domonoske",
-            Rider.attributes.WEIGHT: 90,
-            Rider.attributes.FTP: 380,
-            Rider.attributes.CDA: 0.19,
-            Rider.attributes.WPRIME: 20
+            RiderAttributes.RIDERID: 1,
+            RiderAttributes.FIRSTNAME: "David",
+            RiderAttributes.LASTNAME: "Domonoske",
+            RiderAttributes.WEIGHT: 90,
+            RiderAttributes.FTP: 380,
+            RiderAttributes.CDA: 0.19,
+            RiderAttributes.WPRIME: 20
         }
-        rider = Rider(0, attributeDict=attributes)
+        rider = Rider(**attributes)
         strDict = rider.getStrAttributeDict()
-        if all(key in strDict for key in Rider.keyList):
+        if all(key in strDict for key in attributes.keys()):
             printSuccess("test_Rider_getStrAttributeDict")
             return 0
         else:
@@ -68,13 +69,13 @@ def test_Rider_getStrAttributeDict() -> int:
 def test_Environment_valid_attributes() -> int:
     try:
         attributes = {
-            Environment.attributes.ENVIRID: 1,
-            Environment.attributes.ENVIRNAME: "Panam Games Santiago",
-            Environment.attributes.AIRDENSITY: "1.105",
-            Environment.attributes.CRR: 0.0015,
-            Environment.attributes.MECHLOSSES: 0.02
+            EnvirAttributes.ENVIRID: 1,
+            EnvirAttributes.ENVIRNAME: "Panam Games Santiago",
+            EnvirAttributes.AIRDENSITY: "1.105",
+            EnvirAttributes.CRR: 0.0015,
+            EnvirAttributes.MECHLOSSES: 0.02
         }
-        envir = Environment(0, attributeDict=attributes)
+        envir = Environment(**attributes)
         printSuccess("test_Environment_valid_attributes")
         return 0
     except:
@@ -84,14 +85,14 @@ def test_Environment_valid_attributes() -> int:
 def test_Environment_invalid_attributes() -> int:
     try:
         attributes = {
-            Environment.attributes.ENVIRID: 1,
-            Environment.attributes.ENVIRNAME: "Panam Games Santiago",
-            Environment.attributes.AIRDENSITY: "1.105",
-            Environment.attributes.CRR: 0.0015,
-            Environment.attributes.MECHLOSSES: 0.02,
+            EnvirAttributes.ENVIRID: 1,
+            EnvirAttributes.ENVIRNAME: "Panam Games Santiago",
+            EnvirAttributes.AIRDENSITY: "1.105",
+            EnvirAttributes.CRR: 0.0015,
+            EnvirAttributes.MECHLOSSES: 0.02,
             "invalidAttribute": 0
         }
-        envir = Environment(0, attributeDict=attributes)
+        envir = Environment(**attributes)
         printFailure("test_Environment_invalid_attributes")
         return 1
     except AttributeError:
@@ -104,15 +105,15 @@ def test_Environment_invalid_attributes() -> int:
 def test_Environment_getStrAttributeDict() -> int:
     try:
         attributes = {
-            Environment.attributes.ENVIRID: 1,
-            Environment.attributes.ENVIRNAME: "Panam Games Santiago",
-            Environment.attributes.AIRDENSITY: "1.105",
-            Environment.attributes.CRR: 0.0015,
-            Environment.attributes.MECHLOSSES: 0.02
+            EnvirAttributes.ENVIRID: 1,
+            EnvirAttributes.ENVIRNAME: "Panam Games Santiago",
+            EnvirAttributes.AIRDENSITY: "1.105",
+            EnvirAttributes.CRR: 0.0015,
+            EnvirAttributes.MECHLOSSES: 0.02
         }
-        envir = Environment(0, attributeDict=attributes)
+        envir = Environment(**attributes)
         strDict = envir.getStrAttributeDict()
-        if all(key in strDict for key in Environment.keyList):
+        if all(key in strDict for key in attributes.keys()):
             printSuccess("test_Environment_getStrAttributeDict")
             return 0
         else:
@@ -124,12 +125,12 @@ def test_Environment_getStrAttributeDict() -> int:
 def test_Simulation_valid_attributes() -> int:
     try:
         attributes = {
-            Simulation.attributes.SIMID: 1,
-            Simulation.attributes.SIMNAME: "Dave Panams IP",
-            Simulation.attributes.RIDER: Rider(0, firstName="David"),
-            Simulation.attributes.ENVIR: Environment(0, envirName="Santiago")
+            SimAttributes.SIMID: 1,
+            SimAttributes.SIMNAME: "Dave Panams IP",
+            SimAttributes.RIDER: Rider(0, firstName="David"),
+            SimAttributes.ENVIR: Environment(0, envirName="Santiago")
         }
-        sim = Simulation(0, attributeDict=attributes)
+        sim = Simulation(**attributes)
         printSuccess("test_Simulation_valid_attributes")
         return 0
     except:
@@ -139,13 +140,13 @@ def test_Simulation_valid_attributes() -> int:
 def test_Simulation_invalid_attributes() -> int:
     try:
         attributes = {
-            Simulation.attributes.SIMID: 1,
-            Simulation.attributes.SIMNAME: "Dave Panams IP",
-            Simulation.attributes.RIDER: Rider(0, firstName="David"),
-            Simulation.attributes.ENVIR: Environment(0, envirName="Santiago"),
+            SimAttributes.SIMID: 1,
+            SimAttributes.SIMNAME: "Dave Panams IP",
+            SimAttributes.RIDER: Rider(0, firstName="David"),
+            SimAttributes.ENVIR: Environment(0, envirName="Santiago"),
             "invalidAttribute": 0
         }
-        sim = Simulation(0, attributeDict=attributes)
+        sim = Simulation(**attributes)
         printFailure("test_Simulation_invalid_attributes")
         return 1
     except AttributeError:
@@ -158,14 +159,14 @@ def test_Simulation_invalid_attributes() -> int:
 def test_Simulation_getStrAttributeDict() -> int:
     try:
         attributes = {
-            Simulation.attributes.SIMID: 1,
-            Simulation.attributes.SIMNAME: "Dave Panams IP",
-            Simulation.attributes.RIDER: Rider(0, firstName="David"),
-            Simulation.attributes.ENVIR: Environment(0, envirName="Santiago")
+            SimAttributes.SIMID: 1,
+            SimAttributes.SIMNAME: "Dave Panams IP",
+            SimAttributes.RIDER: Rider(0, firstName="David"),
+            SimAttributes.ENVIR: Environment(8, envirName="San Juan")
         }
-        sim = Simulation(0, attributeDict=attributes)
+        sim = Simulation(**attributes)
         strDict = sim.getStrAttributeDict()
-        if all(key in strDict for key in Simulation.keyList):
+        if all(key in strDict for key in attributes.keys()):
             printSuccess("test_Simulation_getStrAttributeDict")
             return 0
         else:
