@@ -25,5 +25,6 @@ class SimAttributes(object):
     SIMNAME = "simName"
     RIDER = "rider"
     ENVIR = "envir"
+    MODEL = "model"
     RIDERLIST = "riderList"
     ENVIRLIST = "envirList"
