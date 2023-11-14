@@ -32,11 +32,37 @@ def test_IPCalculator_calcPowerForce() -> int:
         printFailure(inspect.currentframe().f_code.co_name)
         return 1
 
-test_list = [test_IPCalculator_calcPowerForce]
+def test_IPCalculator_solve() -> int:
+    try:
+        attributes = {
+            "CdA": 0.195,
+            "airDensity": 1.12,
+            "massKG": 100,
+            "Crr": 0.002,
+            "mechLoss": 0.02,
+            "powerPlan": [(0,500),
+                          (1,1000),
+                          (3,1200),
+                          (7,1000),
+                          (15,800),
+                          (20,700),
+                          (25,500)]
+        }
+        ipc = IPCalculator(**attributes)
+        ipc.solve()
+        ipc.plot()
+        printSuccess(inspect.currentframe().f_code.co_name)
+        return 0
+    except TabError:
+        printFailure(inspect.currentframe().f_code.co_name)
+        return 1
+
+test_list = [test_IPCalculator_calcPowerForce,
+             test_IPCalculator_solve]
 
 # run all tests
 def main():
-    print("Running wottcalcs tests")
+    print("wottcalcs tests:")
     failedTests = 0
     for test in test_list:
         if test():

@@ -1,11 +1,12 @@
 from typing import List
-from numpy import linspace
+import numpy as np
 from scipy.integrate import odeint
-import matplotlib.pyplot as plot
+from scipy.constants import g
+import matplotlib.pyplot as plt
 
 
 class IPCalculator(object):
-    GRAVITY = 9.81
+    GRAVITY = 9.80665
 
     def __init__(self,
                  CdA: float,
@@ -15,7 +16,7 @@ class IPCalculator(object):
                  mechLoss: float,
                  powerPlan: List[tuple[float,float]],
                  maxForce: float = 200,
-                 distance: float = 4000,
+                 raceDistance: float = 4000,
                  dt: float = 1,
                  v0: float = 0) -> None:
         self.CdA = CdA
@@ -25,41 +26,55 @@ class IPCalculator(object):
         self.mechLoss = mechLoss
         self.powerPlan = powerPlan
         self.maxForce = maxForce
-        self.distance = distance
+        self.raceDistance = raceDistance
         self.dt = dt
         self.v0 = v0
+        self.position = None
+        self.velovity = None
 
-    # break into chunks because we're solving until a position is reached, not a time
-    def solve(self,
-              maxT: float = 480,
-              chunkT: float = 10) -> None:
-        # TODO probably initialize my output arrays here
-        # TODO probably initialize chunking things too
-        while (True):
-            # TODO set up things for this chunk
-            # create time vector for this chunk
-            t = self.timeVector()
+    # calculate velocity and position for race
+    def solve(self, tMax: float = 300) -> None:
+        n = tMax * self.dt
+        self.time = np.linspace(0, tMax, n, endpoint=False)
 
-            # TODO solve for next chunk and add/append to output arrays
+        # solve ode for velocity, integrate for position
+        self.velocity = odeint(self.dvdt, self.v0, self.time)
+        self.position = np.cumsum(self.velocity) * self.dt
 
-            # TODO exit if we've reached self.distance or maxT
+        # trim to when race is finished
+        index = np.argmax(self.position > self.raceDistance)
+        self.time = self.time[:index]
+        self.velocity = self.velocity[:index]
+        self.position = self.position[:index]
 
-        # TODO return output array(s)
+    # TODO make this GUI-friendly
+    def plot(self):
+        plt.figure()
+        plt.subplot(2,2,1)
+        plt.plot(self.time, self.velocity*3.6)
+        plt.xlabel('time (s)')
+        plt.ylabel('velocity (kph)')
+        plt.grid()
 
+        plt.subplot(2,2,2)
+        plt.plot(self.position, self.velocity*3.6)
+        plt.xlabel('distance (m)')
+        plt.ylabel('velocity (kph)')
+        plt.grid()
 
-    def timeVector(self, start: float, stop: float, dt: float = 1.0):
-        n = int((stop - start) / dt)
-        return linspace(start, stop, n, endpoint=False)
+        plt.subplot(2,2,3)
+        plt.plot(self.position, self.time)
+        plt.xlabel('distance (m)')
+        plt.ylabel('time (s)')
+        plt.grid()
 
-    def powerVector(self, timeVector, powerPlan: List[tuple[float,float]]):
-        times, powers = zip(*powerPlan)
-        # TODO create an array of powers for each time in timeVector, as indicated by the powerPlan
+        plt.show()
 
     def dvdt(self, v: float, t: float) -> float:
         # sum up all forces
         Frr = -1*(self.GRAVITY*self.massKG*self.Crr)    # rolling resistance
         Fad = -1*(self.CdA*self.airDensity*(v**2))/2    # aerodynamic drag
-        Fp = self.calcPowerForce(self, v, t) * (1-self.mechLoss) # pedaling force - mechanical losses
+        Fp = self.calcPowerForce(v, t) * (1-self.mechLoss) # pedaling force - mechanical losses
 
         return ((Frr + Fad + Fp) / self.massKG)
 
@@ -68,11 +83,9 @@ class IPCalculator(object):
         times, powers = zip(*self.powerPlan)
         power = powers[-1]
         for i,time in enumerate(times):
-            # print(f"t={t}, time={time}")
             if t < time:
                 power = powers[i-1]
                 break
-        # print(f"t={t}, v={v}, p={power}")
         # limit force to max force
         if (self.maxForce*v < power):
             return self.maxForce
