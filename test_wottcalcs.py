@@ -50,7 +50,6 @@ def test_IPCalculator_solve() -> int:
         }
         ipc = IPCalculator(**attributes)
         ipc.solve()
-        ipc.plot()
         printSuccess(inspect.currentframe().f_code.co_name)
         return 0
     except TabError:

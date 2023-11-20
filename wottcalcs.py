@@ -1,8 +1,6 @@
 from typing import List
 import numpy as np
 from scipy.integrate import odeint
-from scipy.constants import g
-import matplotlib.pyplot as plt
 
 
 class IPCalculator(object):
@@ -47,29 +45,6 @@ class IPCalculator(object):
         self.velocity = self.velocity[:index]
         self.position = self.position[:index]
 
-    # TODO make this GUI-friendly
-    def plot(self):
-        plt.figure()
-        plt.subplot(2,2,1)
-        plt.plot(self.time, self.velocity*3.6)
-        plt.xlabel('time (s)')
-        plt.ylabel('velocity (kph)')
-        plt.grid()
-
-        plt.subplot(2,2,2)
-        plt.plot(self.position, self.velocity*3.6)
-        plt.xlabel('distance (m)')
-        plt.ylabel('velocity (kph)')
-        plt.grid()
-
-        plt.subplot(2,2,3)
-        plt.plot(self.position, self.time)
-        plt.xlabel('distance (m)')
-        plt.ylabel('time (s)')
-        plt.grid()
-
-        plt.show()
-
     def dvdt(self, v: float, t: float) -> float:
         # sum up all forces
         Frr = -1*(self.GRAVITY*self.massKG*self.Crr)    # rolling resistance
@@ -78,6 +53,10 @@ class IPCalculator(object):
 
         return ((Frr + Fad + Fp) / self.massKG)
 
+    """
+    Calculate the pedaling force from speed and power. The maxForce limit is used to avoid impossibly
+    high forces when calculating at low velocities.
+    """
     def calcPowerForce(self, v: float, t: float) -> float:
         # look up power according to plan
         times, powers = zip(*self.powerPlan)
