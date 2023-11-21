@@ -248,6 +248,9 @@ class Simulation(object):
         self.model = tmp_model
 
     """ ------ getters and setters ------ """
+    def setModel(self, model):
+        self.model = model
+
     def setRider(self, rider: Rider):
         self.rider = rider
 
@@ -319,6 +322,10 @@ class Model(object):
         self.storageDir = Path(storageDir)
 
         self.loadModel()
+
+        # update the model stored in sims to self
+        for sim in self.sims:
+            sim.setModel(self)
 
         # TODO should I have a save flag that represents if the data has been changed since it was last saved?
 
