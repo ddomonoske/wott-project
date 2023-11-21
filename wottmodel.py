@@ -248,6 +248,9 @@ class Simulation(object):
         self.model = tmp_model
 
     """ ------ getters and setters ------ """
+    def setModel(self, model):
+        self.model = model
+
     def setRider(self, rider: Rider):
         self.rider = rider
 
@@ -319,6 +322,10 @@ class Model(object):
         self.storageDir = Path(storageDir)
 
         self.loadModel()
+
+        # update the model stored in sims to self
+        for sim in self.sims:
+            sim.setModel(self)
 
         # TODO should I have a save flag that represents if the data has been changed since it was last saved?
 
@@ -410,6 +417,10 @@ class Model(object):
     def saveModel(self):
         # create application directory if it doesn't exist
         Path(self.storageDir).mkdir(parents=True, exist_ok=True)
+
+        # remove the links to model stored in sims (to save space)
+        for sim in self.sims:
+            sim.model = None
 
         self.saveRiders()
         self.saveEnvirs()
