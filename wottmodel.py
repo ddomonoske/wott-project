@@ -418,6 +418,10 @@ class Model(object):
         # create application directory if it doesn't exist
         Path(self.storageDir).mkdir(parents=True, exist_ok=True)
 
+        # remove the links to model stored in sims (to save space)
+        for sim in self.sims:
+            sim.model = None
+
         self.saveRiders()
         self.saveEnvirs()
         self.saveSims()
