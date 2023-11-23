@@ -569,10 +569,16 @@ class SimulationProfileFrame(ctk.CTkFrame):
         self.envirOpt = NameIDOptionMenu(self.selectFrm, self.envirList, self.envir)
         self.envirOpt.grid(row=1, column=3, padx=(5,25), pady=(10,10))
 
-        # Save Environment button
-        self.saveBtn = ctk.CTkButton(self, text="Save", fg_color="green", hover_color="dark green",
+        # Save and Run Simulation buttons section
+        self.buttonFrm = ctk.CTkFrame(self, fg_color="transparent")
+        self.buttonFrm.columnconfigure((0,3), weight=1)
+        self.buttonFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.saveBtn = ctk.CTkButton(self.buttonFrm, text="Save", fg_color="green", hover_color="dark green",
                                      command=self.saveSimBtnPress)
-        self.saveBtn.grid(row=2, column=0, padx=(10,10), pady=(10,10))
+        self.saveBtn.grid(row=0, column=1, padx=(10,10), pady=(10,10))
+        self.runBtn = ctk.CTkButton(self.buttonFrm, text = "Run", fg_color="green", hover_color="dark green",
+                                    command=self.runSimBtnPress)
+        self.runBtn.grid(row=0, column=2, padx=(10,10), pady=(10,10))
 
         # success/warning alert label
         self.alertLbl = ctk.CTkLabel(self, text="")
@@ -611,6 +617,13 @@ class SimulationProfileFrame(ctk.CTkFrame):
                              SimAttributes.ENVIR: self.envir}
 
             self.controller.saveSimBtnPress(self.simID, **attributeDict)
+
+    def runSimBtnPress(self):
+        # send to controller
+        if self.controller:
+            # TODO uncomment this when the controller implements this method
+            #self.controller.runSimBtnPress(self.simID)
+            pass
 
     """ ------ alert label methods ------ """
     def hideAlert(self):
