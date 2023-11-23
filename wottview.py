@@ -4,107 +4,6 @@ from typing import List, Dict, Callable
 from functools import partial
 from wottattributes import *
 
-class View(ctk.CTkFrame):
-    def __init__(self, parent):
-        super().__init__(parent)
-
-        self.controller = None
-
-        # set up grid scaling
-        self.grid_columnconfigure((0,1), weight=0)
-        self.grid_columnconfigure(0, minsize=200)
-        self.grid_columnconfigure(1, minsize=150)
-        self.grid_columnconfigure(2, weight=1, minsize=200)
-        self.grid_rowconfigure(0,weight=1)
-
-        # top selection frame
-        self.topSelect_frm = ctk.CTkFrame(self, corner_radius=0, fg_color=("gray60", "black"))
-        self.topSelect_frm.grid_columnconfigure(0, weight=1)
-
-        # logo
-        self.logo_lbl = ctk.CTkLabel(self.topSelect_frm, text="WOTTProject", font=ctk.CTkFont(size=20, weight="bold"))
-        self.logo_lbl.grid(row=0, column=0, padx=20, pady=(20, 10))
-
-        # top selection buttons
-        self.rider_btn = ctk.CTkButton(self.topSelect_frm,
-                                       text="Rider Profiles",
-                                       command=self.riderBtnPress)
-        self.rider_btn.grid(row=1, column=0, pady=5)
-        self.envir_btn = ctk.CTkButton(self.topSelect_frm,
-                                       text="Environments",
-                                       command=self.envirBtnPress)
-        self.envir_btn.grid(row=2, column=0, pady=5)
-        self.sim_btn = ctk.CTkButton(self.topSelect_frm,
-                                     text="Simulations",
-                                     command=self.simBtnPress)
-        self.sim_btn.grid(row=3, column=0, pady=5)
-
-        self.topSelect_frm.grid(row=0, column=0, padx=0, pady=0, sticky="news")
-
-        # sub selection frame, empty at first
-        self.subSelect_frm = ctk.CTkFrame(self, corner_radius=0)
-        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="news")
-
-        # main content frame, empty at first
-        self.mainContent_frm = ctk.CTkFrame(self, corner_radius=0)
-        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="news")
-
-    """ ------ connect controller ------ """
-    def setController(self, controller):
-        self.controller = controller
-
-    """ ------ button handlers ------ """
-    def riderBtnPress(self):
-        if self.controller:
-            self.controller.riderBtnPress()
-
-    def envirBtnPress(self):
-        if self.controller:
-            self.controller.envirBtnPress()
-
-    def simBtnPress(self):
-        if self.controller:
-            self.controller.simBtnPress()
-
-    """ ------ update view methods ------ """
-    # update entire view when main Rider button is pressed
-    def showRiderSelectionList(self, list: List[tuple[str,int]]):
-        # show list of riders in sub selection frame
-        self.subSelect_frm = RiderSelectFrame(self, list, self.controller)
-        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
-        # TODO clear main content frame
-
-    # update entire view when main Environment button is pressed
-    def showEnvirSelectionList(self, list: List[tuple[str,int]]):
-        # show list of environments in sub selection frame
-        self.subSelect_frm = EnvirSelectFrame(self, list, self.controller)
-        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
-        # TODO clear main content frame
-
-    # update entire view when main Simulation button is pressed
-    def showSimSelectionList(self, list: List[tuple[str,int]]):
-        # show list of simulations in sub selection frame
-        self.subSelect_frm = SimSelectFrame(self, list, self.controller)
-        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
-        # TODO clear main content frame
-
-    def showRiderDetail(self, riderID: int, attributeDict: Dict[str,object]):
-        self.mainContent_frm = RiderProfileFrame(self, self.controller, riderID, attributeDict=attributeDict)
-        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
-
-    def showEnvirDetail(self, envirID: int, attributeDict: Dict[str,object]):
-        self.mainContent_frm = EnvironmentProfileFrame(self, self.controller, envirID, attributeDict=attributeDict)
-        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
-
-    def showSimDetail(self, simID: int, attributeDict: Dict[str,object]):
-        self.mainContent_frm = SimulationProfileFrame(self, self.controller, simID, attributeDict=attributeDict)
-        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
-
-    def showDetailSaveError(self, message: str):
-        self.mainContent_frm.showAlertError(message)
-
-    def showDetailSaveSuccess(self, message: str):
-        self.mainContent_frm.showAlertSuccess(message)
 
 # Generalized scrollable list of buttons
 class ScrollableBtnList(ctk.CTkScrollableFrame):
@@ -252,6 +151,9 @@ class SimSelectFrame(ctk.CTkFrame):
         if self.controller:
             self.controller.simSelectBtnPress(id)
 
+class SectionLabel(ctk.CTkLabel):
+    def __init__(self, parent, text: str = ""):
+        super().__init__(parent, text=text, font=ctk.CTkFont(size=15, weight="bold"))
 
 # Rider Profiles main content frame
 class RiderProfileFrame(ctk.CTkFrame):
@@ -637,6 +539,104 @@ class SimulationProfileFrame(ctk.CTkFrame):
         self.alertLbl.configure(text = message, text_color = 'green')
         self.alertLbl.after(ms, self.hideAlert)
 
-class SectionLabel(ctk.CTkLabel):
-    def __init__(self, parent, text: str = ""):
-        super().__init__(parent, text=text, font=ctk.CTkFont(size=15, weight="bold"))
+class View(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.controller = None
+
+        # set up grid scaling
+        self.grid_columnconfigure((0,1), weight=0)
+        self.grid_columnconfigure(0, minsize=200)
+        self.grid_columnconfigure(1, minsize=150)
+        self.grid_columnconfigure(2, weight=1, minsize=200)
+        self.grid_rowconfigure(0,weight=1)
+
+        # top selection frame
+        self.topSelect_frm = ctk.CTkFrame(self, corner_radius=0, fg_color=("gray60", "black"))
+        self.topSelect_frm.grid_columnconfigure(0, weight=1)
+
+        # logo
+        self.logo_lbl = ctk.CTkLabel(self.topSelect_frm, text="WOTTProject", font=ctk.CTkFont(size=20, weight="bold"))
+        self.logo_lbl.grid(row=0, column=0, padx=20, pady=(20, 10))
+
+        # top selection buttons
+        self.rider_btn = ctk.CTkButton(self.topSelect_frm,
+                                       text="Rider Profiles",
+                                       command=self.riderBtnPress)
+        self.rider_btn.grid(row=1, column=0, pady=5)
+        self.envir_btn = ctk.CTkButton(self.topSelect_frm,
+                                       text="Environments",
+                                       command=self.envirBtnPress)
+        self.envir_btn.grid(row=2, column=0, pady=5)
+        self.sim_btn = ctk.CTkButton(self.topSelect_frm,
+                                     text="Simulations",
+                                     command=self.simBtnPress)
+        self.sim_btn.grid(row=3, column=0, pady=5)
+
+        self.topSelect_frm.grid(row=0, column=0, padx=0, pady=0, sticky="news")
+
+        # sub selection frame, empty at first
+        self.subSelect_frm = ctk.CTkFrame(self, corner_radius=0)
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="news")
+
+        # main content frame, empty at first
+        self.mainContent_frm = ctk.CTkFrame(self, corner_radius=0)
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="news")
+
+    """ ------ connect controller ------ """
+    def setController(self, controller):
+        self.controller = controller
+
+    """ ------ button handlers ------ """
+    def riderBtnPress(self):
+        if self.controller:
+            self.controller.riderBtnPress()
+
+    def envirBtnPress(self):
+        if self.controller:
+            self.controller.envirBtnPress()
+
+    def simBtnPress(self):
+        if self.controller:
+            self.controller.simBtnPress()
+
+    """ ------ update view methods ------ """
+    # update entire view when main Rider button is pressed
+    def showRiderSelectionList(self, list: List[tuple[str,int]]):
+        # show list of riders in sub selection frame
+        self.subSelect_frm = RiderSelectFrame(self, list, self.controller)
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
+        # TODO clear main content frame
+
+    # update entire view when main Environment button is pressed
+    def showEnvirSelectionList(self, list: List[tuple[str,int]]):
+        # show list of environments in sub selection frame
+        self.subSelect_frm = EnvirSelectFrame(self, list, self.controller)
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
+        # TODO clear main content frame
+
+    # update entire view when main Simulation button is pressed
+    def showSimSelectionList(self, list: List[tuple[str,int]]):
+        # show list of simulations in sub selection frame
+        self.subSelect_frm = SimSelectFrame(self, list, self.controller)
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
+        # TODO clear main content frame
+
+    def showRiderDetail(self, riderID: int, attributeDict: Dict[str,object]):
+        self.mainContent_frm = RiderProfileFrame(self, self.controller, riderID, attributeDict=attributeDict)
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
+
+    def showEnvirDetail(self, envirID: int, attributeDict: Dict[str,object]):
+        self.mainContent_frm = EnvironmentProfileFrame(self, self.controller, envirID, attributeDict=attributeDict)
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
+
+    def showSimDetail(self, simID: int, attributeDict: Dict[str,object]):
+        self.mainContent_frm = SimulationProfileFrame(self, self.controller, simID, attributeDict=attributeDict)
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
+
+    def showDetailSaveError(self, message: str):
+        self.mainContent_frm.showAlertError(message)
+
+    def showDetailSaveSuccess(self, message: str):
+        self.mainContent_frm.showAlertSuccess(message)
