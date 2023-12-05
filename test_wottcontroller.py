@@ -49,7 +49,7 @@ def main():
 
     view.setController(controller)
 
-    view.grid(row=0, column=0, sticky="NSEW")
+    view.grid(row=0, column=0, sticky="nsew")
 
     app.mainloop()
 

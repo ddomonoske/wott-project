@@ -148,7 +148,7 @@ class RiderSelectFrame(ctk.CTkFrame):
 
         # Scroll list of riders
         self.riders_list = ScrollableBtnList(self, nameIDs, self.scrollBtnPress)
-        self.riders_list.grid(row=1, column=0, sticky="NSEW")
+        self.riders_list.grid(row=1, column=0, sticky="nsew")
 
     """ ------ button callbacks ------ """
     def addRiderBtnPress(self):
@@ -174,7 +174,7 @@ class EnvirSelectFrame(ctk.CTkFrame):
 
         # Scroll list of environments
         self.envirs_list = ScrollableBtnList(self, nameIDs, self.scrollBtnPress)
-        self.envirs_list.grid(row=1, column=0, sticky="NSEW")
+        self.envirs_list.grid(row=1, column=0, sticky="nsew")
 
     """ ------ button callbacks ------ """
     def addEnvirBtnPress(self):
@@ -200,7 +200,7 @@ class SimSelectFrame(ctk.CTkFrame):
 
         # Scroll list of environments
         self.sims_list = ScrollableBtnList(self, nameIDs, self.scrollBtnPress)
-        self.sims_list.grid(row=1, column=0, sticky="NSEW")
+        self.sims_list.grid(row=1, column=0, sticky="nsew")
 
     """ ------ button callbacks ------ """
     def addSimBtnPress(self):
@@ -248,8 +248,8 @@ class RiderProfileFrame(ctk.CTkFrame):
         """ ------ set up the geometry ------ """
         # Name section
         self.nameFrm = ctk.CTkFrame(self)
-        self.nameFrm.columnconfigure(4, weight=1)
-        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.nameFrm.grid_columnconfigure(4, weight=1)
+        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.nameLbl = SectionLabel(self.nameFrm, "Rider Name")
         self.nameLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.firstNameLbl = ctk.CTkLabel(self.nameFrm, text="First Name:")
@@ -265,7 +265,7 @@ class RiderProfileFrame(ctk.CTkFrame):
 
         # Physical stats section
         self.statsFrm = ctk.CTkFrame(self)
-        self.statsFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.statsFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.statsLbl = SectionLabel(self.statsFrm, "Physical Characteristics")
         self.statsLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.weightLbl = ctk.CTkLabel(self.statsFrm, text="Weight (kg):")
@@ -281,7 +281,7 @@ class RiderProfileFrame(ctk.CTkFrame):
 
         # FTP and wPrime section
         self.powerFrm = ctk.CTkFrame(self)
-        self.powerFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.powerFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.powerLbl = SectionLabel(self.powerFrm, "Physiological Characteristics")
         self.powerLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.FTPLbl = ctk.CTkLabel(self.powerFrm, text="FTP (Watts):")
@@ -389,8 +389,8 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
         """ ------ set up the geometry ------ """
         # Name section
         self.nameFrm = ctk.CTkFrame(self)
-        self.nameFrm.columnconfigure(4, weight=1)
-        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.nameFrm.grid_columnconfigure(4, weight=1)
+        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.nameLbl = SectionLabel(self.nameFrm, "Environment Name")
         self.nameLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.envirNameEnt = ctk.CTkEntry(self.nameFrm, width=300)
@@ -399,7 +399,7 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
 
         # Atmospheric conditions section
         self.atmosFrm = ctk.CTkFrame(self)
-        self.atmosFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.atmosFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.atmosLbl = SectionLabel(self.atmosFrm, "Atmospheric Conditions")
         self.atmosLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.airDensityLbl = ctk.CTkLabel(self.atmosFrm, text=f"Air Density (kg/m\N{SUPERSCRIPT THREE}):")
@@ -410,7 +410,7 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
 
         # Equipment section
         self.equipmentFrm = ctk.CTkFrame(self)
-        self.equipmentFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.equipmentFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.EquipmentLbl = SectionLabel(self.equipmentFrm, "Equipment Characteristics")
         self.EquipmentLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.CrrLbl = ctk.CTkLabel(self.equipmentFrm, text="Crr:")
@@ -508,8 +508,8 @@ class SimulationProfileFrame(ctk.CTkFrame):
         """ ------ set up the geometry ------ """
         # Name section
         self.nameFrm = ctk.CTkFrame(self)
-        self.nameFrm.columnconfigure(4, weight=1)
-        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.nameFrm.grid_columnconfigure(4, weight=1)
+        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.nameLbl = SectionLabel(self.nameFrm, "Simulation Name")
         self.nameLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.simNameEnt = ctk.CTkEntry(self.nameFrm, width=300)
@@ -518,8 +518,8 @@ class SimulationProfileFrame(ctk.CTkFrame):
 
         # Rider and Environment section
         self.selectFrm = ctk.CTkFrame(self)
-        self.selectFrm.columnconfigure(4, weight=1)
-        self.selectFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.selectFrm.grid_columnconfigure(4, weight=1)
+        self.selectFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.titleLbl = SectionLabel(self.selectFrm, "Rider and Environment")
         self.titleLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.riderLbl = ctk.CTkLabel(self.selectFrm, text="Rider:")
@@ -533,8 +533,8 @@ class SimulationProfileFrame(ctk.CTkFrame):
 
         # Save and Run Simulation buttons section
         self.buttonFrm = ctk.CTkFrame(self, fg_color="transparent")
-        self.buttonFrm.columnconfigure((0,3), weight=1)
-        self.buttonFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.buttonFrm.grid_columnconfigure((0,3), weight=1)
+        self.buttonFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.saveBtn = ctk.CTkButton(self.buttonFrm, text="Save", fg_color="green", hover_color="dark green",
                                      command=self.saveSimBtnPress)
         self.saveBtn.grid(row=0, column=1, padx=(10,10), pady=(10,10))
@@ -729,15 +729,18 @@ class View(ctk.CTkFrame):
                                      command=self.simBtnPress)
         self.sim_btn.grid(row=3, column=0, pady=5)
 
-        self.topSelect_frm.grid(row=0, column=0, padx=0, pady=0, sticky="news")
+        self.topSelect_frm.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
 
         # sub selection frame, empty at first
         self.subSelect_frm = ctk.CTkFrame(self, corner_radius=0)
-        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="news")
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
 
         # main content frame, empty at first
         self.mainContent_frm = ctk.CTkFrame(self, corner_radius=0)
-        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="news")
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
+
+        # store multiple simulation windows
+        self.simWindows = {}
 
     """ ------ connect controller ------ """
     def setController(self, controller):
@@ -761,21 +764,21 @@ class View(ctk.CTkFrame):
     def showRiderSelectionList(self, list: List[tuple[str,int]]):
         # show list of riders in sub selection frame
         self.subSelect_frm = RiderSelectFrame(self, list, self.controller)
-        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
         # TODO clear main content frame
 
     # update entire view when main Environment button is pressed
     def showEnvirSelectionList(self, list: List[tuple[str,int]]):
         # show list of environments in sub selection frame
         self.subSelect_frm = EnvirSelectFrame(self, list, self.controller)
-        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
         # TODO clear main content frame
 
     # update entire view when main Simulation button is pressed
     def showSimSelectionList(self, list: List[tuple[str,int]]):
         # show list of simulations in sub selection frame
         self.subSelect_frm = SimSelectFrame(self, list, self.controller)
-        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
         # TODO clear main content frame
 
     def showRiderDetail(self, riderID: int, attributeDict: Dict[str,object]):

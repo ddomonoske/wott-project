@@ -34,7 +34,7 @@ def test_RiderSelectFrame(parent: ctk.CTkToplevel):
     controller = BasicController()
 
     ss_frame = RiderSelectFrame(parent, fruitStr, controller)
-    ss_frame.grid(row=0, column=0, sticky="news")
+    ss_frame.grid(row=0, column=0, sticky="nsew")
 
 # test the Rider Frame
 def test_RiderProfileFrame(parent: ctk.CTkToplevel):
@@ -45,7 +45,7 @@ def test_RiderProfileFrame(parent: ctk.CTkToplevel):
     controller = BasicController()
 
     rp_frame = RiderProfileFrame(parent, controller, riderID=3)
-    rp_frame.grid(row=0, column=0, sticky="NSEW")
+    rp_frame.grid(row=0, column=0, sticky="nsew")
 
 def test_RiderProfileFrame_Alert(parent: ctk.CTkToplevel):
     parent.title("Rider Frame Alert Test")
@@ -55,7 +55,7 @@ def test_RiderProfileFrame_Alert(parent: ctk.CTkToplevel):
     controller = BasicController()
 
     rp_frame = RiderProfileFrame(parent, controller,riderID=2)
-    rp_frame.grid(row=0, column=0, sticky="NSEW")
+    rp_frame.grid(row=0, column=0, sticky="nsew")
 
     repeatSuccessAlert(rp_frame)
 
@@ -68,7 +68,7 @@ def test_EnvironmentProfileFrame(parent: ctk.CTkToplevel):
     controller = BasicController()
 
     rp_frame = EnvironmentProfileFrame(parent, controller, envirID=3)
-    rp_frame.grid(row=0, column=0, sticky="NSEW")
+    rp_frame.grid(row=0, column=0, sticky="nsew")
 
 def test_EnvironmentProfileFrame_Alert(parent: ctk.CTkToplevel):
     parent.title("Environment Frame Alert Test")
@@ -78,7 +78,7 @@ def test_EnvironmentProfileFrame_Alert(parent: ctk.CTkToplevel):
     controller = BasicController()
 
     ep_frame = EnvironmentProfileFrame(parent, controller, envirID=3)
-    ep_frame.grid(row=0, column=0, sticky="NSEW")
+    ep_frame.grid(row=0, column=0, sticky="nsew")
 
     repeatSuccessAlert(ep_frame)
 
@@ -124,7 +124,7 @@ def test_View(parent: ctk.CTkToplevel):
     parent.grid_rowconfigure(0,weight=1)
 
     view = View(parent)
-    view.grid(row=0, column=0, sticky="news")
+    view.grid(row=0, column=0, sticky="nsew")
 
     controller = BasicController(view)
     view.setController(controller)
