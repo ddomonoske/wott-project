@@ -14,6 +14,15 @@ def test_NameIDOptionMenu(parent: ctk.CTkToplevel):
     menu = NameIDOptionMenu(parent, fruitStr, fruitStr[2], callback=controller.riderSelectBtnPress) # just grab a random entry for the selection
     menu.grid(row=0, column=0, pady=(20,20), padx=(40,40))
 
+# test CustomTable
+def test_CustomTable(parent: ctk.CTkToplevel):
+    parent.title("CustomTable Test")
+    parent.grid_columnconfigure(0,weight=1)
+    parent.grid_rowconfigure(0,weight=1)
+
+    table = CustomTable(parent, tpSplitsTable[0:10], border_width=1, outside_border_width=3)
+    table.grid(row=0,column=0, sticky="", padx=5, pady=5)
+
 # test RiderSelectFrame with individual callbacks
 def test_RiderSelectFrame(parent: ctk.CTkToplevel):
     parent.title("RiderSelectFrame Test")
@@ -100,6 +109,7 @@ def test_View(parent: ctk.CTkToplevel):
 
 
 test_list = [test_NameIDOptionMenu,
+             test_CustomTable,
              test_RiderSelectFrame,
              test_RiderProfileFrame,
              test_RiderProfileFrame_Alert,
