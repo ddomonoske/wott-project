@@ -1,6 +1,6 @@
 import tkinter as tk
 import customtkinter as ctk
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Union, Tuple, Optional
 from functools import partial
 from wottattributes import *
 
@@ -41,6 +41,53 @@ class ScrollableBtnList(ctk.CTkScrollableFrame):
                                 command=partial(callback, id))
             self.name_btns.append(btn)
             btn.grid(row=i, column=0, sticky="EW")
+
+class CustomTable(ctk.CTkFrame):
+    def __init__(self, parent,
+                 table_values: List[List[str]],
+                 column_widths: List[int] = None,
+                 border_color: Union[str, Tuple[str, str]] = ("dark slate gray","gray60"),
+                 border_width: int = 1,
+                 outside_border_width: int = 1,
+                 fg_color: Optional[Union[str, Tuple[str, str]]] = None,
+                 **kwargs):
+        super().__init__(parent,
+                         corner_radius=0,
+                         fg_color=border_color,
+                         border_width=0,
+                         **kwargs)
+
+        # hacky frame in frame to get the border I want
+        self.border = ctk.CTkFrame(self,
+                                   corner_radius=0,
+                                   fg_color=border_color,
+                                   border_width=0,
+                                   **kwargs)
+        self.grid_columnconfigure(0,weight=1)
+        self.grid_rowconfigure(0,weight=1)
+        self.border.grid(row=0,column=0,padx=outside_border_width, pady=outside_border_width, sticky="nsew")
+
+        # try to get the parent color
+        if fg_color is None:
+            fg_color = parent.cget("fg_color")
+
+        for row, cells in enumerate(table_values):
+            for col, value in enumerate(cells):
+                try:
+                    width = column_widths[col]
+                except:
+                    width = None
+                if row==0:
+                    cell = ctk.CTkLabel(self.border, text=str(value), font=ctk.CTkFont(weight="bold"), fg_color=fg_color)
+                    # self.border.grid_columnconfigure(col, weight=1)
+                    cell.grid(row=row, column=col, sticky="nsew",
+                              padx=border_width, pady=(border_width, border_width+1),
+                              ipadx=5, ipady=2)
+                else:
+                    cell = ctk.CTkLabel(self.border, text=str(value), fg_color=fg_color)
+                    cell.grid(row=row, column=col, sticky="nsew",
+                              padx=border_width, pady=border_width,
+                              ipadx=5, ipady=2)
 
 # Generalized optionmenu. Calls the provided callback
 class NameIDOptionMenu(ctk.CTkOptionMenu):
