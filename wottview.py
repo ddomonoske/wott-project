@@ -599,6 +599,101 @@ class SimulationProfileFrame(ctk.CTkFrame):
         self.alertLbl.configure(text = message, text_color = 'green')
         self.alertLbl.after(ms, self.hideAlert)
 
+class SimulationWindow(ctk.CTkToplevel):
+    def __init__(self, root,
+                 simName = "Simulation Name",
+                 time = [],
+                 power = [],
+                 velocity = [],
+                 splits = [],
+                 splittable = []):
+        super().__init__(root)
+
+        # set up grid
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
+
+        # name at top
+        nameLbl = ctk.CTkLabel(self, text=simName, font=ctk.CTkFont(size=20, weight="bold"))
+        nameLbl.grid(row=0, column=0, columnspan=2, padx=20, pady=(20, 10))
+
+        # plot frame protects the plots from weird scaling
+        plot_frm = ctk.CTkFrame(self)
+        plot_frm.grid_columnconfigure(0,weight=1, minsize=300)
+        plot_frm.grid_rowconfigure((0,1),weight=1, minsize=200)
+        plot_frm.grid(row=1, column=0, sticky="nsew")
+
+        # velocity and power vs time figure/axes
+        self.velocity_fig = plt.figure()
+        power_ax = self.velocity_fig.gca()
+        velocity_ax = power_ax.twinx()
+        velocity_power_widget = FigureCanvasTkAgg(self.velocity_fig, master=plot_frm).get_tk_widget()
+
+        # get plot color list
+        colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+        # velocity plot
+        color = colors[0]
+        velocity_ln = velocity_ax.plot(time, velocity, color=color, label='Velocity')
+        velocity_ax.tick_params(axis='y', labelcolor=color)
+        velocity_ax.set_ylabel("kph", color=color)
+        velocity_ax.set_ylim(bottom=0)
+        velocity_ax.grid(True, axis='y', color=color)
+
+        # power plot
+        color = colors[1]
+        power_ln = power_ax.plot(time, power, color=color, label="Power")
+        power_ax.tick_params(axis='y', labelcolor=color)
+        power_ax.set_ylabel("Wotts", color=color)
+        power_ax.set_ylim(bottom=0)
+        power_ax.grid(True, axis='y', color=color)
+
+        # title and x shared between axes
+        velocity_ax.set_title("Velocity & Power")
+        velocity_ax.set_xlabel("time (s)")
+        velocity_ax.set_xlim(left=-1,right=time[-1]+1)
+        velocity_ax.grid(True, axis='x')
+        lines = velocity_ln + power_ln
+        labels = [l.get_label() for l in lines]
+        velocity_ax.legend(lines, labels, framealpha=1)
+
+        velocity_power_widget.grid(row=0,column=0, sticky="nsew")
+
+        # lap split graph
+        self.split_fig = plt.figure()
+        split_ax = self.split_fig.gca()
+        lap_split_widget = FigureCanvasTkAgg(self.split_fig, master=plot_frm).get_tk_widget()
+        color = colors[2]
+        split_ax.plot(splits, color=color, marker='.')
+        split_ax.tick_params(axis='y', color=color)
+        split_ax.grid(True)
+        split_ax.set_title("Lap Times")
+        split_ax.set_xlabel("Lap")
+        split_ax.set_ylabel("time (seconds)", color=color)
+        lap_split_widget.grid(row=1, column=0, sticky="nsew")
+
+        # table of half-lap splits
+        splits_frm = ctk.CTkScrollableFrame(self, width=1000, corner_radius=0)
+        splits_frm.grid_columnconfigure(0,weight=1)
+        splits_frm.grid_rowconfigure(0,weight=1)
+        splits_tbl = CustomTable(splits_frm, table_values=splittable, outside_border_width=2)
+        splits_frm.grid(row=1,column=1, sticky="nsew")
+        extra_x_pad = 5
+        splits_tbl.grid(row=0,column=0, padx=extra_x_pad)
+
+        # size scrollframe to table width
+        self.update_idletasks()
+        splits_frm.configure(width=splits_tbl.winfo_width()+2*extra_x_pad)
+
+        # patch for matplotlib-tkinter bug
+        self.protocol("WM_DELETE_WINDOW", self.plt_destroy)
+
+    # fix maplotlib-tkinter bug by manually closing figures before destroying window
+    def plt_destroy(self):
+        plt.close(self.velocity_fig)
+        plt.close(self.split_fig)
+        self.destroy()
+
 class View(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
@@ -700,3 +795,13 @@ class View(ctk.CTkFrame):
 
     def showDetailSaveSuccess(self, message: str):
         self.mainContent_frm.showAlertSuccess(message)
+
+    def showSimWindow(self, simID, **kwargs):
+        # destroy the window if it already exists
+        if self.simWindows[simID]:
+            window: SimulationWindow = self.simWindows[simID]
+            window.plt_destroy()
+
+        # create and save the window
+        window = SimulationWindow(self)
+        self.simWindows[simID] = window
