@@ -4,6 +4,8 @@ import customtkinter as ctk
 from typing import Dict
 from test_helpers import *
 
+import numpy as np
+
 
 # test NameIDOptionMenu
 def test_NameIDOptionMenu(parent: ctk.CTkToplevel):
@@ -92,7 +94,27 @@ def test_SimulationProfileFrame(parent: ctk.CTkToplevel):
                                       riderList=riderStr,
                                       rider = riderStr[2],
                                       envir=envirStr[1])
-    sp_frame.grid(row=0, column=0, sticky="NSEW")
+    sp_frame.grid(row=0, column=0, sticky="nsew")
+
+# test Simulation Window
+def test_SimulationWindow(parent: ctk.CTkToplevel):
+    n = 1000
+    maxT = 240
+    time = np.linspace(0,maxT,n,endpoint=False)
+    power = 500*time*np.exp(-0.2*time)+450*(1-np.exp(-0.2*time))-0.2*time
+    velocity = 60*(1-np.exp(-.1*time))-0.02*time
+    splits = [22,20,15,14.5,14.5,14.5,14.5,14.5,14.4,14.6,14.8,15.1]
+    tablesplits = tpSplitsTable
+    SimulationWindow(parent.master, # place under grandparent so we can delete parent
+                     simName = "Test Simulation Name",
+                     time=time,
+                     power=power,
+                     velocity=velocity,
+                     splits=splits,
+                     splittable=tablesplits)
+
+    # destroy parent because SimulationWindow opens it's own window
+    parent.destroy()
 
 # test the entire View
 def test_View(parent: ctk.CTkToplevel):
@@ -115,7 +137,8 @@ test_list = [test_NameIDOptionMenu,
              test_RiderProfileFrame_Alert,
              test_EnvironmentProfileFrame,
              test_EnvironmentProfileFrame_Alert,
-             test_SimulationProfileFrame]
+             test_SimulationProfileFrame,
+             test_SimulationWindow]
 
 # run all tests
 def main():
@@ -126,12 +149,19 @@ def main():
     root = ctk.CTk()
     test_View(root)
 
+    # patch for the plt tcl bug
+    root.protocol("WM_DELETE_WINDOW", partial(test_wattview_plt_destroy, root))
+
     # run every other test in its own window
     for test in test_list:
         top = ctk.CTkToplevel(root)
         test(top)
 
     root.mainloop()
+
+def test_wattview_plt_destroy(root):
+    plt.close("all")
+    root.quit()
 
 if __name__ == '__main__':
     main()
