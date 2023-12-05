@@ -4,6 +4,19 @@ from typing import List, Dict, Callable
 from functools import partial
 from wottattributes import *
 
+# for plotting
+import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import numpy as np
+
+matplotlib.use('TkAgg') # setup plotting to use tkinter background
+
+# use plt style that works for light and dark theme
+plt.style.use('bmh')
+plt.rcParams.update({
+    "figure.facecolor": "LightGray"
+})
 
 # Generalized scrollable list of buttons
 class ScrollableBtnList(ctk.CTkScrollableFrame):
