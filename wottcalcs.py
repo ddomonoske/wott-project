@@ -41,9 +41,9 @@ class IPCalculator(object):
 
         # trim to when race is finished
         index = np.argmax(self.position > self.raceDistance)
-        self.time = self.time[:index]
-        self.velocity = self.velocity[:index]
-        self.position = self.position[:index]
+        self.time = self.time[:index+1]
+        self.velocity = self.velocity[:index+1]
+        self.position = self.position[:index+1]
 
         # calculate final power array
         self.powerPlanArray = self.powerPlan2Array()
