@@ -45,28 +45,51 @@ class IPCalculator(object):
         self.velocity = self.velocity[:index]
         self.position = self.position[:index]
 
+        # calculate final power array
+        self.powerPlanArray = self.powerPlan2Array()
+        self.power = np.where(self.maxForce*self.velocity<self.powerPlanArray,
+                              self.maxForce*self.velocity,
+                              self.powerPlanArray)
+
     def dvdt(self, v: float, t: float) -> float:
         # sum up all forces
         Frr = -1*(self.GRAVITY*self.massKG*self.Crr)    # rolling resistance
         Fad = -1*(self.CdA*self.airDensity*(v**2))/2    # aerodynamic drag
-        Fp = self.calcPowerForce(v, t) * (1-self.mechLoss) # pedaling force - mechanical losses
+        Fp = self.calcPedalForce(v,t) * (1-self.mechLoss) # pedaling force - mechanical losses
 
-        return ((Frr + Fad + Fp) / self.massKG)
+        return (Frr + Fad + Fp) / self.massKG
 
-    """
-    Calculate the pedaling force from speed and power. The maxForce limit is used to avoid impossibly
-    high forces when calculating at low velocities.
-    """
-    def calcPowerForce(self, v: float, t: float) -> float:
+    # make power vector according to power plan
+    def powerPlan2Array(self) -> np.ndarray:
+        times, powers = zip(*self.powerPlan)
+        powerPlanArray = np.zeros(np.size(self.time))
+
+        max = len(times)
+        for i in range(max):
+            if i<max-1:
+                powerPlanArray = np.where(np.logical_and(self.time>=times[i], self.time<times[i+1]),
+                                               powers[i], powerPlanArray)
+            else:
+                powerPlanArray = np.where(self.time>=times[i], powers[i], powerPlanArray)
+                break
+        return powerPlanArray
+
+    def getPowerFromPlan(self, t: float) -> float:
         # look up power according to plan
         times, powers = zip(*self.powerPlan)
-        power = powers[-1]
+        power=powers[-1]
         for i,time in enumerate(times):
             if t < time:
                 power = powers[i-1]
                 break
-        # limit force to max force
+        return power
+
+    # this can't be vectorized because we don't know that t will be an element of self.time
+    def calcPedalForce(self, v: float, t: float) -> float:
+        power = self.getPowerFromPlan(t)
         if (self.maxForce*v < power):
             return self.maxForce
         else:
             return power / v
+
+
