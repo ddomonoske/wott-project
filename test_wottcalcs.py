@@ -3,7 +3,7 @@ from test_helpers import *
 import inspect
 
 
-def test_IPCalculator_calcPowerForce() -> int:
+def test_IPCalculator_calcPedalForce() -> int:
     try:
         attributes = {
             "CdA": 0.195,
@@ -23,7 +23,7 @@ def test_IPCalculator_calcPowerForce() -> int:
 
         for velocity in [0,3,10,20]:
             for time in [0,0.5,1,5,30,60]:
-                if ipc.calcPowerForce(velocity, time) > ipc.maxForce:
+                if ipc.calcPedalForce(velocity, time) > ipc.maxForce:
                     raise Exception
 
         printSuccess(inspect.currentframe().f_code.co_name)
@@ -56,7 +56,7 @@ def test_IPCalculator_solve() -> int:
         printFailure(inspect.currentframe().f_code.co_name)
         return 1
 
-test_list = [test_IPCalculator_calcPowerForce,
+test_list = [test_IPCalculator_calcPedalForce,
              test_IPCalculator_solve]
 
 # run all tests
