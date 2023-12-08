@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 import numpy as np
 from scipy.integrate import odeint
 from wottattributes import *
@@ -69,7 +69,7 @@ class IPCalculator(object):
         for i in range(max):
             if i<max-1:
                 powerPlanArray = np.where(np.logical_and(self.time>=times[i], self.time<times[i+1]),
-                                               powers[i], powerPlanArray)
+                                          powers[i], powerPlanArray)
             else:
                 powerPlanArray = np.where(self.time>=times[i], powers[i], powerPlanArray)
                 break
@@ -93,4 +93,33 @@ class IPCalculator(object):
         else:
             return power / v
 
+    def getLapSplits(self, interval: float = 125, distance: float = 4000) -> List[float]:
+        n = int(np.ceil(distance / interval))
+        self.splitDistances = np.linspace(interval, distance, n, endpoint=True)
+        self.splitTimes = np.zeros(np.size(self.splitDistances))
+        self.lapSplits = np.zeros(np.size(self.splitDistances))
+
+        max = np.size(self.position)
+
+        for i,splitDistance in enumerate(self.splitDistances):
+            # get the index of the last position that's less than this
+            index = np.argmax(self.position > splitDistance)
+
+            # calculate a precise time by drawing a straight line
+            p1 = self.position[index-1]
+            p2 = self.position[index]
+            t1 = self.time[index-1]
+            t2 = self.time[index]
+            self.splitTimes[i] = ((splitDistance-p1)/(p2-p1)) * (t2-t1) + t1
+
+            self.lapSplits[i] = self.splitTimes[i] - self.splitTimes[i-1]
+
+        return self.lapSplits.tolist()
+
+    def buildSplitTable(self):
+        headers = ["Distance","Lap Split","Total Time"]
+        data = [self.splitDistances, self.lapSplits, self.splitTimes]
+        data = np.transpose(data)
+        self.splitTable = [headers, data.tolist()]
+        return self.splitTable
 
