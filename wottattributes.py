@@ -1,5 +1,5 @@
 """
-Valid attributes for Rider, Environment, and Simulation.
+Valid attributes for Rider, Environment, Simulation, and IPCalculator.
 Model and View are dependent on this, instead of being dependent on each other
 """
 
@@ -7,7 +7,7 @@ class RiderAttributes(object):
     RIDERID = "riderID"
     FIRSTNAME = "firstName"
     LASTNAME = "lastName"
-    WEIGHT = "weight"
+    WEIGHT = "massKG"
     FTP = "FTP"
     WPRIME = "wPrime"
     CDA = "CdA"
@@ -28,14 +28,16 @@ class SimAttributes(object):
     MODEL = "model"
     RIDERLIST = "riderList"
     ENVIRLIST = "envirList"
-
-class CalcAttributes(object):
-    CDA = "CdA"
-    AIRDENSITY = "airDensity"
-    MASSKG = "massKG"
-    CRR = "Crr"
-    MECHLOSSES = "mechLosses"
     POWERPLAN = "powerPlan"
+
+# these rely on the above constants to ensure compatibility
+class IPCalcAttributes(object):
+    CDA = RiderAttributes.CDA
+    AIRDENSITY = EnvirAttributes.AIRDENSITY
+    MASSKG = RiderAttributes.WEIGHT
+    CRR = EnvirAttributes.CRR
+    MECHLOSSES = EnvirAttributes.MECHLOSSES
+    POWERPLAN = SimAttributes.POWERPLAN
     MAXFORCE = "maxForce"
     RACEDISTANCE = "raceDistance"
     DT = "dt"
