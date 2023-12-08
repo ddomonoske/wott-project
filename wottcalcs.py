@@ -37,7 +37,7 @@ class IPCalculator(object):
         self.time = np.linspace(0, tMax, n, endpoint=False)
 
         # solve ode for velocity, integrate for position
-        self.velocity = odeint(self.dvdt, self.v0, self.time)
+        self.velocity: np.ndarray = np.squeeze(odeint(self.dvdt, self.v0, self.time))
         self.position = np.cumsum(self.velocity) * self.dt
 
         # trim to when race is finished
