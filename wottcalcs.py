@@ -32,7 +32,7 @@ class IPCalculator(object):
 
     # calculate velocity and position for race
     def solve(self, tMax: float = 300) -> None:
-        n = tMax * self.dt
+        n = int(np.ceil(tMax / self.dt))
         self.time = np.linspace(0, tMax, n, endpoint=False)
 
         # solve ode for velocity, integrate for position
