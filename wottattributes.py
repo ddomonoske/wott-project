@@ -28,3 +28,15 @@ class SimAttributes(object):
     MODEL = "model"
     RIDERLIST = "riderList"
     ENVIRLIST = "envirList"
+
+class CalcAttributes(object):
+    CDA = "CdA"
+    AIRDENSITY = "airDensity"
+    MASSKG = "massKG"
+    CRR = "Crr"
+    MECHLOSSES = "mechLosses"
+    POWERPLAN = "powerPlan"
+    MAXFORCE = "maxForce"
+    RACEDISTANCE = "raceDistance"
+    DT = "dt"
+    V0 = "v0"
