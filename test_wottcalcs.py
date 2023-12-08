@@ -1,23 +1,24 @@
 from wottcalcs import *
 from test_helpers import *
+from wottattributes import *
 import inspect
 
 
 def test_IPCalculator_calcPedalForce() -> int:
     try:
         attributes = {
-            "CdA": 0.195,
-            "airDensity": 1.12,
-            "massKG": 100,
-            "Crr": 0.002,
-            "mechLoss": 0.02,
-            "powerPlan": [(0,500),
-                          (1,1000),
-                          (3,1200),
-                          (7,1000),
-                          (15,800),
-                          (20,700),
-                          (45,360)]
+            CalcAttributes.CDA: 0.195,
+            CalcAttributes.AIRDENSITY: 1.12,
+            CalcAttributes.MASSKG: 100,
+            CalcAttributes.CRR: 0.002,
+            CalcAttributes.MECHLOSSES: 0.02,
+            CalcAttributes.POWERPLAN: [(0,500),
+                                       (1,1000),
+                                       (3,1200),
+                                       (7,1000),
+                                       (15,800),
+                                       (20,700),
+                                       (45,360)]
         }
         ipc = IPCalculator(**attributes)
 
@@ -40,6 +41,7 @@ def test_IPCalculator_solve() -> int:
             "massKG": 100,
             "Crr": 0.002,
             "mechLoss": 0.02,
+            "dt": .1,
             "powerPlan": [(0,500),
                           (1,1000),
                           (3,1200),

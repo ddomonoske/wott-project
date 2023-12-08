@@ -1,6 +1,7 @@
 from typing import List
 import numpy as np
 from scipy.integrate import odeint
+from wottattributes import *
 
 
 class IPCalculator(object):
@@ -11,7 +12,7 @@ class IPCalculator(object):
                  airDensity: float,
                  massKG: float,
                  Crr: float,
-                 mechLoss: float,
+                 mechLosses: float,
                  powerPlan: List[tuple[float,float]],
                  maxForce: float = 200,
                  raceDistance: float = 4000,
@@ -21,7 +22,7 @@ class IPCalculator(object):
         self.airDensity = airDensity
         self.massKG = massKG
         self.Crr = Crr
-        self.mechLoss = mechLoss
+        self.mechLosses = mechLosses
         self.powerPlan = powerPlan
         self.maxForce = maxForce
         self.raceDistance = raceDistance
@@ -55,7 +56,7 @@ class IPCalculator(object):
         # sum up all forces
         Frr = -1*(self.GRAVITY*self.massKG*self.Crr)    # rolling resistance
         Fad = -1*(self.CdA*self.airDensity*(v**2))/2    # aerodynamic drag
-        Fp = self.calcPedalForce(v,t) * (1-self.mechLoss) # pedaling force - mechanical losses
+        Fp = self.calcPedalForce(v,t) * (1-self.mechLosses) # pedaling force - mechanical losses
 
         return (Frr + Fad + Fp) / self.massKG
 
