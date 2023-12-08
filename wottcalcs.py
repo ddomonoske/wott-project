@@ -123,3 +123,12 @@ class IPCalculator(object):
         self.splitTable = [headers, data.tolist()]
         return self.splitTable
 
+    def getSimResults(self) -> Dict[str, object]:
+        simData = {}
+        simData["time"] = self.time.tolist()
+        simData["power"] = self.power.tolist()
+        simData["velocity"] = self.velocity.tolist()
+        simData["splits"] = self.getLapSplits()
+        simData["splittable"] = self.buildSplitTable()
+
+        return simData
