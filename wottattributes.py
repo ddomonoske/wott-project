@@ -7,7 +7,7 @@ class RiderAttributes(object):
     RIDERID = "riderID"
     FIRSTNAME = "firstName"
     LASTNAME = "lastName"
-    WEIGHT = "massKG"
+    WEIGHT = "massKG"   # TODO this is misleading and needs to be renamed
     FTP = "FTP"
     WPRIME = "wPrime"
     CDA = "CdA"
