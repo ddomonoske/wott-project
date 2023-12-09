@@ -606,7 +606,7 @@ class SimulationWindow(ctk.CTkToplevel):
                  power = [],
                  velocity = [],
                  splits = [],
-                 splittable = []):
+                 splitTable = []):
         super().__init__(root)
 
         # set up grid
@@ -676,7 +676,7 @@ class SimulationWindow(ctk.CTkToplevel):
         splits_frm = ctk.CTkScrollableFrame(self, width=1000, corner_radius=0)
         splits_frm.grid_columnconfigure(0,weight=1)
         splits_frm.grid_rowconfigure(0,weight=1)
-        splits_tbl = CustomTable(splits_frm, table_values=splittable, outside_border_width=2)
+        splits_tbl = CustomTable(splits_frm, table_values=splitTable, outside_border_width=2)
         splits_frm.grid(row=1,column=1, sticky="nsew")
         extra_x_pad = 5
         splits_tbl.grid(row=0,column=0, padx=extra_x_pad)

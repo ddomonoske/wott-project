@@ -85,3 +85,20 @@ class IPCalcAttributes(object):
                 cls.RACEDISTANCE,
                 cls.DT,
                 cls.V0}
+
+class SimWindowAttributes(object):
+    SIMNAME = "simName"
+    TIME = "time"
+    POWER = "power"
+    VELOCITY = "velocity"
+    SPLITS = "splits"
+    SPLITTABLE = "splitTable"
+
+    @classmethod
+    def set(cls):
+        return {cls.SIMNAME,
+                cls.TIME,
+                cls.POWER,
+                cls.VELOCITY,
+                cls.SPLITS,
+                cls.SPLITTABLE}

@@ -3,6 +3,7 @@ import tkinter as tk
 import customtkinter as ctk
 from typing import Dict
 from test_helpers import *
+from wottattributes import *
 
 import numpy as np
 
@@ -101,17 +102,17 @@ def test_SimulationWindow(parent: ctk.CTkToplevel):
     n = 1000
     maxT = 240
     time = np.linspace(0,maxT,n,endpoint=False)
-    power = 500*time*np.exp(-0.2*time)+450*(1-np.exp(-0.2*time))-0.2*time
-    velocity = 60*(1-np.exp(-.1*time))-0.02*time
-    splits = [22,20,15,14.5,14.5,14.5,14.5,14.5,14.4,14.6,14.8,15.1]
-    tablesplits = tpSplitsTable
-    SimulationWindow(parent.master, # place under grandparent so we can delete parent
-                     simName = "Test Simulation Name",
-                     time=time,
-                     power=power,
-                     velocity=velocity,
-                     splits=splits,
-                     splittable=tablesplits)
+    attributes = {
+        SimWindowAttributes.SIMNAME: "Test Simulation Name",
+        SimWindowAttributes.TIME: time,
+        SimWindowAttributes.POWER: 500*time*np.exp(-0.2*time)+450*(1-np.exp(-0.2*time))-0.2*time,
+        SimWindowAttributes.VELOCITY: 60*(1-np.exp(-.1*time))-0.02*time,
+        SimWindowAttributes.SPLITS: [22,20,15,14.5,14.5,14.5,14.5,14.5,14.4,14.6,14.8,15.1],
+        SimWindowAttributes.SPLITTABLE: tpSplitsTable
+        }
+
+    # place under grandparent so we can delete parent
+    SimulationWindow(parent.master, **attributes)
 
     # destroy parent because SimulationWindow opens it's own window
     parent.destroy()

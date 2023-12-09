@@ -125,10 +125,10 @@ class IPCalculator(object):
 
     def getSimResults(self) -> Dict[str, object]:
         simData = {}
-        simData["time"] = self.time.tolist()
-        simData["power"] = self.power.tolist()
-        simData["velocity"] = self.velocity.tolist()
-        simData["splits"] = self.getLapSplits()
-        simData["splittable"] = self.buildSplitTable()
+        simData[SimWindowAttributes.TIME] = self.time.tolist()
+        simData[SimWindowAttributes.POWER] = self.power.tolist()
+        simData[SimWindowAttributes.VELOCITY] = self.velocity.tolist()
+        simData[SimWindowAttributes.SPLITS] = self.getLapSplits()
+        simData[SimWindowAttributes.SPLITTABLE] = self.buildSplitTable()
 
         return simData
