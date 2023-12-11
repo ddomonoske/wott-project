@@ -1,6 +1,7 @@
 import customtkinter as ctk
-from typing import Dict
 from wottview import *
+from wottmodel import *
+from wottattributes import *
 from functools import partial
 
 fruitStr = [("apple", 1),
@@ -28,6 +29,33 @@ envirStr = [("LA", 10),
 
 simStr = [("10/8/23 COS Testing", 2),
           ("8/8/23 Worlds", 4)]
+
+testRiderAttributes = {
+    RiderAttributes.FIRSTNAME: "David",
+    RiderAttributes.LASTNAME: "Domonoske",
+    RiderAttributes.CDA: 0.195,
+    RiderAttributes.FTP: 418,
+    RiderAttributes.WEIGHT: 89,
+    RiderAttributes.WPRIME: 28
+}
+
+testEnvirAttributes = {
+    EnvirAttributes.ENVIRNAME: "COS",
+    EnvirAttributes.AIRDENSITY: 0.995,
+    EnvirAttributes.CRR: 0.002,
+    EnvirAttributes.MECHLOSSES: .01
+}
+
+testSimAttributes = {
+    SimAttributes.SIMNAME: "David in COS",
+    SimAttributes.POWERPLAN: [(0,500),
+                              (1,1000),
+                              (3,1200),
+                              (7,1000),
+                              (15,800),
+                              (20,700),
+                              (25,500)]
+}
 
 tpSplitsTable = [["Distance", "Lap Split", "Total Time"],
                 [125,12.50,12.50],
