@@ -112,6 +112,15 @@ class Controller(object):
             # show error message
             self.view.showDetailSaveError(error)
 
+    def runSimBtnPress(self, simID: int=-1):
+        sim = self.model.getSim(simID)
+
+        try:
+            simResults = sim.runSimulation()
+            self.view.showSimWindow(simID, simName=sim.getName(), **simResults)
+        except Exception as error:
+            self.view.showDetailSaveError(error)
+
     def replaceEmptyName(nameIDs: List[tuple[str,int]], replacement: str = "Empty") -> List[tuple[str,int]]:
         newNameIDs: List[tuple[str,int]] = []
         for nameID in nameIDs:

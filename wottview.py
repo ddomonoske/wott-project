@@ -583,9 +583,7 @@ class SimulationProfileFrame(ctk.CTkFrame):
     def runSimBtnPress(self):
         # send to controller
         if self.controller:
-            # TODO uncomment this when the controller implements this method
-            #self.controller.runSimBtnPress(self.simID)
-            pass
+            self.controller.runSimBtnPress(self.simID)
 
     """ ------ alert label methods ------ """
     def hideAlert(self):
@@ -801,10 +799,10 @@ class View(ctk.CTkFrame):
 
     def showSimWindow(self, simID, **kwargs):
         # destroy the window if it already exists
-        if self.simWindows[simID]:
+        if simID in self.simWindows:
             window: SimulationWindow = self.simWindows[simID]
             window.plt_destroy()
 
         # create and save the window
-        window = SimulationWindow(self)
+        window = SimulationWindow(self, **kwargs)
         self.simWindows[simID] = window

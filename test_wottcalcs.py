@@ -80,7 +80,7 @@ def test_IPCalculator_getSimResults() -> int:
         frontendData = ipc.getSimResults()
         printSuccess(inspect.currentframe().f_code.co_name)
         return 0
-    except TabError:
+    except:
         printFailure(inspect.currentframe().f_code.co_name)
         return 1
 
