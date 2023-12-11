@@ -120,7 +120,7 @@ class IPCalculator(object):
         headers = ["Distance","Lap Split","Total Time"]
         data = [self.splitDistances, self.lapSplits, self.splitTimes]
         data = np.transpose(data)
-        self.splitTable = [headers, data.tolist()]
+        self.splitTable = [headers] + data.tolist()
         return self.splitTable
 
     def getSimResults(self) -> Dict[str, object]:
