@@ -7,12 +7,12 @@ import inspect
 def test_IPCalculator_calcPedalForce() -> int:
     try:
         attributes = {
-            CalcAttributes.CDA: 0.195,
-            CalcAttributes.AIRDENSITY: 1.12,
-            CalcAttributes.MASSKG: 100,
-            CalcAttributes.CRR: 0.002,
-            CalcAttributes.MECHLOSSES: 0.02,
-            CalcAttributes.POWERPLAN: [(0,500),
+            IPCalcAttributes.CDA: 0.195,
+            IPCalcAttributes.AIRDENSITY: 1.12,
+            IPCalcAttributes.MASSKG: 100,
+            IPCalcAttributes.CRR: 0.002,
+            IPCalcAttributes.MECHLOSSES: 0.02,
+            IPCalcAttributes.POWERPLAN: [(0,500),
                                        (1,1000),
                                        (3,1200),
                                        (7,1000),
@@ -36,13 +36,13 @@ def test_IPCalculator_calcPedalForce() -> int:
 def test_IPCalculator_solve() -> int:
     try:
         attributes = {
-            CalcAttributes.CDA: 0.195,
-            CalcAttributes.AIRDENSITY: 1.12,
-            CalcAttributes.MASSKG: 100,
-            CalcAttributes.CRR: 0.002,
-            CalcAttributes.MECHLOSSES: 0.02,
-            CalcAttributes.DT: .1,
-            CalcAttributes.POWERPLAN: [(0,500),
+            IPCalcAttributes.CDA: 0.195,
+            IPCalcAttributes.AIRDENSITY: 1.12,
+            IPCalcAttributes.MASSKG: 100,
+            IPCalcAttributes.CRR: 0.002,
+            IPCalcAttributes.MECHLOSSES: 0.02,
+            IPCalcAttributes.DT: .1,
+            IPCalcAttributes.POWERPLAN: [(0,500),
                                        (1,1000),
                                        (3,1200),
                                        (7,1000),
@@ -61,13 +61,13 @@ def test_IPCalculator_solve() -> int:
 def test_IPCalculator_getSimResults() -> int:
     try:
         attributes = {
-            CalcAttributes.CDA: 0.195,
-            CalcAttributes.AIRDENSITY: 1.12,
-            CalcAttributes.MASSKG: 100,
-            CalcAttributes.CRR: 0.002,
-            CalcAttributes.MECHLOSSES: 0.02,
-            CalcAttributes.DT: .1,
-            CalcAttributes.POWERPLAN: [(0,500),
+            IPCalcAttributes.CDA: 0.195,
+            IPCalcAttributes.AIRDENSITY: 1.12,
+            IPCalcAttributes.MASSKG: 100,
+            IPCalcAttributes.CRR: 0.002,
+            IPCalcAttributes.MECHLOSSES: 0.02,
+            IPCalcAttributes.DT: .1,
+            IPCalcAttributes.POWERPLAN: [(0,500),
                                        (1,1000),
                                        (3,1200),
                                        (7,1000),
@@ -80,7 +80,7 @@ def test_IPCalculator_getSimResults() -> int:
         frontendData = ipc.getSimResults()
         printSuccess(inspect.currentframe().f_code.co_name)
         return 0
-    except TabError:
+    except:
         printFailure(inspect.currentframe().f_code.co_name)
         return 1
 

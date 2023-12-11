@@ -46,8 +46,12 @@ def main():
     model = Model(str(testDirectory))
     view = View(app)
     controller = Controller(model, view)
-
     view.setController(controller)
+    
+    # add a rider, envir, and sim to start with
+    rider = model.addRider(**testRiderAttributes)
+    envir = model.addEnvironment(**testEnvirAttributes)
+    model.addSimulation(rider=rider, envir=envir, **testSimAttributes)
 
     view.grid(row=0, column=0, sticky="nsew")
 

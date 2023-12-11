@@ -583,9 +583,7 @@ class SimulationProfileFrame(ctk.CTkFrame):
     def runSimBtnPress(self):
         # send to controller
         if self.controller:
-            # TODO uncomment this when the controller implements this method
-            #self.controller.runSimBtnPress(self.simID)
-            pass
+            self.controller.runSimBtnPress(self.simID)
 
     """ ------ alert label methods ------ """
     def hideAlert(self):
@@ -606,7 +604,7 @@ class SimulationWindow(ctk.CTkToplevel):
                  power = [],
                  velocity = [],
                  splits = [],
-                 splittable = []):
+                 splitTable = []):
         super().__init__(root)
 
         # set up grid
@@ -676,7 +674,7 @@ class SimulationWindow(ctk.CTkToplevel):
         splits_frm = ctk.CTkScrollableFrame(self, width=1000, corner_radius=0)
         splits_frm.grid_columnconfigure(0,weight=1)
         splits_frm.grid_rowconfigure(0,weight=1)
-        splits_tbl = CustomTable(splits_frm, table_values=splittable, outside_border_width=2)
+        splits_tbl = CustomTable(splits_frm, table_values=splitTable, outside_border_width=2)
         splits_frm.grid(row=1,column=1, sticky="nsew")
         extra_x_pad = 5
         splits_tbl.grid(row=0,column=0, padx=extra_x_pad)
@@ -801,10 +799,10 @@ class View(ctk.CTkFrame):
 
     def showSimWindow(self, simID, **kwargs):
         # destroy the window if it already exists
-        if self.simWindows[simID]:
+        if simID in self.simWindows:
             window: SimulationWindow = self.simWindows[simID]
             window.plt_destroy()
 
         # create and save the window
-        window = SimulationWindow(self)
+        window = SimulationWindow(self, **kwargs)
         self.simWindows[simID] = window
