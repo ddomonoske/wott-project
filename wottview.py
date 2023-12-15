@@ -663,8 +663,8 @@ class SimulationWindow(ctk.CTkToplevel):
         lap_split_widget = FigureCanvasTkAgg(self.split_fig, master=plot_frm).get_tk_widget()
         color = colors[2]
         split_ax.plot(splits, color=color, marker='.')
-        split_ax.tick_params(axis='y', color=color)
-        split_ax.grid(True)
+        split_ax.tick_params(axis='y', labelcolor=color)
+        split_ax.grid(True, axis='y', color=color)
         split_ax.set_title("Lap Times")
         split_ax.set_xlabel("Lap")
         split_ax.set_ylabel("time (seconds)", color=color)
