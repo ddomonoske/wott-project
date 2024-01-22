@@ -48,11 +48,11 @@ testEnvirAttributes = {
 
 testSimAttributes = {
     SimAttributes.SIMNAME: "David in COS",
-    SimAttributes.POWERPLAN: [(0,500),
-                              (1,988),
-                              (15,550),
-                              (35,458),
-                              (135,523)]
+    SimAttributes.POWERPLAN: PowerPlan([(0,500,1),
+                                        (1,988,14),
+                                        (15,550,20),
+                                        (35,458,100),
+                                        (135,523,120)])
 }
 
 tpSplitsTable = [["Distance", "Lap Split", "Total Time"],

@@ -47,7 +47,7 @@ def main():
     view = View(app)
     controller = Controller(model, view)
     view.setController(controller)
-    
+
     # add a rider, envir, and sim to start with
     rider = model.addRider(**testRiderAttributes)
     envir = model.addEnvironment(**testEnvirAttributes)
