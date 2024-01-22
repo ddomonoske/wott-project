@@ -133,6 +133,104 @@ class NameIDOptionMenu(ctk.CTkOptionMenu):
         return (name,id)
 
 
+class PowerPlanPointView(ctk.CTkFrame):
+    default_padx = 10
+    default_entry_width = 60
+    default_button_size = 10
+    def __init__(self, parent, powerPlanPoint: tuple[str,str,str],
+                 saveCallback: Callable[[],None]=None,
+                 upCallback: Callable[[],None]=None,
+                 downCallback: Callable[[],None]=None,
+                 deleteCallback: Callable[[],None]=None):
+        super().__init__(parent)
+
+        self.grid_rowconfigure(0, weight=1)
+
+        # start lbl and entry (actually just a label)
+        startLbl = ctk.CTkLabel(self, text="Start (seconds): ")
+        startLbl.grid(row=0, column=0, sticky="w", padx = (self.default_padx,0))
+        self.startEnt = ctk.CTkEntry(self, width=self.default_entry_width)
+        self.startEnt.insert(0, powerPlanPoint[0])
+        self.startEnt.configure(state="disabled")
+        self.startEnt.grid(row=0, column=1, sticky="w", padx = (0,self.default_padx))
+        # power lbl and entry
+        powerLbl = ctk.CTkLabel(self, text="Power (Watts): ")
+        powerLbl.grid(row=0, column=2, padx = (self.default_padx,0))
+        self.powerEnt = ctk.CTkEntry(self, width=self.default_entry_width)
+        self.powerEnt.insert(0,powerPlanPoint[1])
+        self.powerEnt.grid(row=0, column=3, padx = (0,self.default_padx))
+        # duration lbl and entry
+        durationLbl = ctk.CTkLabel(self, text="Duration (seconds): ")
+        durationLbl.grid(row=0, column=4, padx = (self.default_padx,0))
+        self.durationEnt = ctk.CTkEntry(self, width=self.default_entry_width)
+        self.durationEnt.insert(0,powerPlanPoint[2])
+        self.durationEnt.grid(row=0, column=5, padx = (0,self.default_padx))
+        # save button
+        saveBtn = ctk.CTkButton(self, width=20, text="Save", command=saveCallback)
+        saveBtn.grid(row=0, column=6, padx=self.default_padx)
+        # up arrow button
+        downBtn = ctk.CTkButton(self, width=self.default_button_size, height=self.default_button_size,
+                                text="\N{DOWNWARDS ARROW}", command=downCallback)
+        downBtn.grid(row=0, column=7, padx=(self.default_padx, 0))
+        # down arrow button
+        upBtn = ctk.CTkButton(self, width=self.default_button_size, height=self.default_button_size,
+                              text="\N{UPWARDS ARROW}", command=upCallback)
+        upBtn.grid(row=0, column=8, padx=(0,self.default_padx))
+        # delete button
+        delBtn = ctk.CTkButton(self, width=self.default_button_size, height=self.default_button_size,
+                               text="\N{LATIN CAPITAL LETTER X}", command=deleteCallback)
+        delBtn.grid(row=0, column=9, padx=self.default_padx)
+
+    def getEntries(self) -> (float,float,float):
+        start = int(self.startEnt.get())
+        power = int(self.powerEnt.get())
+        duration = int(self.durationEnt.get())
+        return (start,power,duration)
+
+class PowerPlanFrame(ctk.CTkScrollableFrame):
+    def __init__(self, parent, powerPlan: List[tuple[str,str,str]], simID: int = -1, controller=None):
+        super().__init__(parent, height=400)
+        self.controller = controller
+        self.length = len(powerPlan) if powerPlan else 0
+        self.simID = simID
+        self.powerPlanRows: List[PowerPlanPointView] = []
+
+        self.titleLbl = SectionLabel(self, "Power Plan")
+        self.titleLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
+
+        for i,point in enumerate(powerPlan):
+            row = PowerPlanPointView(self, point,
+                                     saveCallback=partial(self.savePointCallback, i),
+                                     upCallback=partial(self.moveUpCallback, i),
+                                     downCallback=partial(self.moveDownCallback, i),
+                                     deleteCallback=partial(self.deletePointCallback, i))
+            row.grid(row=i+1, column=0, padx=10, pady=3, ipady=3)
+            self.powerPlanRows.append(row)
+
+        addBtn = ctk.CTkButton(self, width=20, text="Add \N{FULLWIDTH PLUS SIGN}", command=self.addPointCallback)
+        addBtn.grid(row=self.length+1, column=0, pady=5)
+
+    def savePointCallback(self, id: int):
+        if self.controller:
+            self.controller.savePowerPointPress(self.simID, id, self.powerPlanRows[id].getEntries())
+
+    def moveUpCallback(self, id: int):
+        if id > 0 and self.controller:
+            self.controller.swapPowerPointPress(self.simID, id, id-1)
+
+    def moveDownCallback(self, id: int):
+        if id < self.length-1 and self.controller:
+            self.controller.swapPowerPointPress(self.simID, id, id+1)
+
+    def deletePointCallback(self, id: int):
+        if self.controller:
+            self.controller.deletePowerPointPress(self.simID, id)
+
+    def addPointCallback(self):
+        if self.controller:
+            self.controller.addPowerPointPress(self.simID)
+
+
 class RiderSelectFrame(ctk.CTkFrame):
     def __init__(self, parent, nameIDs: List[tuple[str,int]], controller=None):
         super().__init__(parent, fg_color=("gray70", "gray10"), width=1, corner_radius=0)
@@ -531,10 +629,14 @@ class SimulationProfileFrame(ctk.CTkFrame):
         self.envirOpt = NameIDOptionMenu(self.selectFrm, self.envirList, self.envir)
         self.envirOpt.grid(row=1, column=3, padx=(5,25), pady=(10,10))
 
+        # Power Plan section
+        self.powerPlanFrm = PowerPlanFrame(self, self.powerPlan, simID=self.simID, controller=self.controller)
+        self.powerPlanFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
+
         # Save and Run Simulation buttons section
         self.buttonFrm = ctk.CTkFrame(self, fg_color="transparent")
         self.buttonFrm.grid_columnconfigure((0,3), weight=1)
-        self.buttonFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
+        self.buttonFrm.grid(row=3, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.saveBtn = ctk.CTkButton(self.buttonFrm, text="Save", fg_color="green", hover_color="dark green",
                                      command=self.saveSimBtnPress)
         self.saveBtn.grid(row=0, column=1, padx=(10,10), pady=(10,10))
@@ -544,7 +646,7 @@ class SimulationProfileFrame(ctk.CTkFrame):
 
         # success/warning alert label
         self.alertLbl = ctk.CTkLabel(self, text="")
-        self.alertLbl.grid(row=3, column=0, padx=(10,10), pady=(5,10))
+        self.alertLbl.grid(row=4, column=0, padx=(10,10), pady=(5,10))
 
     # exactly the same as wottmodel.Environment.setProperty
     def setAttribute(self, attributeDict: Dict[str, object]):
@@ -563,6 +665,8 @@ class SimulationProfileFrame(ctk.CTkFrame):
                     self.riderList = value
                 case SimAttributes.ENVIRLIST:
                     self.envirList = value
+                case SimAttributes.POWERPLAN:
+                    self.powerPlan = value
                 case _:
                     pass
 
