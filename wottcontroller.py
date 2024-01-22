@@ -130,3 +130,24 @@ class Controller(object):
             else:
                 newNameIDs.append(nameID)
         return newNameIDs
+
+    """ ------ Power Plan Callbacks ------ """
+    def savePowerPointPress(self, simID: int, pointID: int, point: Tuple[float,float,float]):
+        sim = self.model.getSim(simID)
+        sim.getPowerPlan().updatePoint(pointID, point[1], point[2])
+        self.view.showSimDetail(sim.getID(), sim.getStrAttributeDict())
+
+    def swapPowerPointPress(self, simID: int, i: int, j: int):
+        sim = self.model.getSim(simID)
+        sim.getPowerPlan().swapPoints(i,j)
+        self.view.showSimDetail(sim.getID(), sim.getStrAttributeDict())
+
+    def deletePowerPointPress(self, simID: int, pointID: int):
+        sim = self.model.getSim(simID)
+        sim.getPowerPlan().deletePoint(pointID)
+        self.view.showSimDetail(sim.getID(), sim.getStrAttributeDict())
+
+    def addPowerPointPress(self, simID: int):
+        sim = self.model.getSim(simID)
+        sim.getPowerPlan().addPoint()
+        self.view.showSimDetail(sim.getID(), sim.getStrAttributeDict())

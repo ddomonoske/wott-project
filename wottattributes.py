@@ -34,7 +34,7 @@ class EnvirAttributes(object):
     @classmethod
     def set(cls):
         return {cls.ENVIRID,
-                 cls.ENVIRNAME,
+                cls.ENVIRNAME,
                 cls.AIRDENSITY,
                 cls.CRR,
                 cls.MECHLOSSES}

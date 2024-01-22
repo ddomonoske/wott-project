@@ -13,7 +13,7 @@ class IPCalculator(object):
                  massKG: float,
                  Crr: float,
                  mechLosses: float,
-                 powerPlan: List[tuple[float,float]],
+                 powerPlan: List[tuple[float,float,float]],
                  maxForce: float = 200,
                  raceDistance: float = 4000,
                  dt: float = 1,
@@ -62,7 +62,7 @@ class IPCalculator(object):
 
     # make power vector according to power plan
     def powerPlan2Array(self) -> np.ndarray:
-        times, powers = zip(*self.powerPlan)
+        times, powers, _ = zip(*self.powerPlan)
         powerPlanArray = np.zeros(np.size(self.time))
 
         max = len(times)
@@ -77,7 +77,7 @@ class IPCalculator(object):
 
     def getPowerFromPlan(self, t: float) -> float:
         # look up power according to plan
-        times, powers = zip(*self.powerPlan)
+        times, powers, _ = zip(*self.powerPlan)
         power=powers[-1]
         for i,time in enumerate(times):
             if t < time:
