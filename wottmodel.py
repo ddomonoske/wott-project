@@ -1,5 +1,5 @@
 import pickle
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Tuple, Union
 from pathlib import Path
 from wottattributes import *
 from wottcalcs import *
@@ -12,6 +12,77 @@ ridersFile = "riders_data"
 envirsFile = "envirs_data"
 simsFile = "sims_data"
 metaFile = "meta_data"
+
+
+""" ------ Helper Objects ------ """
+class PowerPlanPoint(object):
+    def __init__(self, start: float, power: float, duration: float):
+        self._start = start
+        self._power = power
+        self._duration = duration
+
+    def asTuple(self) -> Tuple[float,float,float]:
+        return (self.getStart(), self.getPower(), self.getDuration())
+
+    """ getters and setters """
+    def setStart(self, start: float):
+        self._start = start
+
+    def setPower(self, power: float):
+        self._power = power
+
+    def setDuration(self, duration: float):
+        self._duration = duration
+
+    def getStart(self) -> float:
+        return self._start
+
+    def getPower(self) -> float:
+        return self._power
+
+    def getDuration(self) -> float:
+        return self._duration
+
+
+class PowerPlan(object):
+    def __init__(self, powerPointList: List[Tuple[float,float,float]]=None):
+        self.plan: List[PowerPlanPoint] = []
+        self.duration = 0
+
+        if powerPointList:
+            for point in powerPointList:
+                self.plan.append(PowerPlanPoint(start=point[0], power=point[1], duration=point[2]))
+            self.updateDurations()
+
+    def addPoint(self):
+        newPoint = PowerPlanPoint(start=self.duration, power=0, duration=0)
+        self.plan.append(newPoint)
+
+    def updatePoint(self, index: int, power: float, duration: float):
+        self.plan[index].setPower(power)
+        self.plan[index].setDuration(duration)
+        self.updateDurations()
+
+    def swapPoints(self, i: int, j: int):
+        l = len(self.plan)
+        if (i<l and i>=0 and j<l and j>=0):
+            self.plan[i], self.plan[j] = self.plan[j], self.plan[i]
+            self.updateDurations()
+
+    def deletePoint(self, index: int):
+        if (index<len(self.plan) and index>=0):
+            self.plan.pop(index)
+
+    def updateDurations(self):
+        cumulativeDuration = 0
+        for point in self.plan:
+            point.setStart(cumulativeDuration)
+            cumulativeDuration +=  point.getDuration()
+        self.duration = cumulativeDuration
+
+    def asTupleList(self):
+        return [point.asTuple() for point in self.plan]
+
 
 """ ------ Rider ------ """
 class Rider(object):
@@ -191,7 +262,7 @@ class Environment(object):
             EnvirAttributes.MECHLOSSES: str(self.mechLosses) if self.mechLosses else ""
         }
         return attributes
-    
+
     def getDataAttributeDict(self) -> Dict[str, object]:
         attributes = {
             EnvirAttributes.ENVIRID: int(self.envirID),
@@ -207,14 +278,12 @@ class Simulation(object):
     def __init__(self, simID: int, **kwargs) -> None:
         self.simID = simID
         self.simName = ""
-        self.rider = None
-        self.envir = None
-        self.model = None
-        self.powerPlan = None
+        self.rider: Rider = None
+        self.envir: Environment = None
+        self.model: Model = None
+        self.powerPlan: PowerPlan = PowerPlan()
 
         self.setProperty(nullAllowed=True, **kwargs)
-
-        # TODO pacing strategy is a list of something, probably its own object, maybe even its own file
 
     # TODO do more thorough value checking
     def setProperty(self, nullAllowed: bool = False, **kwargs):
@@ -259,7 +328,7 @@ class Simulation(object):
                         else:
                             raise TypeError(f"'{attribute}' must be of Model type")
                     case SimAttributes.POWERPLAN:
-                        if (type(value==List)):
+                        if (type(value==PowerPlan)):
                             tmp_powerPlan = value
                     case _:
                         raise AttributeError(f"'{attribute}' is not a property of the Simulation class")
@@ -334,9 +403,12 @@ class Simulation(object):
 
     def getEnvirList(self) -> List[tuple[str,int]]:
         return self.model.getEnvirNameIDs() if self.model else []
-    
-    def getPowerPlan(self) -> List[tuple[float,float]]:
-        return self.powerPlan
+
+    def getPowerPlan(self) -> PowerPlan:
+        return self.powerPlan if self.powerPlan else None
+
+    def getStrPowerPlan(self) -> List[tuple[str,str,str]]:
+        return self.powerPlan.asTupleList() if self.powerPlan else []
 
     def getStrAttributeDict(self) -> Dict[str,object]:
         attributes = {
@@ -346,10 +418,10 @@ class Simulation(object):
             SimAttributes.ENVIR: self.envir.getNameID() if self.envir else ("",-1),
             SimAttributes.RIDERLIST: self.getRiderList(),
             SimAttributes.ENVIRLIST: self.getEnvirList(),
-            SimAttributes.POWERPLAN: self.getPowerPlan()
+            SimAttributes.POWERPLAN: self.getStrPowerPlan()
         }
         return attributes
-    
+
     def getDataAttributeDict(self) -> Dict[str,object]:
         attributes = {
             SimAttributes.SIMID: int(self.simID),
@@ -358,7 +430,7 @@ class Simulation(object):
             SimAttributes.ENVIR: self.envir.getNameID() if self.envir else ("",-1),
             SimAttributes.RIDERLIST: self.getRiderList(),
             SimAttributes.ENVIRLIST: self.getEnvirList(),
-            SimAttributes.POWERPLAN: self.getPowerPlan()
+            SimAttributes.POWERPLAN: self.getStrPowerPlan()
         }
         return attributes
 
@@ -468,7 +540,6 @@ class Model(object):
         # if data represents meta data, save to self.metaData
         if isinstance(data, WottMetaData):
             self.metaData = data
-
 
 
     # check file, load contents and return object. If file DNE, then return None
