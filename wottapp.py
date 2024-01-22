@@ -1,6 +1,7 @@
 from wottmodel import *
 from wottview import *
 from wottcontroller import *
+import customtkinter as ctk
 
 
 def main():
@@ -21,7 +22,7 @@ def main():
     view.setController(controller)
 
     # place view in app
-    view.grid(row=0, column=0, sticky="NSEW")
+    view.grid(row=0, column=0, sticky="nsew")
 
     # run GUI
     app.mainloop()

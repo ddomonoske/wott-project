@@ -112,6 +112,15 @@ class Controller(object):
             # show error message
             self.view.showDetailSaveError(error)
 
+    def runSimBtnPress(self, simID: int=-1):
+        sim = self.model.getSim(simID)
+
+        try:
+            simResults = sim.runSimulation()
+            self.view.showSimWindow(simID, simName=sim.getName(), **simResults)
+        except Exception as error:
+            self.view.showDetailSaveError(error)
+
     def replaceEmptyName(nameIDs: List[tuple[str,int]], replacement: str = "Empty") -> List[tuple[str,int]]:
         newNameIDs: List[tuple[str,int]] = []
         for nameID in nameIDs:
@@ -121,3 +130,24 @@ class Controller(object):
             else:
                 newNameIDs.append(nameID)
         return newNameIDs
+
+    """ ------ Power Plan Callbacks ------ """
+    def savePowerPointPress(self, simID: int, pointID: int, point: Tuple[float,float,float]):
+        sim = self.model.getSim(simID)
+        sim.getPowerPlan().updatePoint(pointID, point[1], point[2])
+        self.view.showSimDetail(sim.getID(), sim.getStrAttributeDict())
+
+    def swapPowerPointPress(self, simID: int, i: int, j: int):
+        sim = self.model.getSim(simID)
+        sim.getPowerPlan().swapPoints(i,j)
+        self.view.showSimDetail(sim.getID(), sim.getStrAttributeDict())
+
+    def deletePowerPointPress(self, simID: int, pointID: int):
+        sim = self.model.getSim(simID)
+        sim.getPowerPlan().deletePoint(pointID)
+        self.view.showSimDetail(sim.getID(), sim.getStrAttributeDict())
+
+    def addPowerPointPress(self, simID: int):
+        sim = self.model.getSim(simID)
+        sim.getPowerPlan().addPoint()
+        self.view.showSimDetail(sim.getID(), sim.getStrAttributeDict())

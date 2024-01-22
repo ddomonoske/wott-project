@@ -1,7 +1,8 @@
 import pickle
-from typing import List, Dict
+from typing import List, Dict, Set, Tuple, Union
 from pathlib import Path
 from wottattributes import *
+from wottcalcs import *
 
 
 # TODO check file stuff
@@ -11,6 +12,77 @@ ridersFile = "riders_data"
 envirsFile = "envirs_data"
 simsFile = "sims_data"
 metaFile = "meta_data"
+
+
+""" ------ Helper Objects ------ """
+class PowerPlanPoint(object):
+    def __init__(self, start: float, power: float, duration: float):
+        self._start = start
+        self._power = power
+        self._duration = duration
+
+    def asTuple(self) -> Tuple[float,float,float]:
+        return (self.getStart(), self.getPower(), self.getDuration())
+
+    """ getters and setters """
+    def setStart(self, start: float):
+        self._start = start
+
+    def setPower(self, power: float):
+        self._power = power
+
+    def setDuration(self, duration: float):
+        self._duration = duration
+
+    def getStart(self) -> float:
+        return self._start
+
+    def getPower(self) -> float:
+        return self._power
+
+    def getDuration(self) -> float:
+        return self._duration
+
+
+class PowerPlan(object):
+    def __init__(self, powerPointList: List[Tuple[float,float,float]]=None):
+        self.plan: List[PowerPlanPoint] = []
+        self.duration = 0
+
+        if powerPointList:
+            for point in powerPointList:
+                self.plan.append(PowerPlanPoint(start=point[0], power=point[1], duration=point[2]))
+            self.updateDurations()
+
+    def addPoint(self):
+        newPoint = PowerPlanPoint(start=self.duration, power=0, duration=0)
+        self.plan.append(newPoint)
+
+    def updatePoint(self, index: int, power: float, duration: float):
+        self.plan[index].setPower(power)
+        self.plan[index].setDuration(duration)
+        self.updateDurations()
+
+    def swapPoints(self, i: int, j: int):
+        l = len(self.plan)
+        if (i<l and i>=0 and j<l and j>=0):
+            self.plan[i], self.plan[j] = self.plan[j], self.plan[i]
+            self.updateDurations()
+
+    def deletePoint(self, index: int):
+        if (index<len(self.plan) and index>=0):
+            self.plan.pop(index)
+
+    def updateDurations(self):
+        cumulativeDuration = 0
+        for point in self.plan:
+            point.setStart(cumulativeDuration)
+            cumulativeDuration +=  point.getDuration()
+        self.duration = cumulativeDuration
+
+    def asTupleList(self):
+        return [point.asTuple() for point in self.plan]
+
 
 """ ------ Rider ------ """
 class Rider(object):
@@ -106,6 +178,19 @@ class Rider(object):
         }
         return attributes
 
+    def getDataAttributeDict(self) -> Dict[str,object]:
+        attributes = {
+            RiderAttributes.RIDERID: int(self.riderID),
+            RiderAttributes.FIRSTNAME: self.firstName,
+            RiderAttributes.LASTNAME: self.lastName,
+            RiderAttributes.WEIGHT: float(self.weight) if self.weight else 0,
+            RiderAttributes.FTP: float(self.FTP) if self.FTP else 0,
+            RiderAttributes.CDA: float(self.CdA) if self.CdA else 0,
+            RiderAttributes.WPRIME: float(self.wPrime) if self.wPrime else 0,
+            RiderAttributes.POWERRESULTS: self.powerResults
+        }
+        return attributes
+
 """ ------ Environment ------ """
 class Environment(object):
     def __init__(self, envirID: int, **kwargs) -> None:
@@ -178,18 +263,27 @@ class Environment(object):
         }
         return attributes
 
+    def getDataAttributeDict(self) -> Dict[str, object]:
+        attributes = {
+            EnvirAttributes.ENVIRID: int(self.envirID),
+            EnvirAttributes.ENVIRNAME: self.envirName,
+            EnvirAttributes.AIRDENSITY: float(self.airDensity) if self.airDensity else 0,
+            EnvirAttributes.CRR: float(self.Crr) if self.Crr else 0,
+            EnvirAttributes.MECHLOSSES: float(self.mechLosses) if self.mechLosses else 0
+        }
+        return attributes
+
 """ ------ Simulation ------ """
 class Simulation(object):
     def __init__(self, simID: int, **kwargs) -> None:
         self.simID = simID
         self.simName = ""
-        self.rider = None
-        self.envir = None
-        self.model = None
+        self.rider: Rider = None
+        self.envir: Environment = None
+        self.model: Model = None
+        self.powerPlan: PowerPlan = PowerPlan()
 
         self.setProperty(nullAllowed=True, **kwargs)
-
-        # TODO pacing strategy is a list of something, probably its own object, maybe even its own file
 
     # TODO do more thorough value checking
     def setProperty(self, nullAllowed: bool = False, **kwargs):
@@ -199,6 +293,7 @@ class Simulation(object):
         tmp_rider = self.rider
         tmp_envir = self.envir
         tmp_model = self.model
+        tmp_powerPlan = self.powerPlan
 
         for attribute, value in kwargs.items():
             try:
@@ -232,6 +327,9 @@ class Simulation(object):
                             tmp_model = value
                         else:
                             raise TypeError(f"'{attribute}' must be of Model type")
+                    case SimAttributes.POWERPLAN:
+                        if (type(value==PowerPlan)):
+                            tmp_powerPlan = value
                     case _:
                         raise AttributeError(f"'{attribute}' is not a property of the Simulation class")
             except (TypeError,ValueError) as error:
@@ -246,8 +344,36 @@ class Simulation(object):
         self.rider = tmp_rider
         self.envir = tmp_envir
         self.model = tmp_model
+        self.powerPlan = tmp_powerPlan
+
+    # remove all keys that aren't part of a set
+    def limitAttributes(self, attributeDict: Dict, validKeys: Set):
+        newDict = {}
+
+        for key in list(attributeDict.keys()):
+            if key in validKeys:
+                newDict[key] = attributeDict[key]
+
+        return newDict
+
+    # Run a simulation
+    def runSimulation(self) -> Dict[str, object]:
+        # combine all the values into a dictionary
+        attributeDict = self.limitAttributes(self.rider.getDataAttributeDict(), IPCalcAttributes.set())
+        attributeDict.update(self.limitAttributes(self.envir.getDataAttributeDict(), IPCalcAttributes.set()))
+        attributeDict.update(self.limitAttributes(self.getDataAttributeDict(), IPCalcAttributes.set()))
+
+        # create calculator and run
+        self.calc = IPCalculator(dt=0.1, **attributeDict)
+        self.calc.solve()
+        self.simResults = self.calc.getSimResults()
+
+        return self.simResults
 
     """ ------ getters and setters ------ """
+    def setModel(self, model):
+        self.model = model
+
     def setRider(self, rider: Rider):
         self.rider = rider
 
@@ -278,6 +404,12 @@ class Simulation(object):
     def getEnvirList(self) -> List[tuple[str,int]]:
         return self.model.getEnvirNameIDs() if self.model else []
 
+    def getPowerPlan(self) -> PowerPlan:
+        return self.powerPlan if self.powerPlan else None
+
+    def getStrPowerPlan(self) -> List[tuple[str,str,str]]:
+        return self.powerPlan.asTupleList() if self.powerPlan else []
+
     def getStrAttributeDict(self) -> Dict[str,object]:
         attributes = {
             SimAttributes.SIMID: self.simID,
@@ -285,7 +417,20 @@ class Simulation(object):
             SimAttributes.RIDER: self.rider.getNameID() if self.rider else ("",-1),
             SimAttributes.ENVIR: self.envir.getNameID() if self.envir else ("",-1),
             SimAttributes.RIDERLIST: self.getRiderList(),
-            SimAttributes.ENVIRLIST: self.getEnvirList()
+            SimAttributes.ENVIRLIST: self.getEnvirList(),
+            SimAttributes.POWERPLAN: self.getStrPowerPlan()
+        }
+        return attributes
+
+    def getDataAttributeDict(self) -> Dict[str,object]:
+        attributes = {
+            SimAttributes.SIMID: int(self.simID),
+            SimAttributes.SIMNAME: self.simName,
+            SimAttributes.RIDER: self.rider.getNameID() if self.rider else ("",-1),
+            SimAttributes.ENVIR: self.envir.getNameID() if self.envir else ("",-1),
+            SimAttributes.RIDERLIST: self.getRiderList(),
+            SimAttributes.ENVIRLIST: self.getEnvirList(),
+            SimAttributes.POWERPLAN: self.getStrPowerPlan()
         }
         return attributes
 
@@ -319,6 +464,10 @@ class Model(object):
         self.storageDir = Path(storageDir)
 
         self.loadModel()
+
+        # update the model stored in sims to self
+        for sim in self.sims:
+            sim.setModel(self)
 
         # TODO should I have a save flag that represents if the data has been changed since it was last saved?
 
@@ -393,7 +542,6 @@ class Model(object):
             self.metaData = data
 
 
-
     # check file, load contents and return object. If file DNE, then return None
     def loadObject(self, filePath: Path) -> object:
         if filePath.exists():
@@ -410,6 +558,10 @@ class Model(object):
     def saveModel(self):
         # create application directory if it doesn't exist
         Path(self.storageDir).mkdir(parents=True, exist_ok=True)
+
+        # remove the links to model stored in sims (to save space)
+        for sim in self.sims:
+            sim.model = None
 
         self.saveRiders()
         self.saveEnvirs()

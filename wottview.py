@@ -1,110 +1,22 @@
 import tkinter as tk
 import customtkinter as ctk
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Union, Tuple, Optional
 from functools import partial
 from wottattributes import *
 
-class View(ctk.CTkFrame):
-    def __init__(self, parent):
-        super().__init__(parent)
+# for plotting
+import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import numpy as np
 
-        self.controller = None
+matplotlib.use('TkAgg') # setup plotting to use tkinter background
 
-        # set up grid scaling
-        self.grid_columnconfigure((0,1), weight=0)
-        self.grid_columnconfigure(0, minsize=200)
-        self.grid_columnconfigure(1, minsize=150)
-        self.grid_columnconfigure(2, weight=1, minsize=200)
-        self.grid_rowconfigure(0,weight=1)
-
-        # top selection frame
-        self.topSelect_frm = ctk.CTkFrame(self, corner_radius=0, fg_color=("gray60", "black"))
-        self.topSelect_frm.grid_columnconfigure(0, weight=1)
-
-        # logo
-        self.logo_lbl = ctk.CTkLabel(self.topSelect_frm, text="WOTTProject", font=ctk.CTkFont(size=20, weight="bold"))
-        self.logo_lbl.grid(row=0, column=0, padx=20, pady=(20, 10))
-
-        # top selection buttons
-        self.rider_btn = ctk.CTkButton(self.topSelect_frm,
-                                       text="Rider Profiles",
-                                       command=self.riderBtnPress)
-        self.rider_btn.grid(row=1, column=0, pady=5)
-        self.envir_btn = ctk.CTkButton(self.topSelect_frm,
-                                       text="Environments",
-                                       command=self.envirBtnPress)
-        self.envir_btn.grid(row=2, column=0, pady=5)
-        self.sim_btn = ctk.CTkButton(self.topSelect_frm,
-                                     text="Simulations",
-                                     command=self.simBtnPress)
-        self.sim_btn.grid(row=3, column=0, pady=5)
-
-        self.topSelect_frm.grid(row=0, column=0, padx=0, pady=0, sticky="news")
-
-        # sub selection frame, empty at first
-        self.subSelect_frm = ctk.CTkFrame(self, corner_radius=0)
-        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="news")
-
-        # main content frame, empty at first
-        self.mainContent_frm = ctk.CTkFrame(self, corner_radius=0)
-        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="news")
-
-    """ ------ connect controller ------ """
-    def setController(self, controller):
-        self.controller = controller
-
-    """ ------ button handlers ------ """
-    def riderBtnPress(self):
-        if self.controller:
-            self.controller.riderBtnPress()
-
-    def envirBtnPress(self):
-        if self.controller:
-            self.controller.envirBtnPress()
-
-    def simBtnPress(self):
-        if self.controller:
-            self.controller.simBtnPress()
-
-    """ ------ update view methods ------ """
-    # update entire view when main Rider button is pressed
-    def showRiderSelectionList(self, list: List[tuple[str,int]]):
-        # show list of riders in sub selection frame
-        self.subSelect_frm = RiderSelectFrame(self, list, self.controller)
-        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
-        # TODO clear main content frame
-
-    # update entire view when main Environment button is pressed
-    def showEnvirSelectionList(self, list: List[tuple[str,int]]):
-        # show list of environments in sub selection frame
-        self.subSelect_frm = EnvirSelectFrame(self, list, self.controller)
-        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
-        # TODO clear main content frame
-
-    # update entire view when main Simulation button is pressed
-    def showSimSelectionList(self, list: List[tuple[str,int]]):
-        # show list of simulations in sub selection frame
-        self.subSelect_frm = SimSelectFrame(self, list, self.controller)
-        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="NSEW")
-        # TODO clear main content frame
-
-    def showRiderDetail(self, riderID: int, attributeDict: Dict[str,object]):
-        self.mainContent_frm = RiderProfileFrame(self, self.controller, riderID, attributeDict=attributeDict)
-        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
-
-    def showEnvirDetail(self, envirID: int, attributeDict: Dict[str,object]):
-        self.mainContent_frm = EnvironmentProfileFrame(self, self.controller, envirID, attributeDict=attributeDict)
-        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
-
-    def showSimDetail(self, simID: int, attributeDict: Dict[str,object]):
-        self.mainContent_frm = SimulationProfileFrame(self, self.controller, simID, attributeDict=attributeDict)
-        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
-
-    def showDetailSaveError(self, message: str):
-        self.mainContent_frm.showAlertError(message)
-
-    def showDetailSaveSuccess(self, message: str):
-        self.mainContent_frm.showAlertSuccess(message)
+# use plt style that works for light and dark theme
+plt.style.use('bmh')
+plt.rcParams.update({
+    "figure.facecolor": "LightGray"
+})
 
 # Generalized scrollable list of buttons
 class ScrollableBtnList(ctk.CTkScrollableFrame):
@@ -129,6 +41,53 @@ class ScrollableBtnList(ctk.CTkScrollableFrame):
                                 command=partial(callback, id))
             self.name_btns.append(btn)
             btn.grid(row=i, column=0, sticky="EW")
+
+class CustomTable(ctk.CTkFrame):
+    def __init__(self, parent,
+                 table_values: List[List[str]],
+                 column_widths: List[int] = None,
+                 border_color: Union[str, Tuple[str, str]] = ("dark slate gray","gray60"),
+                 border_width: int = 1,
+                 outside_border_width: int = 1,
+                 fg_color: Optional[Union[str, Tuple[str, str]]] = None,
+                 **kwargs):
+        super().__init__(parent,
+                         corner_radius=0,
+                         fg_color=border_color,
+                         border_width=0,
+                         **kwargs)
+
+        # hacky frame in frame to get the border I want
+        self.border = ctk.CTkFrame(self,
+                                   corner_radius=0,
+                                   fg_color=border_color,
+                                   border_width=0,
+                                   **kwargs)
+        self.grid_columnconfigure(0,weight=1)
+        self.grid_rowconfigure(0,weight=1)
+        self.border.grid(row=0,column=0,padx=outside_border_width, pady=outside_border_width, sticky="nsew")
+
+        # try to get the parent color
+        if fg_color is None:
+            fg_color = parent.cget("fg_color")
+
+        for row, cells in enumerate(table_values):
+            for col, value in enumerate(cells):
+                try:
+                    width = column_widths[col]
+                except:
+                    width = None
+                if row==0:
+                    cell = ctk.CTkLabel(self.border, text=str(value), font=ctk.CTkFont(weight="bold"), fg_color=fg_color)
+                    # self.border.grid_columnconfigure(col, weight=1)
+                    cell.grid(row=row, column=col, sticky="nsew",
+                              padx=border_width, pady=(border_width, border_width+1),
+                              ipadx=5, ipady=2)
+                else:
+                    cell = ctk.CTkLabel(self.border, text=str(value), fg_color=fg_color)
+                    cell.grid(row=row, column=col, sticky="nsew",
+                              padx=border_width, pady=border_width,
+                              ipadx=5, ipady=2)
 
 # Generalized optionmenu. Calls the provided callback
 class NameIDOptionMenu(ctk.CTkOptionMenu):
@@ -174,6 +133,104 @@ class NameIDOptionMenu(ctk.CTkOptionMenu):
         return (name,id)
 
 
+class PowerPlanPointView(ctk.CTkFrame):
+    default_padx = 10
+    default_entry_width = 60
+    default_button_size = 10
+    def __init__(self, parent, powerPlanPoint: tuple[str,str,str],
+                 saveCallback: Callable[[],None]=None,
+                 upCallback: Callable[[],None]=None,
+                 downCallback: Callable[[],None]=None,
+                 deleteCallback: Callable[[],None]=None):
+        super().__init__(parent)
+
+        self.grid_rowconfigure(0, weight=1)
+
+        # start lbl and entry (actually just a label)
+        startLbl = ctk.CTkLabel(self, text="Start (seconds): ")
+        startLbl.grid(row=0, column=0, sticky="w", padx = (self.default_padx,0))
+        self.startEnt = ctk.CTkEntry(self, width=self.default_entry_width)
+        self.startEnt.insert(0, powerPlanPoint[0])
+        self.startEnt.configure(state="disabled")
+        self.startEnt.grid(row=0, column=1, sticky="w", padx = (0,self.default_padx))
+        # power lbl and entry
+        powerLbl = ctk.CTkLabel(self, text="Power (Watts): ")
+        powerLbl.grid(row=0, column=2, padx = (self.default_padx,0))
+        self.powerEnt = ctk.CTkEntry(self, width=self.default_entry_width)
+        self.powerEnt.insert(0,powerPlanPoint[1])
+        self.powerEnt.grid(row=0, column=3, padx = (0,self.default_padx))
+        # duration lbl and entry
+        durationLbl = ctk.CTkLabel(self, text="Duration (seconds): ")
+        durationLbl.grid(row=0, column=4, padx = (self.default_padx,0))
+        self.durationEnt = ctk.CTkEntry(self, width=self.default_entry_width)
+        self.durationEnt.insert(0,powerPlanPoint[2])
+        self.durationEnt.grid(row=0, column=5, padx = (0,self.default_padx))
+        # save button
+        saveBtn = ctk.CTkButton(self, width=20, text="Save", command=saveCallback)
+        saveBtn.grid(row=0, column=6, padx=self.default_padx)
+        # up arrow button
+        downBtn = ctk.CTkButton(self, width=self.default_button_size, height=self.default_button_size,
+                                text="\N{DOWNWARDS ARROW}", command=downCallback)
+        downBtn.grid(row=0, column=7, padx=(self.default_padx, 0))
+        # down arrow button
+        upBtn = ctk.CTkButton(self, width=self.default_button_size, height=self.default_button_size,
+                              text="\N{UPWARDS ARROW}", command=upCallback)
+        upBtn.grid(row=0, column=8, padx=(0,self.default_padx))
+        # delete button
+        delBtn = ctk.CTkButton(self, width=self.default_button_size, height=self.default_button_size,
+                               text="\N{LATIN CAPITAL LETTER X}", command=deleteCallback)
+        delBtn.grid(row=0, column=9, padx=self.default_padx)
+
+    def getEntries(self) -> (float,float,float):
+        start = int(self.startEnt.get())
+        power = int(self.powerEnt.get())
+        duration = int(self.durationEnt.get())
+        return (start,power,duration)
+
+class PowerPlanFrame(ctk.CTkScrollableFrame):
+    def __init__(self, parent, powerPlan: List[tuple[str,str,str]], simID: int = -1, controller=None):
+        super().__init__(parent, height=400)
+        self.controller = controller
+        self.length = len(powerPlan) if powerPlan else 0
+        self.simID = simID
+        self.powerPlanRows: List[PowerPlanPointView] = []
+
+        self.titleLbl = SectionLabel(self, "Power Plan")
+        self.titleLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
+
+        for i,point in enumerate(powerPlan):
+            row = PowerPlanPointView(self, point,
+                                     saveCallback=partial(self.savePointCallback, i),
+                                     upCallback=partial(self.moveUpCallback, i),
+                                     downCallback=partial(self.moveDownCallback, i),
+                                     deleteCallback=partial(self.deletePointCallback, i))
+            row.grid(row=i+1, column=0, padx=10, pady=3, ipady=3)
+            self.powerPlanRows.append(row)
+
+        addBtn = ctk.CTkButton(self, width=20, text="Add \N{FULLWIDTH PLUS SIGN}", command=self.addPointCallback)
+        addBtn.grid(row=self.length+1, column=0, pady=5)
+
+    def savePointCallback(self, id: int):
+        if self.controller:
+            self.controller.savePowerPointPress(self.simID, id, self.powerPlanRows[id].getEntries())
+
+    def moveUpCallback(self, id: int):
+        if id > 0 and self.controller:
+            self.controller.swapPowerPointPress(self.simID, id, id-1)
+
+    def moveDownCallback(self, id: int):
+        if id < self.length-1 and self.controller:
+            self.controller.swapPowerPointPress(self.simID, id, id+1)
+
+    def deletePointCallback(self, id: int):
+        if self.controller:
+            self.controller.deletePowerPointPress(self.simID, id)
+
+    def addPointCallback(self):
+        if self.controller:
+            self.controller.addPowerPointPress(self.simID)
+
+
 class RiderSelectFrame(ctk.CTkFrame):
     def __init__(self, parent, nameIDs: List[tuple[str,int]], controller=None):
         super().__init__(parent, fg_color=("gray70", "gray10"), width=1, corner_radius=0)
@@ -189,7 +246,7 @@ class RiderSelectFrame(ctk.CTkFrame):
 
         # Scroll list of riders
         self.riders_list = ScrollableBtnList(self, nameIDs, self.scrollBtnPress)
-        self.riders_list.grid(row=1, column=0, sticky="NSEW")
+        self.riders_list.grid(row=1, column=0, sticky="nsew")
 
     """ ------ button callbacks ------ """
     def addRiderBtnPress(self):
@@ -215,7 +272,7 @@ class EnvirSelectFrame(ctk.CTkFrame):
 
         # Scroll list of environments
         self.envirs_list = ScrollableBtnList(self, nameIDs, self.scrollBtnPress)
-        self.envirs_list.grid(row=1, column=0, sticky="NSEW")
+        self.envirs_list.grid(row=1, column=0, sticky="nsew")
 
     """ ------ button callbacks ------ """
     def addEnvirBtnPress(self):
@@ -241,7 +298,7 @@ class SimSelectFrame(ctk.CTkFrame):
 
         # Scroll list of environments
         self.sims_list = ScrollableBtnList(self, nameIDs, self.scrollBtnPress)
-        self.sims_list.grid(row=1, column=0, sticky="NSEW")
+        self.sims_list.grid(row=1, column=0, sticky="nsew")
 
     """ ------ button callbacks ------ """
     def addSimBtnPress(self):
@@ -252,6 +309,9 @@ class SimSelectFrame(ctk.CTkFrame):
         if self.controller:
             self.controller.simSelectBtnPress(id)
 
+class SectionLabel(ctk.CTkLabel):
+    def __init__(self, parent, text: str = ""):
+        super().__init__(parent, text=text, font=ctk.CTkFont(size=15, weight="bold"))
 
 # Rider Profiles main content frame
 class RiderProfileFrame(ctk.CTkFrame):
@@ -286,8 +346,8 @@ class RiderProfileFrame(ctk.CTkFrame):
         """ ------ set up the geometry ------ """
         # Name section
         self.nameFrm = ctk.CTkFrame(self)
-        self.nameFrm.columnconfigure(4, weight=1)
-        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.nameFrm.grid_columnconfigure(4, weight=1)
+        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.nameLbl = SectionLabel(self.nameFrm, "Rider Name")
         self.nameLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.firstNameLbl = ctk.CTkLabel(self.nameFrm, text="First Name:")
@@ -303,7 +363,7 @@ class RiderProfileFrame(ctk.CTkFrame):
 
         # Physical stats section
         self.statsFrm = ctk.CTkFrame(self)
-        self.statsFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.statsFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.statsLbl = SectionLabel(self.statsFrm, "Physical Characteristics")
         self.statsLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.weightLbl = ctk.CTkLabel(self.statsFrm, text="Weight (kg):")
@@ -319,7 +379,7 @@ class RiderProfileFrame(ctk.CTkFrame):
 
         # FTP and wPrime section
         self.powerFrm = ctk.CTkFrame(self)
-        self.powerFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.powerFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.powerLbl = SectionLabel(self.powerFrm, "Physiological Characteristics")
         self.powerLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.FTPLbl = ctk.CTkLabel(self.powerFrm, text="FTP (Watts):")
@@ -427,8 +487,8 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
         """ ------ set up the geometry ------ """
         # Name section
         self.nameFrm = ctk.CTkFrame(self)
-        self.nameFrm.columnconfigure(4, weight=1)
-        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.nameFrm.grid_columnconfigure(4, weight=1)
+        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.nameLbl = SectionLabel(self.nameFrm, "Environment Name")
         self.nameLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.envirNameEnt = ctk.CTkEntry(self.nameFrm, width=300)
@@ -437,7 +497,7 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
 
         # Atmospheric conditions section
         self.atmosFrm = ctk.CTkFrame(self)
-        self.atmosFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.atmosFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.atmosLbl = SectionLabel(self.atmosFrm, "Atmospheric Conditions")
         self.atmosLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.airDensityLbl = ctk.CTkLabel(self.atmosFrm, text=f"Air Density (kg/m\N{SUPERSCRIPT THREE}):")
@@ -448,7 +508,7 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
 
         # Equipment section
         self.equipmentFrm = ctk.CTkFrame(self)
-        self.equipmentFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.equipmentFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.EquipmentLbl = SectionLabel(self.equipmentFrm, "Equipment Characteristics")
         self.EquipmentLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.CrrLbl = ctk.CTkLabel(self.equipmentFrm, text="Crr:")
@@ -546,8 +606,8 @@ class SimulationProfileFrame(ctk.CTkFrame):
         """ ------ set up the geometry ------ """
         # Name section
         self.nameFrm = ctk.CTkFrame(self)
-        self.nameFrm.columnconfigure(4, weight=1)
-        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.nameFrm.grid_columnconfigure(4, weight=1)
+        self.nameFrm.grid(row=0, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.nameLbl = SectionLabel(self.nameFrm, "Simulation Name")
         self.nameLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.simNameEnt = ctk.CTkEntry(self.nameFrm, width=300)
@@ -556,8 +616,8 @@ class SimulationProfileFrame(ctk.CTkFrame):
 
         # Rider and Environment section
         self.selectFrm = ctk.CTkFrame(self)
-        self.selectFrm.columnconfigure(4, weight=1)
-        self.selectFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="NSEW")
+        self.selectFrm.grid_columnconfigure(4, weight=1)
+        self.selectFrm.grid(row=1, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
         self.titleLbl = SectionLabel(self.selectFrm, "Rider and Environment")
         self.titleLbl.grid(row=0, column=0, columnspan=2, padx=(10,0), sticky="NW")
         self.riderLbl = ctk.CTkLabel(self.selectFrm, text="Rider:")
@@ -569,14 +629,24 @@ class SimulationProfileFrame(ctk.CTkFrame):
         self.envirOpt = NameIDOptionMenu(self.selectFrm, self.envirList, self.envir)
         self.envirOpt.grid(row=1, column=3, padx=(5,25), pady=(10,10))
 
-        # Save Environment button
-        self.saveBtn = ctk.CTkButton(self, text="Save", fg_color="green", hover_color="dark green",
+        # Power Plan section
+        self.powerPlanFrm = PowerPlanFrame(self, self.powerPlan, simID=self.simID, controller=self.controller)
+        self.powerPlanFrm.grid(row=2, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
+
+        # Save and Run Simulation buttons section
+        self.buttonFrm = ctk.CTkFrame(self, fg_color="transparent")
+        self.buttonFrm.grid_columnconfigure((0,3), weight=1)
+        self.buttonFrm.grid(row=3, column=0, padx=(10,10), pady=(10,10), sticky="nsew")
+        self.saveBtn = ctk.CTkButton(self.buttonFrm, text="Save", fg_color="green", hover_color="dark green",
                                      command=self.saveSimBtnPress)
-        self.saveBtn.grid(row=2, column=0, padx=(10,10), pady=(10,10))
+        self.saveBtn.grid(row=0, column=1, padx=(10,10), pady=(10,10))
+        self.runBtn = ctk.CTkButton(self.buttonFrm, text = "Run", fg_color="green", hover_color="dark green",
+                                    command=self.runSimBtnPress)
+        self.runBtn.grid(row=0, column=2, padx=(10,10), pady=(10,10))
 
         # success/warning alert label
         self.alertLbl = ctk.CTkLabel(self, text="")
-        self.alertLbl.grid(row=3, column=0, padx=(10,10), pady=(5,10))
+        self.alertLbl.grid(row=4, column=0, padx=(10,10), pady=(5,10))
 
     # exactly the same as wottmodel.Environment.setProperty
     def setAttribute(self, attributeDict: Dict[str, object]):
@@ -595,6 +665,8 @@ class SimulationProfileFrame(ctk.CTkFrame):
                     self.riderList = value
                 case SimAttributes.ENVIRLIST:
                     self.envirList = value
+                case SimAttributes.POWERPLAN:
+                    self.powerPlan = value
                 case _:
                     pass
 
@@ -612,6 +684,11 @@ class SimulationProfileFrame(ctk.CTkFrame):
 
             self.controller.saveSimBtnPress(self.simID, **attributeDict)
 
+    def runSimBtnPress(self):
+        # send to controller
+        if self.controller:
+            self.controller.runSimBtnPress(self.simID)
+
     """ ------ alert label methods ------ """
     def hideAlert(self):
         self.alertLbl.configure(text = "")
@@ -624,6 +701,212 @@ class SimulationProfileFrame(ctk.CTkFrame):
         self.alertLbl.configure(text = message, text_color = 'green')
         self.alertLbl.after(ms, self.hideAlert)
 
-class SectionLabel(ctk.CTkLabel):
-    def __init__(self, parent, text: str = ""):
-        super().__init__(parent, text=text, font=ctk.CTkFont(size=15, weight="bold"))
+class SimulationWindow(ctk.CTkToplevel):
+    def __init__(self, root,
+                 simName = "Simulation Name",
+                 time = [],
+                 power = [],
+                 velocity = [],
+                 splits = [],
+                 splitTable = []):
+        super().__init__(root)
+
+        # set up grid
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
+
+        # name at top
+        nameLbl = ctk.CTkLabel(self, text=simName, font=ctk.CTkFont(size=20, weight="bold"))
+        nameLbl.grid(row=0, column=0, columnspan=2, padx=20, pady=(20, 10))
+
+        # plot frame protects the plots from weird scaling
+        plot_frm = ctk.CTkFrame(self)
+        plot_frm.grid_columnconfigure(0,weight=1, minsize=300)
+        plot_frm.grid_rowconfigure((0,1),weight=1, minsize=200)
+        plot_frm.grid(row=1, column=0, sticky="nsew")
+
+        # velocity and power vs time figure/axes
+        self.velocity_fig = plt.figure()
+        power_ax = self.velocity_fig.gca()
+        velocity_ax = power_ax.twinx()
+        velocity_power_widget = FigureCanvasTkAgg(self.velocity_fig, master=plot_frm).get_tk_widget()
+
+        # get plot color list
+        colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+        # velocity plot
+        color = colors[0]
+        velocity_ln = velocity_ax.plot(time, velocity, color=color, label='Velocity')
+        velocity_ax.tick_params(axis='y', labelcolor=color)
+        velocity_ax.set_ylabel("kph", color=color)
+        velocity_ax.set_ylim(bottom=0)
+        velocity_ax.grid(True, axis='y', color=color)
+
+        # power plot
+        color = colors[1]
+        power_ln = power_ax.plot(time, power, color=color, label="Power")
+        power_ax.tick_params(axis='y', labelcolor=color)
+        power_ax.set_ylabel("Wotts", color=color)
+        power_ax.set_ylim(bottom=0)
+        power_ax.grid(True, axis='y', color=color)
+
+        # title and x shared between axes
+        velocity_ax.set_title("Velocity & Power")
+        velocity_ax.set_xlabel("time (s)")
+        velocity_ax.set_xlim(left=-1,right=time[-1]+1)
+        velocity_ax.grid(True, axis='x')
+        lines = velocity_ln + power_ln
+        labels = [l.get_label() for l in lines]
+        velocity_ax.legend(lines, labels, framealpha=1)
+
+        velocity_power_widget.grid(row=0,column=0, sticky="nsew")
+
+        # lap split graph
+        self.split_fig = plt.figure()
+        split_ax = self.split_fig.gca()
+        lap_split_widget = FigureCanvasTkAgg(self.split_fig, master=plot_frm).get_tk_widget()
+        color = colors[2]
+        split_ax.plot(splits, color=color, marker='.')
+        split_ax.tick_params(axis='y', labelcolor=color)
+        split_ax.grid(True, axis='y', color=color)
+        split_ax.set_title("Lap Times")
+        split_ax.set_xlabel("Lap")
+        split_ax.set_ylabel("time (seconds)", color=color)
+        lap_split_widget.grid(row=1, column=0, sticky="nsew")
+
+        # table of half-lap splits
+        splits_frm = ctk.CTkScrollableFrame(self, width=1000, corner_radius=0)
+        splits_frm.grid_columnconfigure(0,weight=1)
+        splits_frm.grid_rowconfigure(0,weight=1)
+        splits_tbl = CustomTable(splits_frm, table_values=splitTable, outside_border_width=2)
+        splits_frm.grid(row=1,column=1, sticky="nsew")
+        extra_x_pad = 5
+        splits_tbl.grid(row=0,column=0, padx=extra_x_pad)
+
+        # size scrollframe to table width
+        self.update_idletasks()
+        splits_frm.configure(width=splits_tbl.winfo_width()+2*extra_x_pad)
+
+        # patch for matplotlib-tkinter bug
+        self.protocol("WM_DELETE_WINDOW", self.plt_destroy)
+
+    # fix maplotlib-tkinter bug by manually closing figures before destroying window
+    def plt_destroy(self):
+        plt.close(self.velocity_fig)
+        plt.close(self.split_fig)
+        self.destroy()
+
+class View(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.controller = None
+
+        # set up grid scaling
+        self.grid_columnconfigure((0,1), weight=0)
+        self.grid_columnconfigure(0, minsize=200)
+        self.grid_columnconfigure(1, minsize=150)
+        self.grid_columnconfigure(2, weight=1, minsize=200)
+        self.grid_rowconfigure(0,weight=1)
+
+        # top selection frame
+        self.topSelect_frm = ctk.CTkFrame(self, corner_radius=0, fg_color=("gray60", "black"))
+        self.topSelect_frm.grid_columnconfigure(0, weight=1)
+
+        # logo
+        self.logo_lbl = ctk.CTkLabel(self.topSelect_frm, text="WOTTProject", font=ctk.CTkFont(size=20, weight="bold"))
+        self.logo_lbl.grid(row=0, column=0, padx=20, pady=(20, 10))
+
+        # top selection buttons
+        self.rider_btn = ctk.CTkButton(self.topSelect_frm,
+                                       text="Rider Profiles",
+                                       command=self.riderBtnPress)
+        self.rider_btn.grid(row=1, column=0, pady=5)
+        self.envir_btn = ctk.CTkButton(self.topSelect_frm,
+                                       text="Environments",
+                                       command=self.envirBtnPress)
+        self.envir_btn.grid(row=2, column=0, pady=5)
+        self.sim_btn = ctk.CTkButton(self.topSelect_frm,
+                                     text="Simulations",
+                                     command=self.simBtnPress)
+        self.sim_btn.grid(row=3, column=0, pady=5)
+
+        self.topSelect_frm.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
+
+        # sub selection frame, empty at first
+        self.subSelect_frm = ctk.CTkFrame(self, corner_radius=0)
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
+
+        # main content frame, empty at first
+        self.mainContent_frm = ctk.CTkFrame(self, corner_radius=0)
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
+
+        # store multiple simulation windows
+        self.simWindows = {}
+
+    """ ------ connect controller ------ """
+    def setController(self, controller):
+        self.controller = controller
+
+    """ ------ button handlers ------ """
+    def riderBtnPress(self):
+        if self.controller:
+            self.controller.riderBtnPress()
+
+    def envirBtnPress(self):
+        if self.controller:
+            self.controller.envirBtnPress()
+
+    def simBtnPress(self):
+        if self.controller:
+            self.controller.simBtnPress()
+
+    """ ------ update view methods ------ """
+    # update entire view when main Rider button is pressed
+    def showRiderSelectionList(self, list: List[tuple[str,int]]):
+        # show list of riders in sub selection frame
+        self.subSelect_frm = RiderSelectFrame(self, list, self.controller)
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
+        # TODO clear main content frame
+
+    # update entire view when main Environment button is pressed
+    def showEnvirSelectionList(self, list: List[tuple[str,int]]):
+        # show list of environments in sub selection frame
+        self.subSelect_frm = EnvirSelectFrame(self, list, self.controller)
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
+        # TODO clear main content frame
+
+    # update entire view when main Simulation button is pressed
+    def showSimSelectionList(self, list: List[tuple[str,int]]):
+        # show list of simulations in sub selection frame
+        self.subSelect_frm = SimSelectFrame(self, list, self.controller)
+        self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
+        # TODO clear main content frame
+
+    def showRiderDetail(self, riderID: int, attributeDict: Dict[str,object]):
+        self.mainContent_frm = RiderProfileFrame(self, self.controller, riderID, attributeDict=attributeDict)
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
+
+    def showEnvirDetail(self, envirID: int, attributeDict: Dict[str,object]):
+        self.mainContent_frm = EnvironmentProfileFrame(self, self.controller, envirID, attributeDict=attributeDict)
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
+
+    def showSimDetail(self, simID: int, attributeDict: Dict[str,object]):
+        self.mainContent_frm = SimulationProfileFrame(self, self.controller, simID, attributeDict=attributeDict)
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
+
+    def showDetailSaveError(self, message: str):
+        self.mainContent_frm.showAlertError(message)
+
+    def showDetailSaveSuccess(self, message: str):
+        self.mainContent_frm.showAlertSuccess(message)
+
+    def showSimWindow(self, simID, **kwargs):
+        # destroy the window if it already exists
+        if simID in self.simWindows:
+            window: SimulationWindow = self.simWindows[simID]
+            window.plt_destroy()
+
+        # create and save the window
+        window = SimulationWindow(self, **kwargs)
+        self.simWindows[simID] = window

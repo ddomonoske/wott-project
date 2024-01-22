@@ -1,6 +1,7 @@
 import customtkinter as ctk
-from typing import Dict
 from wottview import *
+from wottmodel import *
+from wottattributes import *
 from functools import partial
 
 fruitStr = [("apple", 1),
@@ -28,6 +29,65 @@ envirStr = [("LA", 10),
 
 simStr = [("10/8/23 COS Testing", 2),
           ("8/8/23 Worlds", 4)]
+
+testRiderAttributes = {
+    RiderAttributes.FIRSTNAME: "David",
+    RiderAttributes.LASTNAME: "Domonoske",
+    RiderAttributes.CDA: 0.195,
+    RiderAttributes.FTP: 418,
+    RiderAttributes.WEIGHT: 89,
+    RiderAttributes.WPRIME: 28
+}
+
+testEnvirAttributes = {
+    EnvirAttributes.ENVIRNAME: "COS",
+    EnvirAttributes.AIRDENSITY: 0.995,
+    EnvirAttributes.CRR: 0.002,
+    EnvirAttributes.MECHLOSSES: .01
+}
+
+testSimAttributes = {
+    SimAttributes.SIMNAME: "David in COS",
+    SimAttributes.POWERPLAN: PowerPlan([(0,500,1),
+                                        (1,988,14),
+                                        (15,550,20),
+                                        (35,458,100),
+                                        (135,523,120)])
+}
+
+tpSplitsTable = [["Distance", "Lap Split", "Total Time"],
+                [125,12.50,12.50],
+                [250,8.50,21.00],
+                [375,7.40,28.40],
+                [500,7.20,35.60],
+                [625,7.10,42.70],
+                [750,7.20,49.90],
+                [875,7.40,57.30],
+                [1000,7.26,64.56],
+                [1125,7.28,71.84],
+                [1250,7.33,79.17],
+                [1375,7.26,86.43],
+                [1500,7.48,93.90],
+                [1625,6.92,100.83],
+                [1750,7.11,107.93],
+                [1875,6.98,114.92],
+                [2000,7.01,121.93],
+                [2125,7.37,129.30],
+                [2250,7.23,136.53],
+                [2375,7.27,143.80],
+                [2500,7.26,151.06],
+                [2625,6.93,157.99],
+                [2750,7.36,165.35],
+                [2875,6.98,172.33],
+                [3000,7.43,179.77],
+                [3125,7.44,187.20],
+                [3250,7.47,194.68],
+                [3375,7.15,201.83],
+                [3500,7.00,208.82],
+                [3625,6.97,215.79],
+                [3750,6.96,222.75],
+                [3875,7.47,230.22],
+                [4000,6.96,237.19]]
 
 # colors from blender
 class bcolors:
