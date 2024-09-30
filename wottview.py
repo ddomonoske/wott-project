@@ -838,8 +838,7 @@ class View(ctk.CTkFrame):
         self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
 
         # main content frame, empty at first
-        self.mainContent_frm = ctk.CTkFrame(self, corner_radius=0)
-        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
+        self.clearMainContent()
 
         # store multiple simulation windows
         self.simWindows = {}
@@ -862,26 +861,32 @@ class View(ctk.CTkFrame):
             self.controller.simBtnPress()
 
     """ ------ update view methods ------ """
+
+    # clear main content frame
+    def clearMainContent(self):
+        self.mainContent_frm = ctk.CTkFrame(self, corner_radius=0)
+        self.mainContent_frm.grid(row=0, column=2, padx=0, pady=0, sticky="nsew")
+
     # update entire view when main Rider button is pressed
     def showRiderSelectionList(self, list: List[tuple[str,int]]):
         # show list of riders in sub selection frame
         self.subSelect_frm = RiderSelectFrame(self, list, self.controller)
         self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
-        # TODO clear main content frame
+        self.clearMainContent()
 
     # update entire view when main Environment button is pressed
     def showEnvirSelectionList(self, list: List[tuple[str,int]]):
         # show list of environments in sub selection frame
         self.subSelect_frm = EnvirSelectFrame(self, list, self.controller)
         self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
-        # TODO clear main content frame
+        self.clearMainContent()
 
     # update entire view when main Simulation button is pressed
     def showSimSelectionList(self, list: List[tuple[str,int]]):
         # show list of simulations in sub selection frame
         self.subSelect_frm = SimSelectFrame(self, list, self.controller)
         self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
-        # TODO clear main content frame
+        self.clearMainContent()
 
     def showRiderDetail(self, riderID: int, attributeDict: Dict[str,object]):
         self.mainContent_frm = RiderProfileFrame(self, self.controller, riderID, attributeDict=attributeDict)
