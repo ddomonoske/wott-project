@@ -1,6 +1,7 @@
 from typing import List, Dict
 import numpy as np
 from scipy.integrate import odeint
+import fitdecode
 from wottattributes import *
 
 
@@ -132,3 +133,70 @@ class IPCalculator(object):
         simData[SimWindowAttributes.SPLITTABLE] = self.buildSplitTable()
 
         return simData
+
+class CdACalculator(object):
+    GRAVITY = 9.80665
+
+    def __init__(self,
+                 filePath: str,
+                 airDensity: float,
+                 massKG: float,
+                 Crr: float,
+                 mechLosses: float) -> None:
+        self.filePath = filePath
+        self.airDensity = airDensity
+        self.massKG = massKG
+        self.Crr = Crr
+        self.mechLosses = mechLosses
+
+    def readFitFile(self):
+        # find start time and file length
+        with fitdecode.FitReader(self.filePath) as fit:
+            for frame in fit:
+                if (frame.frame_type == fitdecode.FIT_FRAME_DATA) and (frame.name == 'session'):
+                    self.n = np.ceil(frame.get_field('total_moving_time').value).astype(int)
+                    self.startTime = frame.get_field('start_time').value
+                    break
+
+        self.t = np.zeros(self.n)
+        self.v = np.zeros(self.n)
+        self.p = np.zeros(self.n)
+        self.c = np.zeros(self.n)
+        self.d = np.zeros(self.n)
+
+        with fitdecode.FitReader(self.filePath) as fit:
+            i = 0
+            for frame in fit:
+                if (frame.frame_type == fitdecode.FIT_FRAME_DATA) and (frame.name == 'record'):
+                    self.t[i] = (frame.get_field("timestamp").value - self.startTime).total_seconds()
+                    self.v[i] = frame.get_field("speed").value
+                    self.p[i] = frame.get_field("power").value
+                    self.c[i] = frame.get_field("cadence").value
+                    self.d[i] = frame.get_field("distance").value
+                    i += 1
+
+        self.startIndex = 0
+        self.endIndex = self._maxIndex = i-1
+
+    # set the indices that are to be used for the calculation
+    def setRange(self, start, end):
+        if (start >= 0 and start < self._maxIndex and
+                end > start and end <= self._maxIndex):
+            self.startIndex = start
+            self.endIndex = end
+        else:
+            raise ValueError(f"innapropriate start and end indices")
+
+    def calcCdA(self, t: np.ndarray, v: np.ndarray, P: np.ndarray):
+        assert np.min(v) > 5
+
+        v_avg = np.mean(v)
+        F_power = np.mean(P)/v_avg*(1-self.mechLosses)
+        F_rolling = -1*self.massKG*self.GRAVITY*self.Crr
+        F_accel = -1*self.massKG*(v[-1]-v[0])/(t[-1]-t[0])
+
+        return 2/(self.airDensity*v_avg**2) * (F_power + F_rolling + F_accel)
+
+    def calcCdASelection(self, chunk):
+        # do the rolling chunk thing for the region between self.startIndex and self.stopIndex
+        pass

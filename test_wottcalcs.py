@@ -2,6 +2,7 @@ from wottcalcs import *
 from test_helpers import *
 from wottattributes import *
 import inspect
+import matplotlib.pyplot as plt
 
 
 def test_IPCalculator_calcPedalForce() -> int:
@@ -12,13 +13,11 @@ def test_IPCalculator_calcPedalForce() -> int:
             IPCalcAttributes.MASSKG: 100,
             IPCalcAttributes.CRR: 0.002,
             IPCalcAttributes.MECHLOSSES: 0.02,
-            IPCalcAttributes.POWERPLAN: [(0,500),
-                                       (1,1000),
-                                       (3,1200),
-                                       (7,1000),
-                                       (15,800),
-                                       (20,700),
-                                       (45,360)]
+            IPCalcAttributes.POWERPLAN: [(0,500,1),
+                                         (1,988,14),
+                                         (15,550,20),
+                                         (35,458,100),
+                                         (135,523,120)]
         }
         ipc = IPCalculator(**attributes)
 
@@ -42,13 +41,11 @@ def test_IPCalculator_solve() -> int:
             IPCalcAttributes.CRR: 0.002,
             IPCalcAttributes.MECHLOSSES: 0.02,
             IPCalcAttributes.DT: .1,
-            IPCalcAttributes.POWERPLAN: [(0,500),
-                                       (1,1000),
-                                       (3,1200),
-                                       (7,1000),
-                                       (15,800),
-                                       (20,700),
-                                       (25,500)]
+            IPCalcAttributes.POWERPLAN: [(0,500,1),
+                                         (1,988,14),
+                                         (15,550,20),
+                                         (35,458,100),
+                                         (135,523,120)]
         }
         ipc = IPCalculator(**attributes)
         ipc.solve()
@@ -67,13 +64,11 @@ def test_IPCalculator_getSimResults() -> int:
             IPCalcAttributes.CRR: 0.002,
             IPCalcAttributes.MECHLOSSES: 0.02,
             IPCalcAttributes.DT: .1,
-            IPCalcAttributes.POWERPLAN: [(0,500),
-                                       (1,1000),
-                                       (3,1200),
-                                       (7,1000),
-                                       (15,800),
-                                       (20,700),
-                                       (25,500)]
+            IPCalcAttributes.POWERPLAN: [(0,500,1),
+                                         (1,988,14),
+                                         (15,550,20),
+                                         (35,458,100),
+                                         (135,523,120)]
         }
         ipc = IPCalculator(**attributes)
         ipc.solve()
@@ -84,9 +79,24 @@ def test_IPCalculator_getSimResults() -> int:
         printFailure(inspect.currentframe().f_code.co_name)
         return 1
 
+def test_CDACalculator() -> int:
+    try:
+        calc = CdACalculator("/Users/daviddomonoske/cs_projects/fit_file_testing/activity.fit",
+                             0, 0, 0, 0)
+        calc.readFitFile()
+
+        plt.plot(calc.t, calc.v)
+        plt.show()
+        printSuccess(inspect.currentframe().f_code.co_name)
+        return 0
+    except:
+        printFailure(inspect.currentframe().f_code.co_name)
+        return 1
+
 test_list = [test_IPCalculator_calcPedalForce,
              test_IPCalculator_solve,
-             test_IPCalculator_getSimResults]
+             test_IPCalculator_getSimResults,
+             test_CDACalculator]
 
 # run all tests
 def main():
