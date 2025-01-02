@@ -635,6 +635,12 @@ class Model(object):
 
         return rider
 
+    # delete rider with riderID, if they exist
+    def deleteRider(self, riderID: int):
+        rider = self.getRider(riderID)
+        if (rider):
+            self.riders.remove(rider)
+
     # add new environment. Returns the new environment
     def addEnvironment(self, **kwargs) -> Rider:
         # get next envirID from metadata
@@ -647,6 +653,12 @@ class Model(object):
 
         return envir
 
+    # delete environment with envirID, if it exists
+    def deleteEnvironment(self, envirID: int):
+        envir = self.getEnvir(envirID)
+        if (envir):
+            self.envirs.remove(envir)
+
     # add new simulation. Returns the new simulation
     def addSimulation(self, **kwargs) -> Simulation:
         # get next simID from metadata
@@ -658,6 +670,12 @@ class Model(object):
         # TODO maybe sort the list of simulations (or insert above)
 
         return sim
+
+    # delete simulation with simID, if it exists
+    def deleteSimulation(self, simID: int):
+        sim = self.getSim(simID)
+        if (sim):
+            self.sims.remove(sim)
 
     # get list of name-ID tuples for riders
     def getRiderNameIDs(self) -> List[tuple[str,int]]:

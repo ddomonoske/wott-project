@@ -12,18 +12,19 @@ class Controller(object):
         riderList = self.model.getRiderNameIDs()
         riderList = Controller.replaceEmptyName(riderList, "New Rider")
         self.view.showRiderSelectionList(riderList)
-        # TODO clear the main frame
+        self.view.clearMainContent()
 
     def envirBtnPress(self):
         envirList = self.model.getEnvirNameIDs()
         envirList = Controller.replaceEmptyName(envirList, "New Environment")
         self.view.showEnvirSelectionList(envirList)
-        # TODO clear the main frame
+        self.view.clearMainContent()
 
     def simBtnPress(self):
         simList = self.model.getSimNameIDs()
         simList = Controller.replaceEmptyName(simList, "New Simulation")
         self.view.showSimSelectionList(simList)
+        self.view.clearMainContent()
 
     """ ------ Add Data Btn Callbacks ------ """
     def addRiderBtnPress(self):
@@ -130,6 +131,25 @@ class Controller(object):
             else:
                 newNameIDs.append(nameID)
         return newNameIDs
+    
+    """ ------ Delete Data Callbacks ------ """
+    def deleteRiderBtnPress(self, riderID: int):
+        self.model.deleteRider(riderID)
+
+        # perform same update as top level rider btn press
+        self.riderBtnPress()
+
+    def deleteEnvirBtnPress(self, envirID: int=-1, **kwargs):
+        self.model.deleteEnvironment(envirID)
+        
+        # perform same update as top level envir btn press
+        self.envirBtnPress()
+        
+    def deleteSimBtnPress(self, simID: int):
+        self.model.deleteSimulation(simID)
+        
+        # perform same update as top level sim btn press
+        self.simBtnPress()
 
     """ ------ Power Plan Callbacks ------ """
     def savePowerPointPress(self, simID: int, pointID: int, point: Tuple[float,float,float]):

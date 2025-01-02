@@ -181,7 +181,7 @@ class PowerPlanPointView(ctk.CTkFrame):
                                text="\N{LATIN CAPITAL LETTER X}", command=deleteCallback)
         delBtn.grid(row=0, column=9, padx=self.default_padx)
 
-    def getEntries(self) -> (float,float,float):
+    def getEntries(self) -> Tuple[float,float,float]:
         start = int(self.startEnt.get())
         power = int(self.powerEnt.get())
         duration = int(self.durationEnt.get())
@@ -398,6 +398,11 @@ class RiderProfileFrame(ctk.CTkFrame):
                                      command=self.saveRiderBtnPress)
         self.saveBtn.grid(row=3, column=0, padx=(10,10), pady=(10,10))
 
+        # Delete Rider button
+        self.deleteBtn = ctk.CTkButton(self, text="Delete", fg_color="red", hover_color="dark red",
+                                     command=self.deleteRiderBtnPress)
+        self.deleteBtn.grid(row=3, column=1, padx=(10,19), pady=(10,10))
+
         # success/warning alert label
         self.alertLbl = ctk.CTkLabel(self, text="")
         self.alertLbl.grid(row=4, column=0, padx=(10,10), pady=(5,10))
@@ -447,6 +452,10 @@ class RiderProfileFrame(ctk.CTkFrame):
                              RiderAttributes.POWERRESULTS: self.powerResults}
 
             self.controller.saveRiderBtnPress(self.riderID, **attributeDict)
+
+    def deleteRiderBtnPress(self):
+        if self.controller:
+            self.controller.deleteRiderBtnPress(self.riderID)
 
     """ ------ alert label methods ------ """
     def hideAlert(self):
@@ -527,6 +536,11 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
                                      command=self.saveEnvirBtnPress)
         self.saveBtn.grid(row=3, column=0, padx=(10,10), pady=(10,10))
 
+        # Delete Environment button
+        self.deleteBtn = ctk.CTkButton(self, text="Delete", fg_color="red", hover_color="dark red",
+                                     command=self.deleteEnvirBtnPress)
+        self.deleteBtn.grid(row=3, column=1, padx=(10,19), pady=(10,10))
+
         # success/warning alert label
         self.alertLbl = ctk.CTkLabel(self, text="")
         self.alertLbl.grid(row=4, column=0, padx=(10,10), pady=(5,10))
@@ -565,6 +579,10 @@ class EnvironmentProfileFrame(ctk.CTkFrame):
 
             self.controller.saveEnvirBtnPress(self.envirID, **attributeDict)
 
+    def deleteEnvirBtnPress(self):
+        if self.controller:
+            self.controller.deleteEnvirBtnPress(self.envirID)
+
     """ ------ alert label methods ------ """
     def hideAlert(self):
         self.alertLbl.configure(text = "")
@@ -586,7 +604,8 @@ class SimulationProfileFrame(ctk.CTkFrame):
                  riderList: List[tuple[str,int]] = [],
                  envir: tuple[str,int] = ("",-1),
                  envirList: List[tuple[str,int]] = [],
-                 attributeDict: Dict[str, object] = {}):
+                 attributeDict: Dict[str, object] = {},
+                 powerPlan: List[tuple[str,str,str]] = []):
         super().__init__(parent)
 
         self.controller = controller
@@ -599,6 +618,7 @@ class SimulationProfileFrame(ctk.CTkFrame):
         self.riderList = riderList
         self.envir = envir
         self.envirList = envirList
+        self.powerPlan = powerPlan
 
         if attributeDict:
             self.setAttribute(attributeDict)
@@ -644,6 +664,11 @@ class SimulationProfileFrame(ctk.CTkFrame):
                                     command=self.runSimBtnPress)
         self.runBtn.grid(row=0, column=2, padx=(10,10), pady=(10,10))
 
+        # Delete Simulation button
+        self.deleteBtn = ctk.CTkButton(self, text="Delete", fg_color="red", hover_color="dark red",
+                                     command=self.deleteSimBtnPress)
+        self.deleteBtn.grid(row=3, column=1, padx=(10,19), pady=(10,10))
+
         # success/warning alert label
         self.alertLbl = ctk.CTkLabel(self, text="")
         self.alertLbl.grid(row=4, column=0, padx=(10,10), pady=(5,10))
@@ -688,6 +713,10 @@ class SimulationProfileFrame(ctk.CTkFrame):
         # send to controller
         if self.controller:
             self.controller.runSimBtnPress(self.simID)
+
+    def deleteSimBtnPress(self):
+        if self.controller:
+            self.controller.deleteSimBtnPress(self.simID)
 
     """ ------ alert label methods ------ """
     def hideAlert(self):
@@ -872,21 +901,18 @@ class View(ctk.CTkFrame):
         # show list of riders in sub selection frame
         self.subSelect_frm = RiderSelectFrame(self, list, self.controller)
         self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
-        self.clearMainContent()
 
     # update entire view when main Environment button is pressed
     def showEnvirSelectionList(self, list: List[tuple[str,int]]):
         # show list of environments in sub selection frame
         self.subSelect_frm = EnvirSelectFrame(self, list, self.controller)
         self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
-        self.clearMainContent()
 
     # update entire view when main Simulation button is pressed
     def showSimSelectionList(self, list: List[tuple[str,int]]):
         # show list of simulations in sub selection frame
         self.subSelect_frm = SimSelectFrame(self, list, self.controller)
         self.subSelect_frm.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
-        self.clearMainContent()
 
     def showRiderDetail(self, riderID: int, attributeDict: Dict[str,object]):
         self.mainContent_frm = RiderProfileFrame(self, self.controller, riderID, attributeDict=attributeDict)
