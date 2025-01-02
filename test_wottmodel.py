@@ -175,6 +175,105 @@ def test_Simulation_getStrAttributeDict() -> int:
         printFailure("test_Simulation_getStrAttributeDict")
         return 1
 
+def test_Model_addRider() -> int:
+    try:
+        # instanciate model with a test directory
+        testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
+        model = Model(str(testDirectory))
+        newRider = model.addRider(**testRiderAttributes)
+
+        # TODO assert something
+
+        printSuccess("test_Model_addRider")
+        return 0
+    except:
+        printFailure("test_Model_addRider")
+        return 1
+
+def test_Model_deleteRider() -> int:
+    try:
+        # instanciate model with a test directory
+        testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
+        model = Model(str(testDirectory))
+        newRider = model.addRider(**testRiderAttributes)
+        newRiderID = newRider.getID()
+        model.deleteRider(newRiderID)
+        for riderNameID in model.getRiderNameIDs():
+            if riderNameID[1] == newRiderID:
+                raise Exception
+        
+        printSuccess("test_Model_deleteRider")
+        return 0
+    except:
+        printFailure("test_Model_deleteRider")
+        return 1
+
+def test_Model_addEnvironment() -> int:
+    try:
+        # instanciate model with a test directory
+        testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
+        model = Model(str(testDirectory))
+        newEnvironment = model.addEnvironment(**testEnvirAttributes)
+
+        # TODO assert something
+
+        printSuccess("test_Model_addEnvironment")
+        return 0
+    except:
+        printFailure("test_Model_addEnvironment")
+        return 1
+
+def test_Model_deleteEnvironment() -> int:
+    try:
+        # instanciate model with a test directory
+        testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
+        model = Model(str(testDirectory))
+        newEnvironment = model.addEnvironment(**testEnvirAttributes)
+        newEnvirID = newEnvironment.getID()
+        model.deleteEnvironment(newEnvirID)
+        for envirNameID in model.getEnvirNameIDs():
+            if envirNameID[1] == newEnvirID:
+                raise Exception
+        
+        printSuccess("test_Model_deleteEnvironment")
+        return 0
+    except:
+        printFailure("test_Model_deleteEnvironment")
+        return 1
+
+def test_Model_addSimulation() -> int:
+    try:
+        # instanciate model with a test directory
+        testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
+        model = Model(str(testDirectory))
+        newSimulation = model.addSimulation(**testSimAttributes)
+
+        # TODO assert something
+
+        printSuccess("test_Model_addSimulation")
+        return 0
+    except:
+        printFailure("test_Model_addSimulation")
+        return 1
+
+def test_Model_deleteSimulation() -> int:
+    try:
+        # instanciate model with a test directory
+        testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
+        model = Model(str(testDirectory))
+        newSim = model.addSimulation(**testSimAttributes)
+        newSimID = newSim.getID()
+        model.deleteSimulation(newSimID)
+        for simNameID in model.getSimNameIDs():
+            if simNameID[1] == newSimID:
+                raise Exception
+        
+        printSuccess("test_Model_deleteSimulation")
+        return 0
+    except TabError:
+        printFailure("test_Model_deleteSimulation")
+        return 1
+
 def test_saveObject_loadObject() -> int:
     # instanciate model with a test directory
     testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
@@ -288,6 +387,12 @@ test_list = [test_Rider_valid_attributes,
              test_Simulation_valid_attributes,
              test_Simulation_invalid_attributes,
              test_Simulation_getStrAttributeDict,
+             test_Model_addRider,
+             test_Model_deleteRider,
+             test_Model_addEnvironment,
+             test_Model_deleteEnvironment,
+             test_Model_addSimulation,
+             test_Model_deleteSimulation,
              test_saveObject_loadObject,
              test_loadRiders,
              test_loadEnvirs,
