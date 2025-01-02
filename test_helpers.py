@@ -124,6 +124,9 @@ class BasicController():
     def simSelectBtnPress(self, id: int):
         print(f"simulation {id} button pressed")
 
+    def addPowerPointPress(self, id: int):
+        print(f"addPowerPoint button pressed for simulation {id}")
+
     def riderBtnPress(self):
         if self.view:
             self.view.showRiderSelectionList(riderStr)

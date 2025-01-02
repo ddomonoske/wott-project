@@ -94,7 +94,8 @@ def test_SimulationProfileFrame(parent: ctk.CTkToplevel):
                                       envirList=envirStr,
                                       riderList=riderStr,
                                       rider = riderStr[2],
-                                      envir=envirStr[1])
+                                      envir=envirStr[1],
+                                      powerPlan=testSimAttributes[SimAttributes.POWERPLAN].asTupleList())
     sp_frame.grid(row=0, column=0, sticky="nsew")
 
 # test Simulation Window
