@@ -118,10 +118,11 @@ class IPCalculator(object):
         return self.lapSplits.tolist()
 
     def buildSplitTable(self):
-        headers = ["Distance","Lap Split","Total Time"]
+        headers = ["Distance (m)","Half Lap Splits","Total Time"]
         data = [self.splitDistances, self.lapSplits, self.splitTimes]
-        data = np.transpose(data)
-        self.splitTable = [headers] + data.tolist()
+        data = np.transpose(data).tolist()
+        data = [[f"{row[0]:.0f}",f"{row[1]:.2f}",f"{row[2]//60:.0f}:{row[2]%60:.3f}"] for row in data]
+        self.splitTable = [headers] + data
         return self.splitTable
 
     def getSimResults(self) -> Dict[str, object]:
