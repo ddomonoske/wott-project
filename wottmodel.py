@@ -129,7 +129,6 @@ class Rider(object):
                     case RiderAttributes.CDA:
                         tmp_CdA = float(value)
                     case RiderAttributes.POWERRESULTS:
-                        # TODO parse power results
                         tmp_powerResults = value
                     case _:
                         raise AttributeError(f"'{keyword}' is not a property of the Rider class")
@@ -681,11 +680,10 @@ class Model(object):
     def getRiderNameIDs(self) -> List[tuple[str,int]]:
         return [rider.getNameID() for rider in self.riders]
 
+    # get list of strings for environments
     def getEnvirNameIDs(self) -> List[tuple[str,int]]:
         return [envir.getNameID() for envir in self.envirs]
 
+    # get list of strings for simulations
     def getSimNameIDs(self) -> List[tuple[str,int]]:
         return [sim.getNameID() for sim in self.sims]
-
-    # get list of strings for environments
-    # get list of strings for simulations

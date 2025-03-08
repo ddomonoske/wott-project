@@ -5,7 +5,6 @@ class Controller(object):
     def __init__(self, model: Model, view: View):
         self.model = model
         self.view = view
-        # TODO have some sort of state machine that remembers which page we're looking at
 
     """ ------ Top Level Btn Callbacks ------ """
     def riderBtnPress(self):
@@ -66,7 +65,6 @@ class Controller(object):
 
     """ ------ Save Data Callbacks ------ """
     def saveRiderBtnPress(self, riderID: int=-1, **kwargs):
-        # TODO check that the attributes are good?
         rider = self.model.getRider(riderID)
 
         try:
@@ -82,7 +80,6 @@ class Controller(object):
             self.view.showDetailSaveError(error)
 
     def saveEnvirBtnPress(self, envirID: int=-1, **kwargs):
-        # TODO check that the attributes are good?
         envir = self.model.getEnvir(envirID)
 
         try:
@@ -98,7 +95,6 @@ class Controller(object):
             self.view.showDetailSaveError(error)
 
     def saveSimBtnPress(self, simID: int=-1, **kwargs):
-        # TODO check that the attributes are good?
         sim = self.model.getSim(simID)
 
         try:
