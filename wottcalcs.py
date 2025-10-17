@@ -121,7 +121,7 @@ class IPCalculator(object):
         headers = ["Distance (m)","Half Lap Splits","Total Time"]
         data = [self.splitDistances, self.lapSplits, self.splitTimes]
         data = np.transpose(data).tolist()
-        data = [[f"{row[0]:.0f}",f"{row[1]:.2f}",f"{row[2]//60:.0f}:{row[2]%60:.3f}"] for row in data]
+        data = [[f"{row[0]:.0f}",f"{row[1]:.2f}",f"{row[2]//60:.0f}:{row[2]%60:{0}6.3f}"] for row in data]
         self.splitTable = [headers] + data
         return self.splitTable
 
@@ -129,7 +129,7 @@ class IPCalculator(object):
         simData = {}
         simData[SimWindowAttributes.TIME] = self.time.tolist()
         simData[SimWindowAttributes.POWER] = self.power.tolist()
-        simData[SimWindowAttributes.VELOCITY] = self.velocity.tolist()
+        simData[SimWindowAttributes.VELOCITY] = (3600/1000 * self.velocity).tolist()
         simData[SimWindowAttributes.SPLITS] = self.getLapSplits()
         simData[SimWindowAttributes.SPLITTABLE] = self.buildSplitTable()
 
