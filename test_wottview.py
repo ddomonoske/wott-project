@@ -37,6 +37,17 @@ def test_RiderSelectFrame(parent: ctk.CTkToplevel):
     ss_frame = RiderSelectFrame(parent, fruitStr, controller)
     ss_frame.grid(row=0, column=0, sticky="nsew")
 
+# test SelectRiderEnvirFrame
+def test_RiderEnvirDropdownFrame(parent: ctk.CTkToplevel):
+    parent.title("RiderEnvirDropdownFrame")
+    parent.grid_columnconfigure(0,weight=1)
+    parent.grid_rowconfigure(0,weight=1)
+
+    controller = BasicController()
+
+    select_frame = RiderEnvirDropdownFrame(parent, riderStr, riderStr[4], envirStr, envirStr[2])
+    select_frame.grid(row=0, column=0, sticky="nsew")
+
 # test the Rider Frame
 def test_RiderProfileFrame(parent: ctk.CTkToplevel):
     parent.title("Rider Frame Test")
@@ -118,6 +129,15 @@ def test_SimulationWindow(parent: ctk.CTkToplevel):
     # destroy parent because SimulationWindow opens it's own window
     parent.destroy()
 
+def test_AeroTestProfileFrame(parent: ctk.CTkToplevel):
+    parent.title("Aero Test Profile Frame Test")
+    parent.grid_columnconfigure(0,weight=1)
+    parent.grid_rowconfigure(0,weight=1)
+
+    controller = BasicController()
+    
+    AeroTestProfileFrame()
+
 # test the entire View
 def test_View(parent: ctk.CTkToplevel):
     parent.title("View Test")
@@ -135,6 +155,7 @@ def test_View(parent: ctk.CTkToplevel):
 test_list = [test_NameIDOptionMenu,
              test_CustomTable,
              test_RiderSelectFrame,
+             test_RiderEnvirDropdownFrame,
              test_RiderProfileFrame,
              test_RiderProfileFrame_Alert,
              test_EnvironmentProfileFrame,

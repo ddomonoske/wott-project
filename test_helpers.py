@@ -30,6 +30,9 @@ envirStr = [("LA", 10),
 simStr = [("10/8/23 COS Testing", 2),
           ("8/8/23 Worlds", 4)]
 
+testStr = [("Who tf knows", 0),
+           ("I certainly don't", 1)]
+
 testRiderAttributes = {
     RiderAttributes.FIRSTNAME: "David",
     RiderAttributes.LASTNAME: "Domonoske",
@@ -53,6 +56,11 @@ testSimAttributes = {
                                         (15,550,20),
                                         (35,458,100),
                                         (135,523,120)])
+}
+
+testAeroTestAttributes = {
+    AeroTestAttributes.AEROTESTNAME: "Dave LA Test 1",
+    AeroTestAttributes.DATAFILE: "~/Library/Application Support/wott_project/test_files/testFile.fit"
 }
 
 tpSplitsTable = [["Distance", "Lap Split", "Total Time"],
@@ -115,6 +123,9 @@ class BasicController():
     def addSimBtnPress(self):
         print("add simulation button pressed")
 
+    def addAeroTestBtnPress(self):
+        print("add aero test button pressed")
+
     def riderSelectBtnPress(self, id: int):
         print(f"rider {id} button pressed")
 
@@ -123,6 +134,9 @@ class BasicController():
 
     def simSelectBtnPress(self, id: int):
         print(f"simulation {id} button pressed")
+
+    def testSelectBtnPress(self, id: int):
+        print(f"aero test {id} button pressed")
 
     def addPowerPointPress(self, id: int):
         print(f"addPowerPoint button pressed for simulation {id}")
@@ -138,6 +152,10 @@ class BasicController():
     def simBtnPress(self):
         if self.view:
             self.view.showSimSelectionList(simStr)
+
+    def aeroTestBtnPress(self):
+        if self.view:
+            self.view.showAeroTestSelectionList(testStr)
 
     def saveRiderBtnPress(self, riderID=-1, **kwargs):
         print(f"rider {riderID} updated:" + str(kwargs))

@@ -175,6 +175,62 @@ def test_Simulation_getStrAttributeDict() -> int:
         printFailure("test_Simulation_getStrAttributeDict")
         return 1
 
+def test_AeroTest_valid_attributes() -> int:
+    try:
+        attributes = {
+            AeroTestAttributes.AEROTESTID: 1,
+            AeroTestAttributes.AEROTESTNAME: "Dave LA Test 1",
+            AeroTestAttributes.RIDER: Rider(0, firstName="David"),
+            AeroTestAttributes.ENVIR: Environment(0, envirName="Los Angeles"),
+            AeroTestAttributes.DATAFILE: "~/Library/Application Support/wott_project/test_files/testFile.fit"
+        }
+        aeroTest = AeroTest(**attributes)
+        printSuccess("test_AeroTest_valid_attributes")
+        return 0
+    except:
+        printFailure("test_AeroTest_valid_attributes")
+        return 1
+    
+def test_AeroTest_invalid_attributes() -> int:
+    try:
+        attributes = {
+            AeroTestAttributes.AEROTESTID: 1,
+            AeroTestAttributes.AEROTESTNAME: "Dave LA Test 1",
+            AeroTestAttributes.RIDER: Rider(0, firstName="David"),
+            AeroTestAttributes.ENVIR: Environment(0, envirName="Los Angeles"),
+            AeroTestAttributes.DATAFILE: "~/Library/Application Support/wott_project/test_files/testFile.fit",
+            "invalidAttribute": 0
+        }
+        aeroTest = AeroTest(**attributes)
+        printFailure("test_AeroTest_invalid_attributes")
+        return 1
+    except AttributeError:
+        printSuccess("test_AeroTest_invalid_attributes")
+        return 0
+    except:
+        printFailure("test_AeroTest_valid_attributes")
+        return 1
+
+def test_AeroTest_getStrAttributeDict() -> int:
+    try:
+        attributes = {
+            AeroTestAttributes.AEROTESTID: 1,
+            AeroTestAttributes.AEROTESTNAME: "Dave LA Test 1",
+            AeroTestAttributes.RIDER: Rider(0, firstName="David"),
+            AeroTestAttributes.ENVIR: Environment(0, envirName="Los Angeles"),
+            AeroTestAttributes.DATAFILE: "~/Library/Application Support/wott_project/test_files/testFile.fit"
+        }
+        aeroTest = AeroTest(**attributes)
+        strDict = aeroTest.getStrAttributeDict()
+        if all(key in strDict for key in attributes.keys()):
+            printSuccess("test_AeroTest_getStrAttributeDict")
+            return 0
+        else:
+            raise Exception
+    except:
+        printFailure("test_AeroTest_getStrAttributeDict")
+        return 1
+
 def test_Model_addRider() -> int:
     try:
         # instanciate model with a test directory
@@ -274,6 +330,39 @@ def test_Model_deleteSimulation() -> int:
         printFailure("test_Model_deleteSimulation")
         return 1
 
+def test_Model_addAeroTest() -> int:
+    try:
+        # instanciate model with a test directory
+        testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
+        model = Model(str(testDirectory))
+        newAeroTest = model.addAeroTest(**testAeroTestAttributes)
+
+        # TODO assert something
+
+        printSuccess("test_Model_addAeroTest")
+        return 0
+    except:
+        printFailure("test_Model_addAeroTest")
+        return 1
+
+def test_Model_deleteAeroTest() -> int:
+    try:
+        # instanciate model with a test directory
+        testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
+        model = Model(str(testDirectory))
+        newAeroTest = model.addAeroTest(**testAeroTestAttributes)
+        newAeroTestID = newAeroTest.getID()
+        model.deleteAeroTest(newAeroTestID)
+        for aeroTestNameID in model.getAeroTestNameIDs():
+            if aeroTestNameID[1] == newAeroTestID:
+                raise Exception
+        
+        printSuccess("test_Model_deleteAeroTest")
+        return 0
+    except TabError:
+        printFailure("test_Model_deleteAeroTest")
+        return 1
+
 def test_saveObject_loadObject() -> int:
     # instanciate model with a test directory
     testDirectory = Path.cwd() / "wott_test_saveObject_loadObject"
@@ -327,6 +416,16 @@ def test_loadSims() -> int:
         printFailure("test_loadSims")
         return 1
 
+def test_loadAeroTest() -> int:
+    try:
+        model = Model()
+        model.loadAeroTests()
+        printSuccess("test_loadAeroTest")
+        return 0
+    except:
+        printFailure("test_loadAeroTest")
+        return 1
+
 def test_loadModel() -> int:
     try:
         model = Model()
@@ -367,6 +466,16 @@ def test_saveSims() -> int:
         printFailure("test_saveSims")
         return 1
 
+def test_saveAeroTests() -> int:
+    try:
+        model = Model()
+        model.saveAeroTests()
+        printSuccess("test_saveAeroTests")
+        return 0
+    except:
+        printFailure("test_saveAeroTests")
+        return 1
+
 def test_saveModel() -> int:
     try:
         model = Model()
@@ -387,20 +496,27 @@ test_list = [test_Rider_valid_attributes,
              test_Simulation_valid_attributes,
              test_Simulation_invalid_attributes,
              test_Simulation_getStrAttributeDict,
+             test_AeroTest_valid_attributes,
+             test_AeroTest_invalid_attributes,
+             test_AeroTest_getStrAttributeDict,
              test_Model_addRider,
              test_Model_deleteRider,
              test_Model_addEnvironment,
              test_Model_deleteEnvironment,
              test_Model_addSimulation,
              test_Model_deleteSimulation,
+             test_Model_addAeroTest,
+             test_Model_deleteAeroTest,
              test_saveObject_loadObject,
              test_loadRiders,
              test_loadEnvirs,
              test_loadSims,
+             test_loadAeroTest,
              test_loadModel,
              test_saveRiders,
              test_saveEnvirs,
              test_saveSims,
+             test_saveAeroTests,
              test_saveModel]
 
 # run all tests

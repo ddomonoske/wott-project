@@ -60,6 +60,29 @@ class SimAttributes(object):
                 cls.ENVIRLIST,
                 cls.POWERPLAN}
 
+class AeroTestAttributes(object):
+    AEROTESTID = "aeroTestID"
+    AEROTESTNAME = "aeroTestName"
+    RIDER = "rider"
+    ENVIR = "envir"
+    MODEL = "model"
+    RIDERLIST = "riderList"
+    ENVIRLIST = "envirList"
+    DATAFILE = "dataFile"
+    DATASELECTIONS = "dataSelections"
+
+    @classmethod
+    def set(cls):
+        return {cls.AEROTESTID,
+                cls.AEROTESTNAME,
+                cls.RIDER,
+                cls.ENVIR,
+                cls.MODEL,
+                cls.RIDERLIST,
+                cls.ENVIRLIST,
+                cls.DATAFILE,
+                cls.DATASELECTIONS}
+
 # these rely on the above constants to ensure compatibility
 class IPCalcAttributes(object):
     CDA = RiderAttributes.CDA

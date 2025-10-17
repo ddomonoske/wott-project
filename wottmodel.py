@@ -5,12 +5,12 @@ from wottattributes import *
 from wottcalcs import *
 
 
-# TODO check file stuff
 # file paths for persistant data storage
 defaultStorageDir = Path.home() / "Library/Application Support/wott_project"
 ridersFile = "riders_data"
 envirsFile = "envirs_data"
 simsFile = "sims_data"
+aeroTestsFile = "aerotests_data"
 metaFile = "meta_data"
 
 
@@ -148,7 +148,7 @@ class Rider(object):
         self.CdA = tmp_CdA
         self.powerResults = tmp_powerResults
 
-    # calculate threshold and w' from set of power results
+    # TODO calculate threshold and w' from set of power results
 
     """ ------ getters ------ """
     def getName(self) -> str:
@@ -433,17 +433,149 @@ class Simulation(object):
         }
         return attributes
 
-    # simulate race
+
+""" ------ Aero Test ------ """
+class AeroTest(object):
+    def __init__(self, aeroTestID: int, **kwargs) -> None:
+        # init aeroTestID, everything else gets defaults
+        self.aeroTestID = aeroTestID
+        self.aeroTestName = ""
+        self.rider: Rider = None
+        self.envir: Environment = None
+        self.model: Model = None
+        self.dataFile: Path = None
+        self.dataSelections: List[Tuple[int,int]] = []
+
+        self.setProperty(nullAllowed=True, **kwargs)
+
+    # TODO do more thorough value checking
+    def setProperty(self, nullAllowed: bool = False, **kwargs):
+        # get the current attributes
+        tmp_aeroTestID = self.aeroTestID
+        tmp_aeroTestName = self.aeroTestName
+        tmp_rider = self.rider
+        tmp_envir = self.envir
+        tmp_model = self.model
+        tmp_dataFile = self.dataFile
+        tmp_dataSelections = self.dataSelections
+
+        for attribute, value in kwargs.items():
+            try:
+                match attribute:
+                    case AeroTestAttributes.AEROTESTID:
+                        tmp_aeroTestID = int(value)
+                    case AeroTestAttributes.AEROTESTNAME:
+                        tmp_aeroTestName = str(value)
+                    case AeroTestAttributes.RIDER:
+                        if (type(value)==Rider):
+                            tmp_rider = value
+                        elif (type(value)==tuple and type(value[1])==int):
+                            if self.model:
+                                tmp_rider = self.model.getRider(value[1])
+                            else:
+                                raise ValueError(f"no model to look up rider '{value}'")
+                        else:
+                            raise TypeError(f"'{attribute}' must be of Rider type")
+                    case AeroTestAttributes.ENVIR:
+                        if (type(value)==Environment):
+                            tmp_envir = value
+                        elif (type(value)==tuple and type(value[1])==int):
+                            if self.model:
+                                tmp_envir = self.model.getEnvir(value[1])
+                            else:
+                                raise ValueError(f"no model to look up environment '{value}'")
+                        else:
+                            raise TypeError(f"'{attribute}' must be of Environment type")
+                    case AeroTestAttributes.MODEL:
+                        if (type(value)==Model):
+                            tmp_model = value
+                        else:
+                            raise TypeError(f"'{attribute}' must be of Model type")
+                    case AeroTestAttributes.DATAFILE:
+                        try:
+                            assert type(value) in [str, Path]
+                            file_path = Path(value)
+                            assert file_path.is_file()
+                            assert file_path.suffix == ".fit"
+                            tmp_dataFile = file_path
+                        except:
+                            raise ValueError(f"'{attribute}' must be a fit file")
+                    case _:
+                        raise AttributeError(f"'{attribute}' is not a property of the Simulation class")
+            except (TypeError,ValueError) as e:
+                raise TypeError(f"'{attribute}' entry is not valid. {e.args[0]}")
+
+        if not (nullAllowed or tmp_aeroTestName):
+            raise AttributeError("Aero Test name must be set")
+
+        # if no errors thrown, save to model
+        self.aeroTestID = tmp_aeroTestID
+        self.aeroTestName = tmp_aeroTestName
+        self.rider = tmp_rider
+        self.envir = tmp_envir
+        self.model = tmp_model
+        self.dataFile = tmp_dataFile
+
+    """ ------ getters and setters ------ """
+    def setModel(self, model):
+        self.model = model
+
+    def setRider(self, rider: Rider):
+        self.rider = rider
+
+    def setEnvir(self, envir: Environment):
+        self.envir = envir
+
+    def getName(self) -> str:
+        return self.aeroTestName
+
+    def getID(self) -> int:
+        return self.aeroTestID
+
+    def getNameID(self) -> tuple[str,int]:
+        return (self.getName(), self.getID())
+
+    def getRider(self) -> Rider:
+        return self.rider
+
+    def getEnvir(self) -> Environment:
+        return self.envir
+
+    def isAeroTest(self, id: int) -> bool:
+        return self.aeroTestID == id
+
+    def getRiderList(self) -> List[tuple[str,int]]:
+        return self.model.getRiderNameIDs() if self.model else []
+
+    def getEnvirList(self) -> List[tuple[str,int]]:
+        return self.model.getEnvirNameIDs() if self.model else []
+
+    def getDataFileStr(self) -> str:
+        return self.dataFile.as_posix()
+
+    def getStrAttributeDict(self) -> Dict[str,object]:
+        attributes = {
+            AeroTestAttributes.AEROTESTID: self.aeroTestID,
+            AeroTestAttributes.AEROTESTNAME: self.aeroTestName,
+            AeroTestAttributes.RIDER: self.rider.getNameID() if self.rider else ("",-1),
+            AeroTestAttributes.ENVIR: self.envir.getNameID() if self.envir else ("",-1),
+            AeroTestAttributes.RIDERLIST: self.getRiderList(),
+            AeroTestAttributes.ENVIRLIST: self.getEnvirList(),
+            AeroTestAttributes.DATAFILE: self.getDataFileStr() if self.dataFile else ""
+        }
+        return attributes
 
 """ ------ Meta Data ------ """
 class WottMetaData(object):
     def __init__(self,
                  nextRiderID: int = 0,
                  nextEnvirID: int = 0,
-                 nextSimID: int = 0) -> None:
+                 nextSimID: int = 0,
+                 nextAeroTestID: int = 0) -> None:
         self.nextRiderID = nextRiderID
         self.nextEnvirID = nextEnvirID
         self.nextSimID = nextSimID
+        self.nextAeroTestID = nextAeroTestID
 
     def newRiderID(self) -> int:
         self.nextRiderID += 1
@@ -457,6 +589,11 @@ class WottMetaData(object):
         self.nextSimID += 1
         return self.nextSimID - 1
 
+    def newAeroTestID(self) -> int:
+        self.nextAeroTestID += 1
+        return self.nextAeroTestID - 1
+
+
 """ ------ Wott Model ------ """
 class Model(object):
     def __init__(self, storageDir: str = str(defaultStorageDir)):
@@ -467,6 +604,9 @@ class Model(object):
         # update the model stored in sims to self
         for sim in self.sims:
             sim.setModel(self)
+
+        for test in self.aeroTests:
+            test.setModel(self)
 
         # TODO should I have a save flag that represents if the data has been changed since it was last saved?
 
@@ -479,6 +619,7 @@ class Model(object):
         self.loadRiders()
         self.loadEnvirs()
         self.loadSims()
+        self.loadAeroTests()
         self.loadMetaData()
 
     # safely load riders
@@ -526,6 +667,21 @@ class Model(object):
             if data and isinstance(data[0], Simulation):
                 self.sims = data
 
+    # safely load aeroTests:
+    def loadAeroTests(self):
+        filePath = self.storageDir / aeroTestsFile
+
+        # load raw data
+        data = self.loadObject(filePath)
+
+        # init as empty list of AeroTests
+        self.aeroTests: List[AeroTest] = []
+
+        # if data represents list of AeroTests, save to self
+        if isinstance(data, List):
+            if data and isinstance(data[0], AeroTest):
+                self.aeroTests = data
+
     # safely load meta data
     def loadMetaData(self):
         filePath = self.storageDir / metaFile
@@ -565,6 +721,7 @@ class Model(object):
         self.saveRiders()
         self.saveEnvirs()
         self.saveSims()
+        self.saveAeroTests()
         self.saveMetaData()
 
     # save riders to file
@@ -581,6 +738,11 @@ class Model(object):
     def saveSims(self):
         filePath = self.storageDir / simsFile
         self.saveObject(filePath, self.sims)
+
+    # save aero tests to a file
+    def saveAeroTests(self):
+        filePath = self.storageDir / aeroTestsFile
+        self.saveObject(filePath, self.aeroTests)
 
     # save meta data to file
     def saveMetaData(self):
@@ -607,18 +769,25 @@ class Model(object):
                 return rider
         return None
 
-    # get specific environment, given a string
+    # get specific environment, given an envirID
     def getEnvir(self, envirID: int) -> Environment:
         for envir in self.envirs:
             if envir.isEnvir(envirID):
                 return envir
         return None
 
-    # get specific simulation, given a string
+    # get specific simulation, given a simID
     def getSim(self, simID: int) -> Simulation:
         for sim in self.sims:
             if sim.isSim(simID):
                 return sim
+        return None
+
+    # get specific Aero Test, given an aeroTestID
+    def getAeroTest(self, aeroTestID: int) -> AeroTest:
+        for aeroTest in self.aeroTests:
+            if aeroTest.isAeroTest(aeroTestID):
+                return aeroTest
         return None
 
     """ ------ Add/Delete methods ------ """
@@ -676,6 +845,23 @@ class Model(object):
         if (sim):
             self.sims.remove(sim)
 
+    # add new aero test. Returns the new Aero test
+    def addAeroTest(self, **kwargs) -> AeroTest:
+        # get next aeroTestID from metadata
+        aeroTestID = self.metaData.newAeroTestID()
+
+        # make new aero test and append to model list
+        aeroTest = AeroTest(aeroTestID, model=self, **kwargs)
+        self.aeroTests.append(aeroTest)
+
+        return aeroTest
+
+    # delete aero test with aeroTestID, if it exists
+    def deleteAeroTest(self, aeroTestID: int):
+        aeroTest = self.getAeroTest(aeroTestID)
+        if (aeroTest):
+            self.aeroTests.remove(aeroTest)
+
     # get list of name-ID tuples for riders
     def getRiderNameIDs(self) -> List[tuple[str,int]]:
         return [rider.getNameID() for rider in self.riders]
@@ -687,3 +873,7 @@ class Model(object):
     # get list of strings for simulations
     def getSimNameIDs(self) -> List[tuple[str,int]]:
         return [sim.getNameID() for sim in self.sims]
+
+    # get list of strings for aero tests
+    def getAeroTestNameIDs(self) -> List[tuple[str,int]]:
+        return [test.getNameID() for test in self.aeroTests]
