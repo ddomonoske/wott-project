@@ -866,8 +866,16 @@ class AeroTestProfileFrame(ctk.CTkFrame):
 
     def selectFileBtnPress(self):
         fileDialog = ctk.filedialog.FileDialog(self, "Select FIT File...")
-        fname = fileDialog.go("~/Desktop")
-        if(fname != None):
+        startFolder = "/"
+        if (self.dataFile != None):
+            pathParts = Path(self.dataFile).parts
+            for part in pathParts[1:-1]:
+                startFolder += part + "/"
+        else:
+            startFolder = "~/Desktop"
+
+        fname = fileDialog.go(startFolder)
+        if (fname != None):
             self.fileEnt.configure(state="normal")
             self.fileEnt.delete(0,len(self.fileEnt.get()))
             self.fileEnt.insert(0,Path(fname).name)
