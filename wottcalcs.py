@@ -201,3 +201,7 @@ class CdACalculator(object):
     def calcCdASelection(self, chunk):
         # do the rolling chunk thing for the region between self.startIndex and self.stopIndex
         pass
+    
+    def getNormPower(self, p: np.ndarray) -> float:
+        normPow = np.mean(p ** 4) ** 0.25
+        return normPow

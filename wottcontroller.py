@@ -155,6 +155,7 @@ class Controller(object):
         aeroTest = self.model.getAeroTest(aeroTestID)
 
         try:
+            # TODO aeroTestResults = aeroTest.
             raise Exception("Sorry, this feature isn't implemented yet")
         except Exception as error:
             self.view.showDetailErrorMessage(error)

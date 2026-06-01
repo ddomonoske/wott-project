@@ -444,7 +444,8 @@ class AeroTest(object):
         self.envir: Environment = None
         self.model: Model = None
         self.dataFile: Path = None
-        self.dataSelections: List[Tuple[int,int]] = []
+        self.dataSelections: List[AeroTestSection] = []
+    
 
         self.setProperty(nullAllowed=True, **kwargs)
 
@@ -564,6 +565,40 @@ class AeroTest(object):
             AeroTestAttributes.DATAFILE: self.getDataFileStr() if self.dataFile else ""
         }
         return attributes
+    
+    """ ------ Analysis Methods ------ """
+    def readFitFile(self):
+        # find start time and file length
+        with fitdecode.FitReader(self.filePath) as fit:
+            for frame in fit:
+                if (frame.frame_type == fitdecode.FIT_FRAME_DATA) and (frame.name == 'session'):
+                    self.n = np.ceil(frame.get_field('total_moving_time').value).astype(int)
+                    self.startTime = frame.get_field('start_time').value
+                    break
+
+        self.t = np.zeros(self.n)
+        self.v = np.zeros(self.n)
+        self.p = np.zeros(self.n)
+        self.c = np.zeros(self.n)
+        self.d = np.zeros(self.n)
+
+        with fitdecode.FitReader(self.filePath) as fit:
+            i = 0
+            for frame in fit:
+                if (frame.frame_type == fitdecode.FIT_FRAME_DATA) and (frame.name == 'record'):
+                    self.t[i] = (frame.get_field("timestamp").value - self.startTime).total_seconds()
+                    self.v[i] = frame.get_field("speed").value
+                    self.p[i] = frame.get_field("power").value
+                    self.c[i] = frame.get_field("cadence").value
+                    self.d[i] = frame.get_field("distance").value
+                    i += 1
+
+        self.startIndex = 0
+        self.endIndex = self._maxIndex = i-1
+        
+    def getValues(self):
+        return {}
+        
 
 """ ------ Meta Data ------ """
 class WottMetaData(object):
@@ -877,3 +912,34 @@ class Model(object):
     # get list of strings for aero tests
     def getAeroTestNameIDs(self) -> List[tuple[str,int]]:
         return [test.getNameID() for test in self.aeroTests]
+
+class AeroTestAnalyzer(object):
+    def __init__(self,
+                 fitFile: Path,
+                 airDensity: float,
+                 massKG: float,
+                 Crr: float,
+                 mechLosses: float) -> None:
+        self.fitFile = fitFile
+        self.airDensity = airDensity
+        self.massKG = massKG
+        self.Crr = Crr
+        self.mechLosses = mechLosses
+
+    
+
+class AeroTestSection(object):
+    _CdA = None
+    _calculated = False
+    
+    def __init__(self,
+                 airDensity: float,
+                 massKG: float,
+                 Crr: float,
+                 mechLosses: float) -> None:
+        self.airDensity = airDensity
+        self.massKG = massKG
+        self.Crr = Crr
+        self.mechLosses = mechLosses
+    
+    
