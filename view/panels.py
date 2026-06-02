@@ -7,6 +7,7 @@ from functools import partial
 
 import matplotlib.pyplot as plt
 import matplotlib
+from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 
@@ -420,7 +421,7 @@ class SimulationWindow(ctk.CTkToplevel):
 
         colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-        self.velocity_fig = plt.figure()
+        self.velocity_fig = Figure()
         power_ax = self.velocity_fig.gca()
         velocity_ax = power_ax.twinx()  # two y-axes sharing one x-axis
 
@@ -448,7 +449,7 @@ class SimulationWindow(ctk.CTkToplevel):
         FigureCanvasTkAgg(self.velocity_fig, master=plot_frm).get_tk_widget().grid(
             row=0, column=0, sticky="nsew")
 
-        self.split_fig = plt.figure()
+        self.split_fig = Figure()
         split_ax = self.split_fig.gca()
         c = colors[2]
         split_ax.plot(splits, color=c, marker='.')
