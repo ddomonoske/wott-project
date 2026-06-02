@@ -265,10 +265,3 @@ def test_delete_aero_test(ctrl):
     c.delete_aero_test_btn_press(test.aero_test_id)
     assert len(storage.aero_tests) == 0
 
-
-def test_calc_aero_test_not_implemented(ctrl):
-    c, storage, view = ctrl
-    c.add_aero_test_btn_press()
-    test = storage.aero_tests[0]
-    c.calc_aero_test_btn_press(test.aero_test_id)
-    assert view.last_error is not None

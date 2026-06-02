@@ -1,3 +1,4 @@
+from calcs import IPCalculator, CdACalculator
 from model.entities import Rider, Environment, Simulation, AeroTest
 from model.storage import Storage
 from view.panels import View
@@ -141,7 +142,6 @@ class Controller:
     # ------ Run simulation ------
 
     def run_sim_btn_press(self, sim_id: int):
-        from calcs import IPCalculator  # deferred to avoid loading scipy/numpy at startup
         sim = self.storage.get_sim(sim_id)
         rider = self.storage.get_rider(sim.rider_id) if sim.rider_id is not None else None
         envir = self.storage.get_envir(sim.envir_id) if sim.envir_id is not None else None
