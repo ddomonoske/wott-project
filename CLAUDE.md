@@ -44,3 +44,16 @@ Strict MVC. Files are organized into packages:
 ## Dependencies
 
 `customtkinter`, `numpy`, `scipy`, `matplotlib`, `fitdecode`
+
+## Building a standalone executable
+
+PyInstaller bundles the app and all dependencies into a platform-native executable (`.app` on macOS, `.exe` on Windows, binary on Linux). The spec file is `wott.spec`.
+
+```bash
+pip install -r requirements-dev.txt   # includes pyinstaller
+pyinstaller wott.spec                 # output in dist/
+```
+
+`requirements.txt` lists runtime deps (what gets bundled). `requirements-dev.txt` adds `pyinstaller` and `pytest` on top — this is what developers install.
+
+GitHub Actions (`.github/workflows/build.yml`) builds all three platforms automatically when a `v*` tag is pushed, and attaches the binaries to a GitHub Release.
