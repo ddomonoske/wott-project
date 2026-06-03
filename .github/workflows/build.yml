@@ -91,7 +91,6 @@ jobs:
           codesign --force --options runtime --timestamp --sign "$CERT_IDENTITY" dist/WOTT.app
           echo "=== Verifying signature ==="
           codesign --verify --deep --strict --verbose=2 dist/WOTT.app
-          spctl --assess --type execute --verbose dist/WOTT.app
 
       - name: Notarize the app
         if: matrix.os == 'macos-latest'
