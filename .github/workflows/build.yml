@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
+      - development
   workflow_dispatch:
 
 jobs:
@@ -48,16 +52,35 @@ jobs:
         run: |
           echo "$MACOS_CERTIFICATE" | base64 --decode > certificate.p12
           security create-keychain -p actions build.keychain
+          security set-keychain-settings -lut 21600 build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p actions build.keychain
-          security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12
           security set-key-partition-list -S apple-tool:,apple: -s -k actions build.keychain
+          security list-keychains -d user -s build.keychain login.keychain
 
       - name: Sign the app
         if: matrix.os == 'macos-latest'
         run: |
-          CERT_IDENTITY=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application" | head -1 | awk '{print $2}')
-          codesign --deep --force --options runtime --sign "$CERT_IDENTITY" dist/WOTT.app
+          CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | awk '{print $2}')
+          if [ -z "$CERT_IDENTITY" ]; then
+            echo "ERROR: No Developer ID Application certificate found. Check that the MACOS_CERTIFICATE secret contains a Developer ID Application cert, not an Apple Development cert."
+            exit 1
+          fi
+          echo "Signing with identity: $CERT_IDENTITY"
+          # Sign all Mach-O binaries (catches all executables regardless of name/extension)
+          find dist/WOTT.app -type f | while read f; do
+            if file "$f" | grep -qE "Mach-O"; then
+              codesign --force --options runtime --timestamp --sign "$CERT_IDENTITY" "$f"
+            fi
+          done
+          # Sign framework bundles deepest-first so outer bundles don't invalidate inner ones
+          find dist/WOTT.app -name "*.framework" -type d | awk '{print length, $0}' | sort -rn | cut -d' ' -f2- | while read fw; do
+            codesign --force --options runtime --timestamp --sign "$CERT_IDENTITY" "$fw"
+          done
+          codesign --force --options runtime --timestamp --sign "$CERT_IDENTITY" dist/WOTT.app
+          echo "=== Verifying signature ==="
+          codesign --verify --deep --strict --verbose=2 dist/WOTT.app
 
       - name: Notarize the app
         if: matrix.os == 'macos-latest'
@@ -67,15 +90,27 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           cd dist
-          zip -r WOTT-macOS.zip WOTT.app
-          xcrun notarytool submit WOTT-macOS.zip \
+          ditto -c -k --sequesterRsrc --keepParent WOTT.app WOTT-macOS.zip
+          NOTARY_OUTPUT=$(xcrun notarytool submit WOTT-macOS.zip \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --wait
+            --wait \
+            --output-format json)
+          echo "$NOTARY_OUTPUT"
+          STATUS=$(echo "$NOTARY_OUTPUT" | python3 -c "import sys,json; print(json.load(sys.stdin)['status'])")
+          SUBMISSION_ID=$(echo "$NOTARY_OUTPUT" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+          if [ "$STATUS" != "Accepted" ]; then
+            echo "Notarization failed with status: $STATUS. Fetching log..."
+            xcrun notarytool log "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_ID_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID"
+            exit 1
+          fi
           xcrun stapler staple WOTT.app
           rm WOTT-macOS.zip
-          zip -r WOTT-macOS.zip WOTT.app
+          ditto -c -k --sequesterRsrc --keepParent WOTT.app WOTT-macOS.zip
 
       - name: Upload artifact (macOS)
         if: matrix.os == 'macos-latest'
