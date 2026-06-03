@@ -9,6 +9,7 @@ def main():
     ctk.set_appearance_mode("system")
 
     app = ctk.CTk()
+    app.title("")
     app.wm_state("zoomed")
     app.grid_columnconfigure(0, weight=1)
     app.grid_rowconfigure(0, weight=1)
