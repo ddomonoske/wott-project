@@ -59,16 +59,6 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k actions build.keychain
           security list-keychains -d user -s build.keychain login.keychain
 
-      - name: Debug identities
-        if: matrix.os == 'macos-latest'
-        run: |
-          echo "=== All identities ==="
-          security find-identity build.keychain
-          echo "=== Valid codesigning identities ==="
-          security find-identity -v -p codesigning
-          echo "=== Keychain list ==="
-          security list-keychains
-
       - name: Sign the app
         if: matrix.os == 'macos-latest'
         run: |
