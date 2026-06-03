@@ -56,11 +56,12 @@ jobs:
           security unlock-keychain -p actions build.keychain
           security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k actions build.keychain
+          security list-keychains -d user -s build.keychain login.keychain
 
       - name: Sign the app
         if: matrix.os == 'macos-latest'
         run: |
-          CERT_IDENTITY=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application" | head -1 | awk '{print $2}')
+          CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | awk '{print $2}')
           codesign --deep --force --options runtime --sign "$CERT_IDENTITY" dist/WOTT.app
 
       - name: Notarize the app
