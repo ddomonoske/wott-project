@@ -58,11 +58,28 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k actions build.keychain
           security list-keychains -d user -s build.keychain login.keychain
 
+      - name: Debug identities
+        if: matrix.os == 'macos-latest'
+        run: |
+          echo "=== All identities ==="
+          security find-identity build.keychain
+          echo "=== Valid codesigning identities ==="
+          security find-identity -v -p codesigning
+          echo "=== Keychain list ==="
+          security list-keychains
+
       - name: Sign the app
         if: matrix.os == 'macos-latest'
         run: |
           CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | awk '{print $2}')
-          codesign --deep --force --options runtime --sign "$CERT_IDENTITY" dist/WOTT.app
+          # Sign nested binaries inside-out before signing the bundle
+          find dist/WOTT.app -type f \( -name "*.dylib" -o -name "*.so" -o -name "Python" \) | while read binary; do
+            codesign --force --options runtime --sign "$CERT_IDENTITY" "$binary"
+          done
+          find dist/WOTT.app -name "*.framework" | while read fw; do
+            codesign --force --options runtime --sign "$CERT_IDENTITY" "$fw"
+          done
+          codesign --force --options runtime --sign "$CERT_IDENTITY" dist/WOTT.app
 
       - name: Notarize the app
         if: matrix.os == 'macos-latest'
@@ -73,11 +90,25 @@ jobs:
         run: |
           cd dist
           zip -r WOTT-macOS.zip WOTT.app
-          xcrun notarytool submit WOTT-macOS.zip \
+          SUBMISSION_ID=$(xcrun notarytool submit WOTT-macOS.zip \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --wait
+            --wait \
+            --output-format json | tee /dev/stderr | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+          STATUS=$(xcrun notarytool info "$SUBMISSION_ID" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --output-format json | python3 -c "import sys,json; print(json.load(sys.stdin)['status'])")
+          if [ "$STATUS" != "Accepted" ]; then
+            echo "Notarization failed with status: $STATUS. Fetching log..."
+            xcrun notarytool log "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_ID_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID"
+            exit 1
+          fi
           xcrun stapler staple WOTT.app
           rm WOTT-macOS.zip
           zip -r WOTT-macOS.zip WOTT.app
