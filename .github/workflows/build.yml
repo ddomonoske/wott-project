@@ -52,9 +52,10 @@ jobs:
         run: |
           echo "$MACOS_CERTIFICATE" | base64 --decode > certificate.p12
           security create-keychain -p actions build.keychain
+          security set-keychain-settings -lut 21600 build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p actions build.keychain
-          security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12
           security set-key-partition-list -S apple-tool:,apple: -s -k actions build.keychain
           security list-keychains -d user -s build.keychain login.keychain
 
@@ -88,6 +89,9 @@ jobs:
             codesign --force --options runtime --timestamp --sign "$CERT_IDENTITY" "$fw"
           done
           codesign --force --options runtime --timestamp --sign "$CERT_IDENTITY" dist/WOTT.app
+          echo "=== Verifying signature ==="
+          codesign --verify --deep --strict --verbose=2 dist/WOTT.app
+          spctl --assess --type execute --verbose dist/WOTT.app
 
       - name: Notarize the app
         if: matrix.os == 'macos-latest'
@@ -97,7 +101,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           cd dist
-          zip -r WOTT-macOS.zip WOTT.app
+          ditto -c -k --sequesterRsrc --keepParent WOTT.app WOTT-macOS.zip
           SUBMISSION_ID=$(xcrun notarytool submit WOTT-macOS.zip \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
@@ -119,7 +123,7 @@ jobs:
           fi
           xcrun stapler staple WOTT.app
           rm WOTT-macOS.zip
-          zip -r WOTT-macOS.zip WOTT.app
+          ditto -c -k --sequesterRsrc --keepParent WOTT.app WOTT-macOS.zip
 
       - name: Upload artifact (macOS)
         if: matrix.os == 'macos-latest'
