@@ -72,14 +72,22 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | awk '{print $2}')
-          # Sign nested binaries inside-out before signing the bundle
-          find dist/WOTT.app -type f \( -name "*.dylib" -o -name "*.so" -o -name "Python" \) | while read binary; do
-            codesign --force --options runtime --sign "$CERT_IDENTITY" "$binary"
+          if [ -z "$CERT_IDENTITY" ]; then
+            echo "ERROR: No Developer ID Application certificate found. Check that the MACOS_CERTIFICATE secret contains a Developer ID Application cert, not an Apple Development cert."
+            exit 1
+          fi
+          echo "Signing with identity: $CERT_IDENTITY"
+          # Sign all Mach-O binaries (catches all executables regardless of name/extension)
+          find dist/WOTT.app -type f | while read f; do
+            if file "$f" | grep -qE "Mach-O"; then
+              codesign --force --options runtime --timestamp --sign "$CERT_IDENTITY" "$f"
+            fi
           done
-          find dist/WOTT.app -name "*.framework" | while read fw; do
-            codesign --force --options runtime --sign "$CERT_IDENTITY" "$fw"
+          # Sign framework bundles deepest-first so outer bundles don't invalidate inner ones
+          find dist/WOTT.app -name "*.framework" -type d | awk '{print length, $0}' | sort -rn | cut -d' ' -f2- | while read fw; do
+            codesign --force --options runtime --timestamp --sign "$CERT_IDENTITY" "$fw"
           done
-          codesign --force --options runtime --sign "$CERT_IDENTITY" dist/WOTT.app
+          codesign --force --options runtime --timestamp --sign "$CERT_IDENTITY" dist/WOTT.app
 
       - name: Notarize the app
         if: matrix.os == 'macos-latest'
