@@ -45,7 +45,10 @@ jobs:
         run: pyinstaller wott.spec
 
       - name: Import certificate
-        if: matrix.os == 'macos-latest'
+        if: >-
+          matrix.os == 'macos-latest' &&
+          (startsWith(github.ref, 'refs/tags/') ||
+          (github.event_name == 'pull_request' && github.base_ref == 'main'))
         env:
           MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
@@ -60,7 +63,10 @@ jobs:
           security list-keychains -d user -s build.keychain login.keychain
 
       - name: Sign the app
-        if: matrix.os == 'macos-latest'
+        if: >-
+          matrix.os == 'macos-latest' &&
+          (startsWith(github.ref, 'refs/tags/') ||
+          (github.event_name == 'pull_request' && github.base_ref == 'main'))
         run: |
           CERT_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | awk '{print $2}')
           if [ -z "$CERT_IDENTITY" ]; then
@@ -83,7 +89,10 @@ jobs:
           codesign --verify --deep --strict --verbose=2 dist/WOTT.app
 
       - name: Notarize the app
-        if: matrix.os == 'macos-latest'
+        if: >-
+          matrix.os == 'macos-latest' &&
+          (startsWith(github.ref, 'refs/tags/') ||
+          (github.event_name == 'pull_request' && github.base_ref == 'main'))
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
@@ -113,21 +122,30 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent WOTT.app WOTT-macOS.zip
 
       - name: Upload artifact (macOS)
-        if: matrix.os == 'macos-latest'
+        if: >-
+          matrix.os == 'macos-latest' &&
+          (startsWith(github.ref, 'refs/tags/') ||
+          (github.event_name == 'pull_request' && github.base_ref == 'main'))
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
           path: dist/WOTT-macOS.zip
 
       - name: Upload artifact (Windows)
-        if: matrix.os == 'windows-latest'
+        if: >-
+          matrix.os == 'windows-latest' &&
+          (startsWith(github.ref, 'refs/tags/') ||
+          (github.event_name == 'pull_request' && github.base_ref == 'main'))
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
           path: dist/WOTT.exe
 
       - name: Upload artifact (Linux)
-        if: matrix.os == 'ubuntu-latest'
+        if: >-
+          matrix.os == 'ubuntu-latest' &&
+          (startsWith(github.ref, 'refs/tags/') ||
+          (github.event_name == 'pull_request' && github.base_ref == 'main'))
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
