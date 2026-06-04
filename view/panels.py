@@ -126,7 +126,7 @@ class RiderProfileFrame(_AlertMixin, ctk.CTkFrame):
         # Name
         name_frm = ctk.CTkFrame(self)
         name_frm.grid_columnconfigure(4, weight=1)
-        name_frm.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        name_frm.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
         SectionLabel(name_frm, "Rider Name").grid(row=0, column=0, columnspan=2, padx=(10, 0), sticky="NW")
         ctk.CTkLabel(name_frm, text="First Name:").grid(row=1, column=0, padx=(15, 5), pady=10)
         self.first_name_ent = ctk.CTkEntry(name_frm)
@@ -139,7 +139,7 @@ class RiderProfileFrame(_AlertMixin, ctk.CTkFrame):
 
         # Physical stats
         stats_frm = ctk.CTkFrame(self)
-        stats_frm.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        stats_frm.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
         SectionLabel(stats_frm, "Physical Characteristics").grid(row=0, column=0, columnspan=2, padx=(10, 0), sticky="NW")
         ctk.CTkLabel(stats_frm, text="Weight (kg):").grid(row=1, column=0, padx=(15, 5), pady=10)
         self.weight_ent = ctk.CTkEntry(stats_frm)
@@ -152,7 +152,7 @@ class RiderProfileFrame(_AlertMixin, ctk.CTkFrame):
 
         # Physiological
         power_frm = ctk.CTkFrame(self)
-        power_frm.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+        power_frm.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
         SectionLabel(power_frm, "Physiological Characteristics").grid(row=0, column=0, columnspan=2, padx=(10, 0), sticky="NW")
         ctk.CTkLabel(power_frm, text="FTP (Watts):").grid(row=1, column=0, padx=(15, 5), pady=10)
         self.ftp_ent = ctk.CTkEntry(power_frm)
@@ -169,7 +169,7 @@ class RiderProfileFrame(_AlertMixin, ctk.CTkFrame):
         ctk.CTkButton(self, text="Delete", fg_color="red", hover_color="dark red",
                       command=self._delete).grid(row=3, column=1, padx=(10, 19), pady=10)
         self.alert_lbl = ctk.CTkLabel(self, text="")
-        self.alert_lbl.grid(row=4, column=0, padx=10, pady=(5, 10))
+        self.alert_lbl.grid(row=4, column=0, columnspan=2, padx=10, pady=(5, 10))
 
     def _save(self):
         if self.controller:
@@ -198,7 +198,7 @@ class EnvironmentProfileFrame(_AlertMixin, ctk.CTkFrame):
         # Name
         name_frm = ctk.CTkFrame(self)
         name_frm.grid_columnconfigure(4, weight=1)
-        name_frm.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        name_frm.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
         SectionLabel(name_frm, "Environment Name").grid(row=0, column=0, columnspan=2, padx=(10, 0), sticky="NW")
         self.name_ent = ctk.CTkEntry(name_frm, width=300)
         self.name_ent.insert(0, envir.name or "")
@@ -206,7 +206,7 @@ class EnvironmentProfileFrame(_AlertMixin, ctk.CTkFrame):
 
         # Atmospheric
         atmos_frm = ctk.CTkFrame(self)
-        atmos_frm.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        atmos_frm.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
         SectionLabel(atmos_frm, "Atmospheric Conditions").grid(row=0, column=0, columnspan=2, padx=(10, 0), sticky="NW")
         ctk.CTkLabel(atmos_frm, text=f"Air Density (kg/m\N{SUPERSCRIPT THREE}):").grid(row=1, column=0, padx=(15, 5), pady=10)
         self.air_density_ent = ctk.CTkEntry(atmos_frm)
@@ -215,7 +215,7 @@ class EnvironmentProfileFrame(_AlertMixin, ctk.CTkFrame):
 
         # Equipment
         equip_frm = ctk.CTkFrame(self)
-        equip_frm.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+        equip_frm.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
         SectionLabel(equip_frm, "Equipment Characteristics").grid(row=0, column=0, columnspan=2, padx=(10, 0), sticky="NW")
         ctk.CTkLabel(equip_frm, text="Crr:").grid(row=1, column=0, padx=(15, 5), pady=10)
         self.crr_ent = ctk.CTkEntry(equip_frm)
@@ -232,7 +232,7 @@ class EnvironmentProfileFrame(_AlertMixin, ctk.CTkFrame):
         ctk.CTkButton(self, text="Delete", fg_color="red", hover_color="dark red",
                       command=self._delete).grid(row=3, column=1, padx=(10, 19), pady=10)
         self.alert_lbl = ctk.CTkLabel(self, text="")
-        self.alert_lbl.grid(row=4, column=0, padx=10, pady=(5, 10))
+        self.alert_lbl.grid(row=4, column=0, columnspan=2, padx=10, pady=(5, 10))
 
     def _save(self):
         if self.controller:
@@ -264,7 +264,7 @@ class SimulationProfileFrame(_AlertMixin, ctk.CTkFrame):
         # Name
         name_frm = ctk.CTkFrame(self)
         name_frm.grid_columnconfigure(4, weight=1)
-        name_frm.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        name_frm.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
         SectionLabel(name_frm, "Simulation Name").grid(row=0, column=0, columnspan=2, padx=(10, 0), sticky="NW")
         self.name_ent = ctk.CTkEntry(name_frm, width=300)
         self.name_ent.insert(0, sim.name or "")
@@ -273,12 +273,12 @@ class SimulationProfileFrame(_AlertMixin, ctk.CTkFrame):
         # Rider/Envir selection
         self.select_frm = RiderEnvirDropdownFrame(
             self, rider_names, selected_rider, envir_names, selected_envir)
-        self.select_frm.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        self.select_frm.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
 
         # Power plan
         self.power_plan_frm = PowerPlanFrame(
             self, sim.power_plan.as_tuple_list(), sim_id=sim.sim_id, controller=controller)
-        self.power_plan_frm.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+        self.power_plan_frm.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
 
         # Save/Run buttons
         btn_frm = ctk.CTkFrame(self, fg_color="transparent")
@@ -291,7 +291,7 @@ class SimulationProfileFrame(_AlertMixin, ctk.CTkFrame):
         ctk.CTkButton(self, text="Delete", fg_color="red", hover_color="dark red",
                       command=self._delete).grid(row=3, column=1, padx=(10, 19), pady=10)
         self.alert_lbl = ctk.CTkLabel(self, text="")
-        self.alert_lbl.grid(row=4, column=0, padx=10, pady=(5, 10))
+        self.alert_lbl.grid(row=4, column=0, columnspan=2, padx=10, pady=(5, 10))
 
     def _save(self):
         if self.controller:
@@ -330,7 +330,7 @@ class AeroTestProfileFrame(_AlertMixin, ctk.CTkFrame):
         # Name
         name_frm = ctk.CTkFrame(self)
         name_frm.grid_columnconfigure(4, weight=1)
-        name_frm.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        name_frm.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
         SectionLabel(name_frm, "Aero Test Name").grid(row=0, column=0, columnspan=2, padx=(10, 0), sticky="NW")
         self.name_ent = ctk.CTkEntry(name_frm, width=300)
         self.name_ent.insert(0, aero_test.name or "")
@@ -339,12 +339,12 @@ class AeroTestProfileFrame(_AlertMixin, ctk.CTkFrame):
         # Rider/Envir selection
         self.select_frm = RiderEnvirDropdownFrame(
             self, rider_names, selected_rider, envir_names, selected_envir)
-        self.select_frm.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        self.select_frm.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
 
         # File selector
         file_frm = ctk.CTkFrame(self)
         file_frm.grid_columnconfigure(4, weight=1)
-        file_frm.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+        file_frm.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
         SectionLabel(file_frm, "Data File (FIT)").grid(row=0, column=0, columnspan=2, padx=(10, 0), sticky="NW")
         self.file_ent = ctk.CTkEntry(file_frm, width=500)
         self.file_ent.insert(0, Path(self.data_file).name if self.data_file else "")
@@ -364,7 +364,7 @@ class AeroTestProfileFrame(_AlertMixin, ctk.CTkFrame):
         ctk.CTkButton(self, text="Delete", fg_color="red", hover_color="dark red",
                       command=self._delete).grid(row=4, column=1, padx=(10, 19), pady=10)
         self.alert_lbl = ctk.CTkLabel(self, text="")
-        self.alert_lbl.grid(row=5, column=0, padx=10, pady=(5, 10))
+        self.alert_lbl.grid(row=5, column=0, columnspan=2, padx=10, pady=(5, 10))
 
     def _select_file(self):
         initial_dir = str(Path(self.data_file).parent) if self.data_file else str(Path.home())
