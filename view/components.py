@@ -68,7 +68,7 @@ class NameIDOptionMenu(ctk.CTkOptionMenu):
         self.callback = callback
         self.selection = selection
 
-        # Build a unique string→id map (append integer suffix for duplicate names)
+        # Build a unique string->id map (append integer suffix for duplicate names)
         self.name_id_map: dict[str, int] = {}
         for name, id_ in name_ids:
             suffix = 0

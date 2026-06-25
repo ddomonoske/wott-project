@@ -1,10 +1,19 @@
 import pytest
+import numpy as np
 from model.entities import Rider, Environment, Simulation, AeroTest, PowerPlan
 from model.storage import Storage
 from controller import Controller, _replace_empty_name
 
 
 # ------ Stubs ------
+
+class StubAeroTestWindow:
+    def __init__(self):
+        self.refreshed_selections = None
+
+    def refresh_selections(self, selections):
+        self.refreshed_selections = selections
+
 
 class StubView:
     def __init__(self):
@@ -19,6 +28,9 @@ class StubView:
         self.shown_sim = None
         self.shown_aero_test = None
         self.sim_window_shown = False
+        self.aero_test_window_shown = False
+        self.aero_test_window_args = None
+        self.aero_test_windows: dict = {}
 
     def show_rider_selection_list(self, name_ids): self.rider_list = name_ids
     def show_envir_selection_list(self, name_ids): self.envir_list = name_ids
@@ -32,6 +44,10 @@ class StubView:
     def show_detail_error(self, msg): self.last_error = str(msg)
     def show_detail_success(self, msg): self.last_success = msg
     def show_sim_window(self, *args, **kwargs): self.sim_window_shown = True
+
+    def show_aero_test_window(self, aero_test_id, aero_test, fit_data):
+        self.aero_test_window_shown = True
+        self.aero_test_window_args = (aero_test_id, aero_test, fit_data)
 
 
 @pytest.fixture
@@ -233,7 +249,7 @@ def test_run_sim_success(ctrl):
     sim = storage.sims[0]
     sim.rider_id = rider.rider_id
     sim.envir_id = envir.envir_id
-    # High opening effort followed by steady power — known to complete 4000m in time
+    # High opening effort followed by steady power -- known to complete 4000m in time
     sim.power_plan = PowerPlan([(0, 500, 1), (1, 988, 14), (15, 550, 20), (35, 458, 100), (135, 523, 120)])
     c.run_sim_btn_press(sim.sim_id)
     assert view.last_error is None
@@ -264,4 +280,123 @@ def test_delete_aero_test(ctrl):
     test = storage.aero_tests[0]
     c.delete_aero_test_btn_press(test.aero_test_id)
     assert len(storage.aero_tests) == 0
+
+
+def test_calc_aero_test_no_file_shows_error(ctrl):
+    c, storage, view = ctrl
+    c.add_aero_test_btn_press()
+    test = storage.aero_tests[0]
+    c.calc_aero_test_btn_press(test.aero_test_id)
+    assert view.last_error is not None
+    assert view.aero_test_window_shown is False
+
+
+def test_calc_aero_test_bad_file_shows_error(ctrl):
+    c, storage, view = ctrl
+    c.add_aero_test_btn_press()
+    test = storage.aero_tests[0]
+    test.data_file = '/nonexistent/file.fit'
+    c.calc_aero_test_btn_press(test.aero_test_id)
+    assert view.last_error is not None
+    assert view.aero_test_window_shown is False
+
+
+def test_calc_aero_test_success_opens_window(ctrl, monkeypatch):
+    c, storage, view = ctrl
+    c.add_aero_test_btn_press()
+    test = storage.aero_tests[0]
+    test.data_file = '/fake.fit'
+
+    fake_fit = {
+        'elapsed_time': np.array([0.0, 1.0, 2.0]),
+        'speed': np.array([10.0, 11.0, 12.0]),
+        'power': np.array([250.0, 260.0, 270.0]),
+    }
+    monkeypatch.setattr('controller.read_fit_file_data', lambda p: fake_fit)
+
+    c.calc_aero_test_btn_press(test.aero_test_id)
+
+    assert view.last_error is None
+    assert view.aero_test_window_shown is True
+    aero_test_id, aero_test, fit_data = view.aero_test_window_args
+    assert aero_test_id == test.aero_test_id
+    assert fit_data is fake_fit
+
+
+def test_calc_aero_test_missing_elapsed_time_shows_error(ctrl, monkeypatch):
+    c, storage, view = ctrl
+    c.add_aero_test_btn_press()
+    test = storage.aero_tests[0]
+    test.data_file = '/fake.fit'
+
+    # fit data with no elapsed_time key (e.g. no session frame in file)
+    monkeypatch.setattr('controller.read_fit_file_data',
+                        lambda p: {'speed': np.array([10.0])})
+
+    c.calc_aero_test_btn_press(test.aero_test_id)
+
+    assert view.last_error is not None
+    assert view.aero_test_window_shown is False
+
+
+def test_save_aero_test_selection_adds_to_model(ctrl):
+    c, storage, view = ctrl
+    c.add_aero_test_btn_press()
+    test = storage.aero_tests[0]
+
+    c.save_aero_test_selection(test.aero_test_id, "Lap 1", 10.0, 70.0,
+                                duration=60.0, avg_power=280.0)
+
+    assert len(test.selections) == 1
+    assert test.selections[0].name == "Lap 1"
+    assert test.selections[0].start_time == 10.0
+    assert test.selections[0].avg_power == 280.0
+
+
+def test_save_aero_test_selection_refreshes_open_window(ctrl):
+    c, storage, view = ctrl
+    c.add_aero_test_btn_press()
+    test = storage.aero_tests[0]
+
+    stub_window = StubAeroTestWindow()
+    view.aero_test_windows[test.aero_test_id] = stub_window
+
+    c.save_aero_test_selection(test.aero_test_id, "Lap 1", 10.0, 70.0)
+
+    assert stub_window.refreshed_selections is test.selections
+
+
+def test_save_aero_test_selection_no_window_no_error(ctrl):
+    c, storage, view = ctrl
+    c.add_aero_test_btn_press()
+    test = storage.aero_tests[0]
+    # No window in aero_test_windows -- should complete without raising
+    c.save_aero_test_selection(test.aero_test_id, "Lap 1", 10.0, 70.0)
+    assert len(test.selections) == 1
+
+
+def test_delete_aero_test_selection_removes_from_model(ctrl):
+    c, storage, view = ctrl
+    c.add_aero_test_btn_press()
+    test = storage.aero_tests[0]
+    sel = test.add_selection("Lap 1", 10.0, 70.0)
+
+    c.delete_aero_test_selection(test.aero_test_id, sel.selection_id)
+
+    assert len(test.selections) == 0
+
+
+def test_delete_aero_test_selection_refreshes_open_window(ctrl):
+    c, storage, view = ctrl
+    c.add_aero_test_btn_press()
+    test = storage.aero_tests[0]
+    sel = test.add_selection("Lap 1", 10.0, 70.0)
+
+    stub_window = StubAeroTestWindow()
+    view.aero_test_windows[test.aero_test_id] = stub_window
+
+    c.delete_aero_test_selection(test.aero_test_id, sel.selection_id)
+
+    assert stub_window.refreshed_selections is test.selections
+    assert len(stub_window.refreshed_selections) == 0
 

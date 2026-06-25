@@ -41,7 +41,7 @@ class PowerPlan:
 
     def _update_starts(self):
         # `start` is always derived from the cumulative sum of durations before it,
-        # never stored independently — call this after any mutation.
+        # never stored independently -- call this after any mutation.
         cumulative = 0.0
         for point in self.plan:
             point.start = cumulative
@@ -71,7 +71,7 @@ class Rider:
         return f"{self.first_name} {self.last_name}".strip()
 
     def update(self, **kwargs) -> None:
-        # Validate all fields before applying any — so a partial update never
+        # Validate all fields before applying any -- so a partial update never
         # leaves the object in a half-modified state on error.
         validated = {}
         for k, v in kwargs.items():
@@ -147,17 +147,40 @@ class Simulation:
 
 
 @dataclass
+class AeroTestSelection:
+    selection_id: int
+    name: str = "Selection"
+    start_time: float = 0.0
+    end_time: float = 0.0
+    duration: Optional[float] = None
+    distance: Optional[float] = None
+    avg_power: Optional[float] = None
+    avg_speed: Optional[float] = None
+    max_speed: Optional[float] = None
+    min_speed: Optional[float] = None
+    avg_accel: Optional[float] = None
+
+
+@dataclass
 class AeroTest:
     aero_test_id: int
     name: str = ""
     rider_id: Optional[int] = None
     envir_id: Optional[int] = None
     data_file: Optional[str] = None
+    selections: list[AeroTestSelection] = field(default_factory=list)
+    _next_sel_id: int = field(default=0, repr=False, compare=False, init=False)
+
+    def __setstate__(self, state):
+        state.setdefault('selections', [])
+        state.setdefault('_next_sel_id', 0)
+        self.__dict__.update(state)
 
     def update(self, **kwargs) -> None:
         validated = {}
+        _readonly = frozenset({'aero_test_id', 'selections', '_next_sel_id'})
         for k, v in kwargs.items():
-            if k == 'aero_test_id' or not hasattr(self, k):
+            if k in _readonly or not hasattr(self, k):
                 raise AttributeError(f"Unknown or read-only field {k!r}")
             validated[k] = v
         new_name = validated.get('name', self.name)
@@ -165,3 +188,35 @@ class AeroTest:
             raise AttributeError("name must be set")
         for k, v in validated.items():
             setattr(self, k, v)
+
+    def add_selection(self, name: str, start_time: float, end_time: float,
+                      **stats) -> 'AeroTestSelection':
+        sel = AeroTestSelection(
+            selection_id=self._next_sel_id,
+            name=name,
+            start_time=start_time,
+            end_time=end_time,
+            **stats,
+        )
+        self._next_sel_id += 1
+        self.selections.append(sel)
+        return sel
+
+    def delete_selection(self, selection_id: int):
+        self.selections = [s for s in self.selections if s.selection_id != selection_id]
+
+    def rename_selection(self, selection_id: int, name: str):
+        sel = next((s for s in self.selections if s.selection_id == selection_id), None)
+        if sel is not None:
+            sel.name = name
+
+    def update_selection(self, selection_id: int, name: str,
+                         start_time: float, end_time: float, **stats):
+        sel = next((s for s in self.selections if s.selection_id == selection_id), None)
+        if sel is not None:
+            sel.name = name
+            sel.start_time = start_time
+            sel.end_time = end_time
+            for k, v in stats.items():
+                if hasattr(sel, k):
+                    setattr(sel, k, v)
