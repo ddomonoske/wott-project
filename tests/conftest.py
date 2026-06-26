@@ -1,5 +1,5 @@
 import pytest
-from model.entities import Rider, Environment, Simulation, AeroTest, PowerPlan
+from model.entities import Rider, Environment, Simulation, AeroTest, AeroTestSelection, PowerPlan
 from model.storage import Storage
 
 
@@ -56,6 +56,23 @@ def sample_aero_test():
         name="Dave LA Test 1",
         rider_id=0,
         envir_id=0,
+    )
+
+
+@pytest.fixture
+def sample_aero_test_selection():
+    return AeroTestSelection(
+        selection_id=0,
+        name="Test Lap",
+        start_time=10.0,
+        end_time=90.0,
+        duration=80.0,
+        distance=400.0,
+        avg_power=280.0,
+        avg_speed=5.0,
+        max_speed=6.0,
+        min_speed=4.0,
+        avg_accel=0.005,
     )
 
 

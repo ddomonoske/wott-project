@@ -1,5 +1,7 @@
+import pickle
 import pytest
-from model.entities import Rider, Environment, Simulation, AeroTest, PowerPlan, PowerPlanPoint
+from model.entities import (Rider, Environment, Simulation, AeroTest, AeroTestSelection,
+                             PowerPlan, PowerPlanPoint)
 from model.storage import Storage
 
 
@@ -248,3 +250,124 @@ def test_storage_meta_persists(tmp_storage, tmp_path):
     loaded = Storage(storage_dir=str(tmp_path))
     r = loaded.add_rider(first_name="C")
     assert r.rider_id == 2
+
+
+# ------ AeroTestSelection ------
+
+def test_aero_test_selection_defaults(sample_aero_test_selection):
+    sel = sample_aero_test_selection
+    assert sel.selection_id == 0
+    assert sel.name == "Test Lap"
+    assert sel.start_time == 10.0
+    assert sel.end_time == 90.0
+    assert sel.duration == 80.0
+    assert sel.avg_power == 280.0
+
+
+def test_aero_test_selection_optional_stats_default_none():
+    sel = AeroTestSelection(selection_id=0, name="Bare", start_time=0.0, end_time=10.0)
+    assert sel.duration is None
+    assert sel.distance is None
+    assert sel.avg_power is None
+
+
+# ------ AeroTest selections ------
+
+def test_aero_test_starts_with_no_selections(sample_aero_test):
+    assert sample_aero_test.selections == []
+
+
+def test_add_selection_returns_selection(sample_aero_test):
+    sel = sample_aero_test.add_selection("Lap 1", 0.0, 60.0)
+    assert isinstance(sel, AeroTestSelection)
+    assert sel.name == "Lap 1"
+    assert sel.start_time == 0.0
+    assert sel.end_time == 60.0
+
+
+def test_add_selection_appends_to_list(sample_aero_test):
+    sample_aero_test.add_selection("Lap 1", 0.0, 60.0)
+    assert len(sample_aero_test.selections) == 1
+
+
+def test_add_selection_stores_stats(sample_aero_test):
+    sel = sample_aero_test.add_selection(
+        "Lap 1", 0.0, 60.0,
+        duration=60.0, avg_power=300.0, distance=500.0,
+    )
+    assert sel.duration == 60.0
+    assert sel.avg_power == 300.0
+    assert sel.distance == 500.0
+
+
+def test_add_selection_ids_increment(sample_aero_test):
+    s0 = sample_aero_test.add_selection("A", 0.0, 10.0)
+    s1 = sample_aero_test.add_selection("B", 10.0, 20.0)
+    s2 = sample_aero_test.add_selection("C", 20.0, 30.0)
+    assert s0.selection_id == 0
+    assert s1.selection_id == 1
+    assert s2.selection_id == 2
+
+
+def test_delete_selection_removes_correct_entry(sample_aero_test):
+    s0 = sample_aero_test.add_selection("A", 0.0, 10.0)
+    s1 = sample_aero_test.add_selection("B", 10.0, 20.0)
+    sample_aero_test.delete_selection(s0.selection_id)
+    assert len(sample_aero_test.selections) == 1
+    assert sample_aero_test.selections[0].selection_id == s1.selection_id
+
+
+def test_delete_selection_nonexistent_id_is_safe(sample_aero_test):
+    sample_aero_test.add_selection("A", 0.0, 10.0)
+    sample_aero_test.delete_selection(999)
+    assert len(sample_aero_test.selections) == 1
+
+
+def test_deleted_id_not_reused(sample_aero_test):
+    s0 = sample_aero_test.add_selection("A", 0.0, 10.0)
+    sample_aero_test.delete_selection(s0.selection_id)
+    s1 = sample_aero_test.add_selection("B", 10.0, 20.0)
+    assert s1.selection_id != s0.selection_id
+
+
+def test_rename_selection(sample_aero_test):
+    sel = sample_aero_test.add_selection("Old Name", 0.0, 10.0)
+    sample_aero_test.rename_selection(sel.selection_id, "New Name")
+    assert sample_aero_test.selections[0].name == "New Name"
+
+
+def test_rename_selection_nonexistent_id_is_safe(sample_aero_test):
+    sample_aero_test.add_selection("A", 0.0, 10.0)
+    sample_aero_test.rename_selection(999, "Ghost")
+    assert sample_aero_test.selections[0].name == "A"
+
+
+def test_aero_test_update_blocks_selections(sample_aero_test):
+    with pytest.raises(AttributeError):
+        sample_aero_test.update(selections=[])
+
+
+def test_aero_test_setstate_backward_compat():
+    test = AeroTest.__new__(AeroTest)
+    test.__setstate__({
+        'aero_test_id': 1,
+        'name': 'Old Test',
+        'rider_id': None,
+        'envir_id': None,
+        'data_file': None,
+    })
+    assert test.selections == []
+    assert test._next_sel_id == 0
+    assert test.name == 'Old Test'
+
+
+def test_aero_test_pickle_round_trip():
+    test = AeroTest(aero_test_id=1, name="Test")
+    test.add_selection("Sel 1", 0.0, 60.0, avg_power=300.0)
+
+    loaded = pickle.loads(pickle.dumps(test))
+
+    assert len(loaded.selections) == 1
+    assert loaded.selections[0].name == "Sel 1"
+    assert loaded.selections[0].avg_power == 300.0
+    assert loaded._next_sel_id == 1

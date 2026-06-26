@@ -1,4 +1,4 @@
-from calcs import IPCalculator, CdACalculator
+from calcs import IPCalculator, CdACalculator, read_fit_file_data
 from model.entities import Rider, Environment, Simulation, AeroTest
 from model.storage import Storage
 from view.panels import View
@@ -168,7 +168,38 @@ class Controller:
             self.view.show_detail_error(e)
 
     def calc_aero_test_btn_press(self, aero_test_id: int):
-        self.view.show_detail_error("Aero Test calculation is not yet implemented")
+        test = self.storage.get_aero_test(aero_test_id)
+        if not test.data_file:
+            self.view.show_detail_error("No FIT file selected")
+            return
+        try:
+            fit_data = read_fit_file_data(test.data_file)
+            if not fit_data or 'elapsed_time' not in fit_data:
+                raise ValueError("No valid record data found in FIT file")
+        except Exception as e:
+            self.view.show_detail_error(e)
+            return
+        self.view.show_aero_test_window(aero_test_id, test, fit_data)
+
+    def save_aero_test_selection(self, aero_test_id: int, name: str,
+                                  start_time: float, end_time: float, **stats):
+        test = self.storage.get_aero_test(aero_test_id)
+        test.add_selection(name, start_time, end_time, **stats)
+        if aero_test_id in self.view.aero_test_windows:
+            self.view.aero_test_windows[aero_test_id].refresh_selections(test.selections)
+
+    def update_aero_test_selection(self, aero_test_id: int, selection_id: int,
+                                    name: str, start_time: float, end_time: float, **stats):
+        test = self.storage.get_aero_test(aero_test_id)
+        test.update_selection(selection_id, name, start_time, end_time, **stats)
+        if aero_test_id in self.view.aero_test_windows:
+            self.view.aero_test_windows[aero_test_id].refresh_selections(test.selections)
+
+    def delete_aero_test_selection(self, aero_test_id: int, selection_id: int):
+        test = self.storage.get_aero_test(aero_test_id)
+        test.delete_selection(selection_id)
+        if aero_test_id in self.view.aero_test_windows:
+            self.view.aero_test_windows[aero_test_id].refresh_selections(test.selections)
 
     # ------ Power plan ------
 

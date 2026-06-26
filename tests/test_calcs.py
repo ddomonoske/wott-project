@@ -1,5 +1,9 @@
+import datetime
+import types
 import pytest
-from calcs import IPCalculator
+import numpy as np
+import fitdecode
+from calcs import IPCalculator, read_fit_file_data
 
 
 SAMPLE_ATTRS = dict(
@@ -73,7 +77,7 @@ def test_velocity_output_is_kph():
     calc = IPCalculator(**SAMPLE_ATTRS)
     calc.solve()
     results = calc.get_results()
-    # Peak TT speed should be 40–70 kph; raw m/s would be ~11–19, confirming the conversion
+    # Peak TT speed should be 40-70 kph; raw m/s would be ~11-19, confirming the conversion
     assert 40 < max(results["velocity"]) < 100
 
 
@@ -105,12 +109,12 @@ def test_cda_calc_cda_constant_velocity():
     from calcs import CdACalculator
     import numpy as np
     calc = CdACalculator("/fake/path", air_density=1.2, mass_kg=80, crr=0.004, mech_losses=0.02)
-    v = np.full(10, 10.0)   # constant 10 m/s → zero acceleration term
+    v = np.full(10, 10.0)   # constant 10 m/s => zero acceleration term
     t = np.arange(10, dtype=float)
     p = np.full(10, 300.0)
     result = calc.calc_cda(t, v, p)
-    # f_power = 300/10 * 0.98 = 29.4; f_rolling = -80*9.80665*0.004 ≈ -3.14
-    # cda = 2 / (1.2 * 100) * (29.4 - 3.14) ≈ 0.438
+    # f_power = 300/10 * 0.98 = 29.4; f_rolling = -80*9.80665*0.004 ~= -3.14
+    # cda = 2 / (1.2 * 100) * (29.4 - 3.14) ~= 0.438
     assert abs(result - 0.438) < 0.01
 
 
@@ -128,3 +132,140 @@ def test_cda_calculator():
     from calcs import CdACalculator
     calc = CdACalculator("/path/to/activity.fit", 0, 0, 0, 0)
     calc.read_fit_file()
+
+
+# ------ read_fit_file_data ------
+# Helpers that build lightweight stand-ins for fitdecode frame / field objects.
+
+_START_DT = datetime.datetime(2024, 6, 1, 8, 0, 0)
+
+
+def _field(name, value):
+    return types.SimpleNamespace(name=name, value=value)
+
+
+def _session_frame(start_dt=_START_DT):
+    f = types.SimpleNamespace(
+        frame_type=fitdecode.FIT_FRAME_DATA,
+        name='session',
+        fields=[_field('start_time', start_dt)],
+    )
+    f.get_field = lambda field_name: _field(field_name, start_dt)
+    return f
+
+
+def _record_frame(elapsed_s, start_dt=_START_DT, **kwargs):
+    fields = [_field('timestamp', start_dt + datetime.timedelta(seconds=elapsed_s))]
+    for name, val in kwargs.items():
+        fields.append(_field(name, val))
+    return types.SimpleNamespace(
+        frame_type=fitdecode.FIT_FRAME_DATA,
+        name='record',
+        fields=fields,
+    )
+
+
+class _MockFitReader:
+    """Context-manager stub for fitdecode.FitReader; yields pre-built frames."""
+    def __init__(self, frames):
+        self._frames = frames
+
+    def __enter__(self):
+        return iter(self._frames)
+
+    def __exit__(self, *_):
+        return False
+
+
+def _reader_factory(*frame_lists):
+    """Returns a FitReader callable that serves each frame list in turn."""
+    itr = iter(frame_lists)
+    return lambda _path: _MockFitReader(next(itr))
+
+
+def test_read_fit_returns_elapsed_time(monkeypatch):
+    session = _session_frame()
+    records = [_record_frame(0, speed=10.0), _record_frame(1, speed=11.0)]
+    monkeypatch.setattr('calcs.fitdecode.FitReader', _reader_factory([session], records))
+
+    result = read_fit_file_data('/fake.fit')
+
+    assert 'elapsed_time' in result
+    np.testing.assert_array_equal(result['elapsed_time'], [0.0, 1.0])
+
+
+def test_read_fit_returns_numeric_fields(monkeypatch):
+    session = _session_frame()
+    records = [
+        _record_frame(0, speed=10.0, power=250.0, cadence=90.0),
+        _record_frame(1, speed=11.0, power=260.0, cadence=92.0),
+    ]
+    monkeypatch.setattr('calcs.fitdecode.FitReader', _reader_factory([session], records))
+
+    result = read_fit_file_data('/fake.fit')
+
+    assert set(result.keys()) == {'elapsed_time', 'speed', 'power', 'cadence'}
+    np.testing.assert_array_equal(result['speed'], [10.0, 11.0])
+    np.testing.assert_array_equal(result['power'], [250.0, 260.0])
+
+
+def test_read_fit_excludes_raw_timestamp(monkeypatch):
+    session = _session_frame()
+    records = [_record_frame(0, speed=10.0)]
+    monkeypatch.setattr('calcs.fitdecode.FitReader', _reader_factory([session], records))
+
+    result = read_fit_file_data('/fake.fit')
+
+    assert 'timestamp' not in result
+
+
+def test_read_fit_missing_field_becomes_nan(monkeypatch):
+    session = _session_frame()
+    records = [
+        _record_frame(0, speed=10.0, power=250.0),
+        _record_frame(1, speed=11.0),  # no power on this record
+    ]
+    monkeypatch.setattr('calcs.fitdecode.FitReader', _reader_factory([session], records))
+
+    result = read_fit_file_data('/fake.fit')
+
+    assert result['power'][0] == 250.0
+    assert np.isnan(result['power'][1])
+
+
+def test_read_fit_excludes_nonnumeric_fields(monkeypatch):
+    session = _session_frame()
+    records = [_record_frame(0, speed=10.0, label="some_string")]
+    # Override: the string field must be detected as non-numeric and dropped
+    # We supply it by patching the field value directly
+    rec = _record_frame(0, speed=10.0)
+    rec.fields.append(_field('label', 'fast'))  # string value
+    records = [rec]
+    monkeypatch.setattr('calcs.fitdecode.FitReader', _reader_factory([session], records))
+
+    result = read_fit_file_data('/fake.fit')
+
+    assert 'label' not in result
+    assert 'speed' in result
+
+
+def test_read_fit_empty_records_returns_empty(monkeypatch):
+    session = _session_frame()
+    monkeypatch.setattr('calcs.fitdecode.FitReader', _reader_factory([session], []))
+
+    result = read_fit_file_data('/fake.fit')
+
+    assert result == {}
+
+
+def test_read_fit_no_session_frame_still_reads_records(monkeypatch):
+    # When there's no session frame, elapsed_time can't be computed --
+    # the function still returns whatever numeric fields it finds.
+    records = [_record_frame(0, speed=10.0)]
+    # Both FitReader calls return only record frames (no session)
+    monkeypatch.setattr('calcs.fitdecode.FitReader', _reader_factory(records, records))
+
+    result = read_fit_file_data('/fake.fit')
+
+    assert 'speed' in result
+    assert 'elapsed_time' not in result

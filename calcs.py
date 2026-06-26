@@ -55,7 +55,7 @@ class IPCalculator:
     def _dvdt(self, v: float, t: float) -> float:
         # Newton's second law: a = F_net / m.
         # f_rr: rolling resistance (always opposes motion, hence negative)
-        # f_ad: aerodynamic drag (proportional to v², always negative)
+        # f_ad: aerodynamic drag (proportional to v^2, always negative)
         # f_p:  pedaling force reduced by drivetrain mechanical losses
         f_rr = -1 * (self.GRAVITY * self.mass_kg * self.crr)
         f_ad = -1 * (self.cda * self.air_density * (v ** 2)) / 2
@@ -121,10 +121,63 @@ class IPCalculator:
         return {
             "time": self.time.tolist(),
             "power": self.power.tolist(),
-            "velocity": (3600 / 1000 * self.velocity).tolist(),  # convert m/s → kph
+            "velocity": (3600 / 1000 * self.velocity).tolist(),  # convert m/s to kph
             "splits": self.get_lap_splits(),
             "split_table": self.build_split_table(),
         }
+
+
+def read_fit_file_data(file_path: str) -> dict[str, np.ndarray]:
+    """Read all numeric record fields from a FIT file.
+
+    Returns a dict of field_name -> 1-D numpy array. Always includes
+    'elapsed_time' (seconds from session start) when a session record is found.
+    Non-numeric fields and None values are excluded. Missing values for a given
+    field on a particular record are stored as NaN.
+    """
+    start_time = None
+    with fitdecode.FitReader(file_path) as fit:
+        for frame in fit:
+            if frame.frame_type == fitdecode.FIT_FRAME_DATA and frame.name == 'session':
+                try:
+                    start_time = frame.get_field('start_time').value
+                except Exception:
+                    pass
+                break
+
+    rows: list[dict] = []
+    with fitdecode.FitReader(file_path) as fit:
+        for frame in fit:
+            if frame.frame_type != fitdecode.FIT_FRAME_DATA or frame.name != 'record':
+                continue
+            row: dict[str, float] = {}
+            for fdata in frame.fields:
+                if fdata.name == 'timestamp':
+                    if start_time is not None:
+                        try:
+                            row['elapsed_time'] = (fdata.value - start_time).total_seconds()
+                        except (TypeError, AttributeError):
+                            pass
+                elif fdata.value is not None and isinstance(fdata.value, (int, float)):
+                    row[fdata.name] = float(fdata.value)
+            rows.append(row)
+
+    if not rows:
+        return {}
+
+    all_keys: set[str] = set()
+    for row in rows:
+        all_keys.update(row.keys())
+
+    n = len(rows)
+    result: dict[str, np.ndarray] = {}
+    for key in all_keys:
+        arr = np.empty(n)
+        for i, row in enumerate(rows):
+            arr[i] = row.get(key, np.nan)
+        result[key] = arr
+
+    return result
 
 
 class CdACalculator:

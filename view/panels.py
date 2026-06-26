@@ -18,6 +18,7 @@ plt.rcParams.update({"figure.facecolor": "LightGray"})
 from model.entities import Rider, Environment, Simulation, AeroTest
 from view.components import (ScrollableBtnList, CustomTable, SectionLabel,
                               RiderEnvirDropdownFrame, PowerPlanFrame)
+from view.aero_test_window import AeroTestWindow
 
 
 # ------ Selection frames (left panel) ------
@@ -353,13 +354,13 @@ class AeroTestProfileFrame(_AlertMixin, ctk.CTkFrame):
         ctk.CTkButton(file_frm, text="Select File",
                       command=self._select_file).grid(row=1, column=1, padx=(10, 10), pady=10)
 
-        # Save/Calculate buttons
+        # Save/Analyze buttons
         btn_frm = ctk.CTkFrame(self, fg_color="transparent")
         btn_frm.grid_columnconfigure((0, 3), weight=1)
         btn_frm.grid(row=4, column=0, padx=10, pady=10, sticky="nsew")
         ctk.CTkButton(btn_frm, text="Save", fg_color="green", hover_color="dark green",
                       command=self._save).grid(row=0, column=1, padx=10, pady=10)
-        ctk.CTkButton(btn_frm, text="Calculate", fg_color="green", hover_color="dark green",
+        ctk.CTkButton(btn_frm, text="Analyze", fg_color="green", hover_color="dark green",
                       command=self._calculate).grid(row=0, column=2, padx=10, pady=10)
         ctk.CTkButton(self, text="Delete", fg_color="red", hover_color="dark red",
                       command=self._delete).grid(row=4, column=1, padx=(10, 19), pady=10)
@@ -526,6 +527,7 @@ class View(ctk.CTkFrame):
         self.clear_main_content()
 
         self.sim_windows: dict = {}
+        self.aero_test_windows: dict = {}
 
     def set_controller(self, controller):
         self.controller = controller
@@ -604,3 +606,13 @@ class View(ctk.CTkFrame):
             self.sim_windows[sim_id]._on_close()
         window = SimulationWindow(self, sim_name=sim_name, **results)
         self.sim_windows[sim_id] = window
+
+    def show_aero_test_window(self, aero_test_id: int, aero_test: AeroTest,
+                               fit_data: dict):
+        if aero_test_id in self.aero_test_windows:
+            try:
+                self.aero_test_windows[aero_test_id]._on_close()
+            except Exception:
+                pass
+        window = AeroTestWindow(self, aero_test, fit_data, self.controller)
+        self.aero_test_windows[aero_test_id] = window
