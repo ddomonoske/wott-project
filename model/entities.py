@@ -92,7 +92,7 @@ class Rider:
             setattr(self, k, v)
 
 
-_ENVIR_FLOAT = frozenset({'air_density', 'crr', 'mech_losses'})
+_ENVIR_FLOAT = frozenset({'air_density', 'crr', 'mech_losses', 'track_length', 'corners'})
 
 
 @dataclass
@@ -102,6 +102,13 @@ class Environment:
     air_density: Optional[float] = None
     crr: Optional[float] = None
     mech_losses: Optional[float] = None
+    track_length: Optional[float] = None
+    corners: Optional[float] = None
+
+    def __setstate__(self, state):
+        state.setdefault('track_length', None)
+        state.setdefault('corners', None)
+        self.__dict__.update(state)
 
     def update(self, **kwargs) -> None:
         validated = {}

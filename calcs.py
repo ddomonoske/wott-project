@@ -1,6 +1,7 @@
 from typing import List, Dict
 import numpy as np
-from scipy.integrate import odeint
+from scipy.integrate import cumulative_trapezoid, odeint
+from scipy.ndimage import uniform_filter1d
 import fitdecode
 
 
@@ -125,6 +126,38 @@ class IPCalculator:
             "splits": self.get_lap_splits(),
             "split_table": self.build_split_table(),
         }
+
+
+class TrackShape:
+    def __init__(self, track_length: float = 250.0, corners: float = 0.60,
+                 transition: float = 15.0, dx: float = 0.1):
+        self.track_length = track_length
+        self.corners = corners
+        self.transition = transition
+        self.dx = dx
+
+    def compute(self) -> dict:
+        straight = self.track_length * (1 - self.corners) / 2
+        corner = self.track_length * self.corners / 2
+        radius = corner / np.pi
+
+        s = np.arange(0, self.track_length + self.dx, self.dx)
+        kappa = self._curvature(s, straight, corner, radius)
+
+        heading = cumulative_trapezoid(kappa, s, initial=0)
+        x = cumulative_trapezoid(np.cos(heading), s, initial=0)
+        y = cumulative_trapezoid(np.sin(heading), s, initial=0)
+
+        return {"s": s, "kappa": kappa, "x": x, "y": y}
+
+    def _curvature(self, d: np.ndarray, straight: float,
+                   corner: float, radius: float) -> np.ndarray:
+        p = d % (straight + corner)
+        c_beg = straight / 2
+        kappa = np.zeros(len(d))
+        kappa[(p > c_beg) & (p <= c_beg + corner)] = 1.0 / radius
+        window = int(np.ceil(self.transition / self.dx))
+        return uniform_filter1d(kappa, size=window, mode='nearest')
 
 
 def read_fit_file_data(file_path: str) -> dict[str, np.ndarray]:
