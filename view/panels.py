@@ -261,9 +261,14 @@ class EnvironmentProfileFrame(_AlertMixin, ctk.CTkFrame):
         self.corners_val_lbl.grid(row=0, column=3, padx=(0, 5))
 
         # Right column: plot
-        self._track_fig = Figure(figsize=(4, 3), constrained_layout=True)
+        self._track_fig = Figure(figsize=(4, 3))
+        self._track_fig.patch.set_visible(False)
+        self._track_fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
         self._track_ax = self._track_fig.add_subplot(111)
         self._track_canvas = FigureCanvasTkAgg(self._track_fig, master=track_frm)
+        _mode = ctk.get_appearance_mode()
+        _frame_bg = ctk.ThemeManager.theme["CTkFrame"]["fg_color"][1 if _mode == "Dark" else 0]
+        self._track_canvas.get_tk_widget().configure(bg=_frame_bg)
         self._track_canvas.get_tk_widget().grid(row=1, column=1, sticky="nsew", padx=(5, 10), pady=5)
         self._update_track_plot()
 
@@ -293,9 +298,21 @@ class EnvironmentProfileFrame(_AlertMixin, ctk.CTkFrame):
     def _update_track_plot(self):
         length, corners = self._track_params()
         result = TrackShape(track_length=length, corners=corners).compute()
+        x = result["x"] - (result["x"].max() + result["x"].min()) / 2
+        y = result["y"] - (result["y"].max() + result["y"].min()) / 2
+        # Fixed half-extents from the two extreme shapes (corners=0.20 widest, corners=1.0 tallest):
+        #   x_half = straight/2 + radius at corners=0.20 = L*(0.20 + 0.10/pi)
+        #   y_half = radius at corners=1.0 = L/(2*pi)
+        x_half = length * (0.20 + 0.10 / np.pi)
+        y_half = length / (2 * np.pi)
+        pad = 0.05 * max(2 * x_half, 2 * y_half)
         self._track_ax.cla()
-        self._track_ax.plot(result["x"], result["y"])
+        self._track_ax.patch.set_visible(False)
+        self._track_ax.set_axis_off()
+        self._track_ax.plot(x, y)
         self._track_ax.set_aspect("equal")
+        self._track_ax.set_xlim(-x_half - pad, x_half + pad)
+        self._track_ax.set_ylim(-y_half - pad, y_half + pad)
         self._track_canvas.draw()
 
     def _save(self):
