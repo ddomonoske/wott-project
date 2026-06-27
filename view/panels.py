@@ -231,20 +231,26 @@ class EnvironmentProfileFrame(_AlertMixin, ctk.CTkFrame):
         # Track Shape
         track_frm = ctk.CTkFrame(self)
         track_frm.grid_columnconfigure(1, weight=1)
+        track_frm.grid_rowconfigure(1, weight=1)
         track_frm.grid(row=3, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
         SectionLabel(track_frm, "Track Shape").grid(row=0, column=0, columnspan=2, padx=(10, 0), sticky="NW")
 
-        ctk.CTkLabel(track_frm, text="Track Length (m):").grid(row=1, column=0, padx=(15, 5), pady=10, sticky="w")
-        self.track_length_ent = ctk.CTkEntry(track_frm, width=80)
-        self.track_length_ent.insert(0, str(envir.track_length) if envir.track_length is not None else "")
-        self.track_length_ent.grid(row=1, column=1, padx=(5, 25), pady=10, sticky="w")
+        # Left column: controls
+        controls_frm = ctk.CTkFrame(track_frm, fg_color="transparent")
+        controls_frm.grid_rowconfigure((0, 3), weight=1)
+        controls_frm.grid(row=1, column=0, padx=(10, 5), pady=5, sticky="nsew")
+
+        ctk.CTkLabel(controls_frm, text="Track Length (m):").grid(row=1, column=0, padx=(0, 5), pady=10, sticky="w")
+        self.track_length_ent = ctk.CTkEntry(controls_frm, width=80)
+        self.track_length_ent.insert(0, str(envir.track_length) if envir.track_length is not None else "250.0")
+        self.track_length_ent.grid(row=1, column=1, pady=10, sticky="w")
         self.track_length_ent.bind("<FocusOut>", lambda _e: self._update_track_plot())
         self.track_length_ent.bind("<Return>", lambda _e: self._update_track_plot())
 
         corners_val = envir.corners if envir.corners is not None else 0.60
-        slider_frm = ctk.CTkFrame(track_frm, fg_color="transparent")
+        slider_frm = ctk.CTkFrame(controls_frm, fg_color="transparent")
         slider_frm.grid_columnconfigure(1, weight=1)
-        slider_frm.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky="ew")
+        slider_frm.grid(row=2, column=0, columnspan=2, pady=5, sticky="ew")
         ctk.CTkLabel(slider_frm, text="hotdog").grid(row=0, column=0, padx=(0, 5))
         self.corners_slider = ctk.CTkSlider(slider_frm, from_=0.20, to=1.0, number_of_steps=80,
                                              command=self._on_corners_change)
@@ -254,10 +260,11 @@ class EnvironmentProfileFrame(_AlertMixin, ctk.CTkFrame):
         self.corners_val_lbl = ctk.CTkLabel(slider_frm, text=f"{corners_val:.2f}", width=40)
         self.corners_val_lbl.grid(row=0, column=3, padx=(0, 5))
 
-        self._track_fig = Figure(figsize=(4, 3))
+        # Right column: plot
+        self._track_fig = Figure(figsize=(4, 3), constrained_layout=True)
         self._track_ax = self._track_fig.add_subplot(111)
         self._track_canvas = FigureCanvasTkAgg(self._track_fig, master=track_frm)
-        self._track_canvas.get_tk_widget().grid(row=3, column=0, columnspan=2, sticky="nsew", padx=10, pady=5)
+        self._track_canvas.get_tk_widget().grid(row=1, column=1, sticky="nsew", padx=(5, 10), pady=5)
         self._update_track_plot()
 
         self.bind("<Destroy>", lambda e: plt.close(self._track_fig) if e.widget is self else None)
@@ -289,8 +296,6 @@ class EnvironmentProfileFrame(_AlertMixin, ctk.CTkFrame):
         self._track_ax.cla()
         self._track_ax.plot(result["x"], result["y"])
         self._track_ax.set_aspect("equal")
-        self._track_ax.set_title("Track Shape")
-        self._track_fig.tight_layout()
         self._track_canvas.draw()
 
     def _save(self):
