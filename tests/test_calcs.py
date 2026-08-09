@@ -55,6 +55,21 @@ def test_split_table_has_header():
     assert results["split_table"][0] == ["Distance (m)", "Half Lap Splits", "Total Time"]
 
 
+def test_solve_raises_when_race_distance_not_reached():
+    # t_max=1 is nowhere near enough time to cover the 4000m race_distance.
+    calc = IPCalculator(**SAMPLE_ATTRS)
+    with pytest.raises(ValueError, match="did not reach race_distance"):
+        calc.solve(t_max=1)
+
+
+def test_get_lap_splits_raises_when_split_distance_not_reached():
+    calc = IPCalculator(**SAMPLE_ATTRS)
+    calc.solve()
+    # Ask for splits well beyond the distance actually covered.
+    with pytest.raises(ValueError, match="did not reach split distance"):
+        calc.get_lap_splits(interval=125, distance=calc.position[-1] + 10000)
+
+
 def test_get_power_from_plan():
     calc = IPCalculator(**SAMPLE_ATTRS)
     # First segment starts at t=0 (power=500), second at t=1 (power=988)
