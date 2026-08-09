@@ -54,8 +54,18 @@ class IPCalculator:
         race_distance_event.terminal = True
         race_distance_event.direction = 1
 
+        # Corner curvature (kappa(s)) has sharp ramps -- a corner's transition
+        # zone can be crossed in under a second at speed. RK45's default adaptive
+        # step size is chosen from the smooth power/drag dynamics and can grow
+        # to several seconds, stepping clean over a transition zone with no idea
+        # it happened; the dense-output values reported inside that skipped
+        # step are then a smooth polynomial guess, not the real corner-influenced
+        # motion -- this is what produces spiky/jagged output. Capping the step
+        # at dt forces the solver to actually resolve each transition.
+        max_step = self.dt if self._has_track else np.inf
+
         sol = solve_ivp(self._ode_rhs, (0, t_max), [self.v0, 0.0],
-                         t_eval=self.time, events=race_distance_event)
+                         t_eval=self.time, events=race_distance_event, max_step=max_step)
 
         if sol.t_events[0].size == 0:
             raise ValueError(

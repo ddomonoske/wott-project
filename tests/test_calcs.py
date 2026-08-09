@@ -207,6 +207,27 @@ def test_solve_corner_energy_does_not_compound_over_many_laps():
     assert late < early + 15
 
 
+def test_solve_matches_finer_reference_near_corners():
+    # Regression test: without a max_step cap, RK45's adaptive step size (chosen
+    # from the smooth power/drag dynamics) can grow to multiple seconds and skip
+    # clean over a corner's ~1s curvature transition zone, producing dense-output
+    # values with no real connection to what happened in the corner -- this
+    # produced large, smoothly-wrong excursions unrelated to the track geometry.
+    # Guard against regressing by comparing against an independently
+    # finer-integrated reference solution.
+    kwargs = dict(cda=0.195, air_density=1.12, mass_kg=100.0, crr=0.002, mech_losses=0.02,
+                  power_plan=[(0, 500, 300)], dt=0.1, track_length=250.0, corners=0.6,
+                  com_height_m=1.0, race_distance=2000)
+    calc = IPCalculator(**kwargs)
+    calc.solve(t_max=150)
+
+    reference = IPCalculator(**{**kwargs, 'dt': 0.02})
+    reference.solve(t_max=150)
+
+    ref_v_interp = np.interp(calc.time, reference.time, reference.velocity)
+    assert np.max(np.abs(calc.velocity - ref_v_interp)) < 0.5
+
+
 def test_solve_with_track_and_com_height_produces_lean():
     calc = IPCalculator(**SAMPLE_ATTRS, track_length=100.0, corners=0.8,
                          com_height_m=0.7, race_distance=1000)
