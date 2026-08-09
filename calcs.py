@@ -40,7 +40,14 @@ class IPCalculator:
 
         # Trim arrays to the first moment position exceeds race_distance.
         # argmax returns the index of the first True, which is one step past the finish.
-        index = np.argmax(self.position > self.race_distance)
+        reached = self.position > self.race_distance
+        if not np.any(reached):
+            raise ValueError(
+                f"Rider did not reach race_distance ({self.race_distance} m) within "
+                f"t_max={t_max}s (max position reached: {self.position[-1]:.1f} m). "
+                "Increase t_max or check the power plan."
+            )
+        index = np.argmax(reached)
         self.time = self.time[:index + 1]
         self.velocity = self.velocity[:index + 1]
         self.position = self.position[:index + 1]
@@ -100,7 +107,14 @@ class IPCalculator:
         self.lap_splits = np.zeros(np.size(self.split_distances))
 
         for i, split_dist in enumerate(self.split_distances):
-            index = np.argmax(self.position > split_dist)
+            reached = self.position > split_dist
+            if not np.any(reached):
+                raise ValueError(
+                    f"Rider did not reach split distance {split_dist:.0f} m "
+                    f"(max position reached: {self.position[-1]:.1f} m). "
+                    "Increase t_max or check the power plan."
+                )
+            index = np.argmax(reached)
             p1, p2 = self.position[index - 1], self.position[index]
             t1, t2 = self.time[index - 1], self.time[index]
             # Linear interpolation between the two position samples that straddle
