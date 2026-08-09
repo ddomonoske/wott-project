@@ -151,6 +151,10 @@ class RiderProfileFrame(_AlertMixin, ctk.CTkFrame):
         self.cda_ent = ctk.CTkEntry(stats_frm)
         self.cda_ent.insert(0, str(rider.cda) if rider.cda is not None else "")
         self.cda_ent.grid(row=1, column=3, padx=(5, 25), pady=10)
+        ctk.CTkLabel(stats_frm, text="CoM Height (m):").grid(row=1, column=4, padx=(25, 5), pady=10)
+        self.com_height_ent = ctk.CTkEntry(stats_frm)
+        self.com_height_ent.insert(0, str(rider.com_height_m) if rider.com_height_m is not None else "")
+        self.com_height_ent.grid(row=1, column=5, padx=(5, 25), pady=10)
 
         # Physiological
         power_frm = ctk.CTkFrame(self)
@@ -183,6 +187,7 @@ class RiderProfileFrame(_AlertMixin, ctk.CTkFrame):
                 ftp=self.ftp_ent.get(),
                 w_prime=self.w_prime_ent.get(),
                 cda=self.cda_ent.get(),
+                com_height_m=self.com_height_ent.get(),
             )
 
     def _delete(self):
