@@ -43,8 +43,8 @@ class IPCalculator:
         reached = self.position > self.race_distance
         if not np.any(reached):
             raise ValueError(
-                f"Rider did not reach race_distance ({self.race_distance} m) within "
-                f"t_max={t_max}s (max position reached: {self.position[-1]:.1f} m). "
+                f"Rider did not reach race distance ({self.race_distance} m) within "
+                f"{t_max}s (max position reached: {self.position[-1]:.1f} m). "
                 "Increase t_max or check the power plan."
             )
         index = np.argmax(reached)
