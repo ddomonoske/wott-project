@@ -256,6 +256,36 @@ def test_run_sim_success(ctrl):
     assert view.sim_window_shown is True
 
 
+def test_run_sim_success_with_corner_physics(ctrl):
+    c, storage, view = ctrl
+    rider = storage.add_rider(first_name="Dave", weight_kg=80, cda=0.25, com_height_m=0.7)
+    envir = storage.add_environment(name="Velodrome", air_density=1.2, crr=0.004,
+                                    mech_losses=0.02, track_length=250.0, corners=0.6)
+    c.add_sim_btn_press()
+    sim = storage.sims[0]
+    sim.rider_id = rider.rider_id
+    sim.envir_id = envir.envir_id
+    sim.power_plan = PowerPlan([(0, 500, 1), (1, 988, 14), (15, 550, 20), (35, 458, 100), (135, 523, 120)])
+    c.run_sim_btn_press(sim.sim_id)
+    assert view.last_error is None
+    assert view.sim_window_shown is True
+
+
+def test_run_sim_track_geometry_without_com_height_still_runs(ctrl):
+    c, storage, view = ctrl
+    rider = storage.add_rider(first_name="Dave", weight_kg=80, cda=0.25)  # no com_height_m
+    envir = storage.add_environment(name="Velodrome", air_density=1.2, crr=0.004,
+                                    mech_losses=0.02, track_length=250.0, corners=0.6)
+    c.add_sim_btn_press()
+    sim = storage.sims[0]
+    sim.rider_id = rider.rider_id
+    sim.envir_id = envir.envir_id
+    sim.power_plan = PowerPlan([(0, 500, 1), (1, 988, 14), (15, 550, 20), (35, 458, 100), (135, 523, 120)])
+    c.run_sim_btn_press(sim.sim_id)
+    assert view.last_error is None
+    assert view.sim_window_shown is True
+
+
 # ------ Aero test flow ------
 
 def test_add_aero_test(ctrl):
