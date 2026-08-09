@@ -121,9 +121,11 @@ class IPCalculator:
 
     @staticmethod
     def _dtheta_ds(v: float, kappa: float, dkappa_ds: float, g: float = GRAVITY) -> float:
-        # d/ds[arctan(v^2*kappa/g)], holding v fixed (quasi-steady: lean-angle
-        # change is treated as driven by the track's geometry, not by the
-        # rider's own instantaneous acceleration).
+        # Partial d(theta)/ds from arctan(v^2*kappa/g), holding v fixed -- the
+        # contribution to dtheta/dt from moving through the track's curvature.
+        # (The other contribution, from v itself changing, is handled
+        # separately by _energy_feedback_coeff below, since it couples back
+        # into dv/dt and must be solved for rather than looked up.)
         x = (v ** 2) * kappa / g
         return (1.0 / (1.0 + x ** 2)) * (v ** 2 / g) * dkappa_ds
 
@@ -131,11 +133,31 @@ class IPCalculator:
     def _energy_accel(v: float, com_height_m: Optional[float], theta: float,
                        dtheta_ds: float, v_wheel: float, g: float = GRAVITY,
                        v_eps: float = V_EPS) -> float:
-        # Energy conservation on CoM vertical motion: d/dt(1/2 v^2) = g*h*sin(theta)*dtheta/dt,
-        # with dtheta/dt = dtheta_ds * ds/dt (ds/dt = v_wheel).
+        # Energy conservation on CoM vertical motion: d/dt(1/2 v^2) = g*h*sin(theta)*dtheta/dt.
+        # This is the part of dtheta/dt driven by moving through the corner
+        # (dtheta_ds * ds/dt); the part driven by v itself changing is added
+        # separately in _ode_rhs via _energy_feedback_coeff.
         if not com_height_m or v < v_eps:
             return 0.0
         return (g * com_height_m * np.sin(theta) / v) * dtheta_ds * v_wheel
+
+    @staticmethod
+    def _energy_feedback_coeff(v: float, kappa: float, theta: float,
+                                com_height_m: Optional[float], g: float = GRAVITY,
+                                v_eps: float = V_EPS) -> float:
+        # theta also depends on v (tan(theta) = v^2*kappa/g), so as v changes,
+        # theta -- and therefore CoM height -- changes too, feeding back into
+        # dv/dt. Left out, that omission silently leaks energy every corner
+        # (verified: lean angle and speed compounded upward lap after lap in
+        # testing). Coefficient of dv/dt in a_energy, derived via chain rule:
+        #   dv/dt = a_power + (g*h*sin(theta)/v) * dtheta/dt
+        #   dtheta/dt = dtheta_ds*ds/dt + [1/(1+x^2)]*(2*v*kappa/g)*dv/dt
+        # Solving for dv/dt explicitly gives dv/dt = (a_power + D) / (1 - C)
+        # (see _ode_rhs), with C = this coefficient (v and g cancel out of it).
+        if not com_height_m or v < v_eps:
+            return 0.0
+        x = (v ** 2) * kappa / g
+        return (2.0 * com_height_m * kappa * np.sin(theta)) / (1.0 + x ** 2)
 
     @staticmethod
     def _banked_rolling_resistance(mass_kg: float, crr: float, theta: float,
@@ -160,9 +182,14 @@ class IPCalculator:
 
         dkappa_ds = self._dkappa_ds_at(s)
         dtheta_ds = self._dtheta_ds(v, kappa, dkappa_ds)
-        a_energy = self._energy_accel(v, self.com_height_m, theta, dtheta_ds, v_wheel)
+        a_energy_ds = self._energy_accel(v, self.com_height_m, theta, dtheta_ds, v_wheel)
+        feedback = self._energy_feedback_coeff(v, kappa, theta, self.com_height_m)
 
-        return [a_power + a_energy, v_wheel]
+        # dv/dt = a_power + a_energy_ds + feedback*dv/dt (self-referential through
+        # theta's own dependence on v) -- solved explicitly, see _energy_feedback_coeff.
+        dv_dt = (a_power + a_energy_ds) / max(1.0 - feedback, 0.1)
+
+        return [dv_dt, v_wheel]
 
     def _plan_to_array(self) -> np.ndarray:
         times, powers, _ = zip(*self.power_plan)

@@ -159,6 +159,21 @@ def test_banked_rolling_resistance_scales_by_one_over_cos():
     assert leaned == pytest.approx(base / math.cos(0.4))
 
 
+def test_energy_feedback_coeff_zero_without_com_height():
+    assert IPCalculator._energy_feedback_coeff(v=10.0, kappa=0.05, theta=0.3, com_height_m=None) == 0.0
+
+
+def test_energy_feedback_coeff_zero_on_straight():
+    assert IPCalculator._energy_feedback_coeff(v=10.0, kappa=0.0, theta=0.0, com_height_m=1.0) == 0.0
+
+
+def test_energy_feedback_coeff_matches_formula():
+    v, kappa, theta, h = 12.0, 1.0 / 25.0, 0.5, 0.8
+    x = v ** 2 * kappa / IPCalculator.GRAVITY
+    expected = (2.0 * h * kappa * math.sin(theta)) / (1.0 + x ** 2)
+    assert IPCalculator._energy_feedback_coeff(v, kappa, theta, h) == pytest.approx(expected)
+
+
 # ------ Corner-lean physics integration (via solve()) ------
 
 def test_solve_no_op_without_track_geometry():
@@ -166,6 +181,30 @@ def test_solve_no_op_without_track_geometry():
     calc = IPCalculator(**SAMPLE_ATTRS)
     calc.solve()
     assert calc._has_track is False
+
+
+def test_solve_corner_energy_does_not_compound_over_many_laps():
+    # Regression test: dropping theta's dependence on v from the corner energy
+    # term (using only dtheta/ds, not the full dtheta/dt) silently leaks energy
+    # into the system every corner. Undetectable in a single short sim -- lean
+    # angle and speed compounded upward lap after lap over a long race instead
+    # of settling into a bounded oscillation.
+    calc = IPCalculator(**SAMPLE_ATTRS, track_length=250.0, corners=0.6,
+                         com_height_m=1.0, race_distance=8000)
+    calc.solve(t_max=600)
+    lap_len = 250.0
+    n_laps = int(calc.position[-1] // lap_len)
+
+    def lap_max_lean_deg(lap):
+        mask = (calc.position >= lap * lap_len) & (calc.position < (lap + 1) * lap_len)
+        v = calc.velocity[mask]
+        kappa = np.array([calc._kappa_at(s) for s in calc.position[mask]])
+        theta = [IPCalculator._lean_angle(vv, kk) for vv, kk in zip(v, kappa)]
+        return np.degrees(max(theta))
+
+    early = lap_max_lean_deg(10)
+    late = lap_max_lean_deg(n_laps - 1)
+    assert late < early + 15
 
 
 def test_solve_with_track_and_com_height_produces_lean():
