@@ -275,7 +275,7 @@ class IPCalculator:
 
 class TrackShape:
     def __init__(self, track_length: float = 250.0, corners: float = 0.60,
-                 transition: float = 15.0, dx: float = 0.1):
+                 transition: float = 30.0, dx: float = 0.1):
         self.track_length = track_length
         self.corners = corners
         self.transition = transition
