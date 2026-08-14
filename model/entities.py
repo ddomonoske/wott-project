@@ -52,7 +52,7 @@ class PowerPlan:
         return [p.as_tuple() for p in self.plan]
 
 
-_RIDER_FLOAT = frozenset({'weight_kg', 'ftp', 'w_prime', 'cda'})
+_RIDER_FLOAT = frozenset({'weight_kg', 'ftp', 'w_prime', 'cda', 'com_height_m'})
 
 
 @dataclass
@@ -64,7 +64,12 @@ class Rider:
     ftp: Optional[float] = None
     w_prime: Optional[float] = None
     cda: Optional[float] = None
+    com_height_m: Optional[float] = None
     power_results: dict = field(default_factory=dict)
+
+    def __setstate__(self, state):
+        state.setdefault('com_height_m', None)
+        self.__dict__.update(state)
 
     @property
     def name(self) -> str:
@@ -92,7 +97,7 @@ class Rider:
             setattr(self, k, v)
 
 
-_ENVIR_FLOAT = frozenset({'air_density', 'crr', 'mech_losses'})
+_ENVIR_FLOAT = frozenset({'air_density', 'crr', 'mech_losses', 'track_length', 'corners'})
 
 
 @dataclass
@@ -102,6 +107,13 @@ class Environment:
     air_density: Optional[float] = None
     crr: Optional[float] = None
     mech_losses: Optional[float] = None
+    track_length: Optional[float] = None
+    corners: Optional[float] = None
+
+    def __setstate__(self, state):
+        state.setdefault('track_length', None)
+        state.setdefault('corners', None)
+        self.__dict__.update(state)
 
     def update(self, **kwargs) -> None:
         validated = {}

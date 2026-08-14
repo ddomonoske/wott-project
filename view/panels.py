@@ -15,6 +15,7 @@ matplotlib.use('TkAgg')  # must be set before any Figure or FigureCanvas is crea
 plt.style.use('bmh')
 plt.rcParams.update({"figure.facecolor": "LightGray"})
 
+from calcs import TrackShape
 from model.entities import Rider, Environment, Simulation, AeroTest
 from view.components import (ScrollableBtnList, CustomTable, SectionLabel,
                               RiderEnvirDropdownFrame, PowerPlanFrame)
@@ -150,6 +151,10 @@ class RiderProfileFrame(_AlertMixin, ctk.CTkFrame):
         self.cda_ent = ctk.CTkEntry(stats_frm)
         self.cda_ent.insert(0, str(rider.cda) if rider.cda is not None else "")
         self.cda_ent.grid(row=1, column=3, padx=(5, 25), pady=10)
+        ctk.CTkLabel(stats_frm, text="CoM Height (m):").grid(row=1, column=4, padx=(25, 5), pady=10)
+        self.com_height_ent = ctk.CTkEntry(stats_frm)
+        self.com_height_ent.insert(0, str(rider.com_height_m) if rider.com_height_m is not None else "")
+        self.com_height_ent.grid(row=1, column=5, padx=(5, 25), pady=10)
 
         # Physiological
         power_frm = ctk.CTkFrame(self)
@@ -182,6 +187,7 @@ class RiderProfileFrame(_AlertMixin, ctk.CTkFrame):
                 ftp=self.ftp_ent.get(),
                 w_prime=self.w_prime_ent.get(),
                 cda=self.cda_ent.get(),
+                com_height_m=self.com_height_ent.get(),
             )
 
     def _delete(self):
@@ -227,22 +233,104 @@ class EnvironmentProfileFrame(_AlertMixin, ctk.CTkFrame):
         self.mech_losses_ent.insert(0, str(envir.mech_losses) if envir.mech_losses is not None else "")
         self.mech_losses_ent.grid(row=1, column=3, padx=(5, 25), pady=10)
 
+        # Track Shape
+        track_frm = ctk.CTkFrame(self)
+        track_frm.grid_columnconfigure(1, weight=1)
+        track_frm.grid_rowconfigure(1, weight=1)
+        track_frm.grid(row=3, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+        SectionLabel(track_frm, "Track Shape").grid(row=0, column=0, columnspan=2, padx=(10, 0), sticky="NW")
+
+        # Left column: controls
+        controls_frm = ctk.CTkFrame(track_frm, fg_color="transparent")
+        controls_frm.grid_rowconfigure((0, 3), weight=1)
+        controls_frm.grid(row=1, column=0, padx=(10, 5), pady=5, sticky="nsew")
+
+        ctk.CTkLabel(controls_frm, text="Track Length (m):").grid(row=1, column=0, padx=(0, 5), pady=10, sticky="w")
+        self.track_length_ent = ctk.CTkEntry(controls_frm, width=80)
+        self.track_length_ent.insert(0, str(envir.track_length) if envir.track_length is not None else "250.0")
+        self.track_length_ent.grid(row=1, column=1, pady=10, sticky="w")
+        self.track_length_ent.bind("<FocusOut>", lambda _e: self._update_track_plot())
+        self.track_length_ent.bind("<Return>", lambda _e: self._update_track_plot())
+
+        corners_val = envir.corners if envir.corners is not None else 0.60
+        slider_frm = ctk.CTkFrame(controls_frm, fg_color="transparent")
+        slider_frm.grid_columnconfigure(1, weight=1)
+        slider_frm.grid(row=2, column=0, columnspan=2, pady=5, sticky="ew")
+        ctk.CTkLabel(slider_frm, text="hotdog").grid(row=0, column=0, padx=(0, 5))
+        self.corners_slider = ctk.CTkSlider(slider_frm, from_=0.20, to=1.0, number_of_steps=80,
+                                             command=self._on_corners_change)
+        self.corners_slider.set(corners_val)
+        self.corners_slider.grid(row=0, column=1, sticky="ew")
+        ctk.CTkLabel(slider_frm, text="circle").grid(row=0, column=2, padx=(5, 10))
+        self.corners_val_lbl = ctk.CTkLabel(slider_frm, text=f"{corners_val:.2f}", width=40)
+        self.corners_val_lbl.grid(row=0, column=3, padx=(0, 5))
+
+        # Right column: plot
+        self._track_fig = Figure(figsize=(4, 3))
+        self._track_fig.patch.set_visible(False)
+        self._track_fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+        self._track_ax = self._track_fig.add_subplot(111)
+        self._track_canvas = FigureCanvasTkAgg(self._track_fig, master=track_frm)
+        _mode = ctk.get_appearance_mode()
+        _frame_bg = ctk.ThemeManager.theme["CTkFrame"]["fg_color"][1 if _mode == "Dark" else 0]
+        self._track_canvas.get_tk_widget().configure(bg=_frame_bg)
+        self._track_canvas.get_tk_widget().grid(row=1, column=1, sticky="nsew", padx=(5, 10), pady=5)
+        self._update_track_plot()
+
+        self.bind("<Destroy>", lambda e: plt.close(self._track_fig) if e.widget is self else None)
+
         # Buttons
         ctk.CTkButton(self, text="Save", fg_color="green", hover_color="dark green",
-                      command=self._save).grid(row=3, column=0, padx=10, pady=10)
+                      command=self._save).grid(row=4, column=0, padx=10, pady=10)
         ctk.CTkButton(self, text="Delete", fg_color="red", hover_color="dark red",
-                      command=self._delete).grid(row=3, column=1, padx=(10, 19), pady=10)
+                      command=self._delete).grid(row=4, column=1, padx=(10, 19), pady=10)
         self.alert_lbl = ctk.CTkLabel(self, text="")
-        self.alert_lbl.grid(row=4, column=0, columnspan=2, padx=10, pady=(5, 10))
+        self.alert_lbl.grid(row=5, column=0, columnspan=2, padx=10, pady=(5, 10))
+
+    def _on_corners_change(self, value: float):
+        self.corners_val_lbl.configure(text=f"{value:.2f}")
+        self._update_track_plot()
+
+    def _track_params(self) -> tuple[float, float]:
+        try:
+            length = float(self.track_length_ent.get())
+            if length <= 0:
+                length = 250.0
+        except ValueError:
+            length = 250.0
+        return length, self.corners_slider.get()
+
+    def _update_track_plot(self):
+        length, corners = self._track_params()
+        result = TrackShape(track_length=length, corners=corners).compute()
+        x = result["x"] - (result["x"].max() + result["x"].min()) / 2
+        y = result["y"] - (result["y"].max() + result["y"].min()) / 2
+        # Fixed half-extents from the two extreme shapes (corners=0.20 widest, corners=1.0 tallest):
+        #   x_half = straight/2 + radius at corners=0.20 = L*(0.20 + 0.10/pi)
+        #   y_half = radius at corners=1.0 = L/(2*pi)
+        x_half = length * (0.20 + 0.10 / np.pi)
+        y_half = length / (2 * np.pi)
+        pad = 0.05 * max(2 * x_half, 2 * y_half)
+        self._track_ax.cla()
+        self._track_ax.patch.set_visible(False)
+        self._track_ax.set_axis_off()
+        self._track_ax.plot(x, y)
+        self._track_ax.set_aspect("equal")
+        self._track_ax.set_xlim(-x_half - pad, x_half + pad)
+        self._track_ax.set_ylim(-y_half - pad, y_half + pad)
+        self._track_canvas.draw()
 
     def _save(self):
         if self.controller:
+            length_str = self.track_length_ent.get()
             self.controller.save_envir_btn_press(
                 self.envir_id,
                 name=self.name_ent.get(),
                 air_density=self.air_density_ent.get(),
                 crr=self.crr_ent.get(),
                 mech_losses=self.mech_losses_ent.get(),
+                track_length=length_str or None,
+                corners=self.corners_slider.get(),
             )
 
     def _delete(self):

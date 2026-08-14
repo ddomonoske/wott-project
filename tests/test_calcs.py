@@ -1,4 +1,5 @@
 import datetime
+import math
 import types
 import pytest
 import numpy as np
@@ -94,6 +95,155 @@ def test_velocity_output_is_kph():
     results = calc.get_results()
     # Peak TT speed should be 40-70 kph; raw m/s would be ~11-19, confirming the conversion
     assert 40 < max(results["velocity"]) < 100
+
+
+# ------ Corner-lean physics helpers ------
+
+def test_lean_angle_zero_on_straight():
+    assert IPCalculator._lean_angle(v=15.0, kappa=0.0) == 0.0
+
+
+def test_lean_angle_zero_at_v_zero():
+    assert IPCalculator._lean_angle(v=0.0, kappa=1.0 / 20.0) == 0.0
+
+
+def test_lean_angle_matches_formula():
+    v, kappa = 12.0, 1.0 / 25.0
+    expected = math.atan(v ** 2 * kappa / IPCalculator.GRAVITY)
+    assert IPCalculator._lean_angle(v, kappa) == pytest.approx(expected)
+
+
+def test_wheel_speed_coning_example():
+    # User's worked example: 20m corner radius, CoM inset 10m -> wheel speed = 2x CoM speed.
+    # kappa=1/20, and h*sin(theta)=10 (e.g. theta=pi/2, com_height_m=10) gives that inset.
+    v_com = 5.0
+    v_wheel = IPCalculator._wheel_speed(v=v_com, kappa=1.0 / 20.0, theta=math.pi / 2,
+                                         com_height_m=10.0)
+    assert v_wheel == pytest.approx(2 * v_com)
+
+
+def test_wheel_speed_no_op_without_com_height():
+    assert IPCalculator._wheel_speed(v=8.0, kappa=1.0 / 20.0, theta=0.3, com_height_m=None) == 8.0
+
+
+def test_wheel_speed_no_op_on_straight():
+    assert IPCalculator._wheel_speed(v=8.0, kappa=0.0, theta=0.0, com_height_m=1.0) == 8.0
+
+
+def test_energy_accel_zero_without_com_height():
+    assert IPCalculator._energy_accel(v=10.0, com_height_m=None, theta=0.3,
+                                       dtheta_ds=0.01, v_wheel=10.0) == 0.0
+
+
+def test_energy_accel_zero_near_v_zero():
+    assert IPCalculator._energy_accel(v=0.01, com_height_m=0.7, theta=0.3,
+                                       dtheta_ds=0.01, v_wheel=0.01) == 0.0
+
+
+def test_energy_accel_symmetric_entering_and_exiting_corner():
+    kwargs = dict(v=10.0, com_height_m=0.7, theta=0.3, v_wheel=10.0)
+    entering = IPCalculator._energy_accel(dtheta_ds=0.02, **kwargs)
+    exiting = IPCalculator._energy_accel(dtheta_ds=-0.02, **kwargs)
+    assert entering > 0
+    assert exiting == pytest.approx(-entering)
+
+
+def test_banked_rolling_resistance_matches_plain_formula_at_zero_lean():
+    result = IPCalculator._banked_rolling_resistance(mass_kg=100.0, crr=0.002, theta=0.0)
+    assert result == pytest.approx(-IPCalculator.GRAVITY * 100.0 * 0.002)
+
+
+def test_banked_rolling_resistance_scales_by_one_over_cos():
+    base = IPCalculator._banked_rolling_resistance(mass_kg=100.0, crr=0.002, theta=0.0)
+    leaned = IPCalculator._banked_rolling_resistance(mass_kg=100.0, crr=0.002, theta=0.4)
+    assert leaned == pytest.approx(base / math.cos(0.4))
+
+
+def test_energy_feedback_coeff_zero_without_com_height():
+    assert IPCalculator._energy_feedback_coeff(v=10.0, kappa=0.05, theta=0.3, com_height_m=None) == 0.0
+
+
+def test_energy_feedback_coeff_zero_on_straight():
+    assert IPCalculator._energy_feedback_coeff(v=10.0, kappa=0.0, theta=0.0, com_height_m=1.0) == 0.0
+
+
+def test_energy_feedback_coeff_matches_formula():
+    v, kappa, theta, h = 12.0, 1.0 / 25.0, 0.5, 0.8
+    x = v ** 2 * kappa / IPCalculator.GRAVITY
+    expected = (2.0 * h * kappa * math.sin(theta)) / (1.0 + x ** 2)
+    assert IPCalculator._energy_feedback_coeff(v, kappa, theta, h) == pytest.approx(expected)
+
+
+# ------ Corner-lean physics integration (via solve()) ------
+
+def test_solve_no_op_without_track_geometry():
+    # No track_length/corners/com_height_m -- must behave exactly like a flat, straight sim.
+    calc = IPCalculator(**SAMPLE_ATTRS)
+    calc.solve()
+    assert calc._has_track is False
+
+
+def test_solve_corner_energy_does_not_compound_over_many_laps():
+    # Regression test: dropping theta's dependence on v from the corner energy
+    # term (using only dtheta/ds, not the full dtheta/dt) silently leaks energy
+    # into the system every corner. Undetectable in a single short sim -- lean
+    # angle and speed compounded upward lap after lap over a long race instead
+    # of settling into a bounded oscillation.
+    calc = IPCalculator(**SAMPLE_ATTRS, track_length=250.0, corners=0.6,
+                         com_height_m=1.0, race_distance=8000)
+    calc.solve(t_max=600)
+    lap_len = 250.0
+    n_laps = int(calc.position[-1] // lap_len)
+
+    def lap_max_lean_deg(lap):
+        mask = (calc.position >= lap * lap_len) & (calc.position < (lap + 1) * lap_len)
+        v = calc.velocity[mask]
+        kappa = np.array([calc._kappa_at(s) for s in calc.position[mask]])
+        theta = [IPCalculator._lean_angle(vv, kk) for vv, kk in zip(v, kappa)]
+        return np.degrees(max(theta))
+
+    early = lap_max_lean_deg(10)
+    late = lap_max_lean_deg(n_laps - 1)
+    assert late < early + 15
+
+
+def test_solve_matches_finer_reference_near_corners():
+    # Regression test: without a max_step cap, RK45's adaptive step size (chosen
+    # from the smooth power/drag dynamics) can grow to multiple seconds and skip
+    # clean over a corner's ~1s curvature transition zone, producing dense-output
+    # values with no real connection to what happened in the corner -- this
+    # produced large, smoothly-wrong excursions unrelated to the track geometry.
+    # Guard against regressing by comparing against an independently
+    # finer-integrated reference solution.
+    kwargs = dict(cda=0.195, air_density=1.12, mass_kg=100.0, crr=0.002, mech_losses=0.02,
+                  power_plan=[(0, 500, 300)], dt=0.1, track_length=250.0, corners=0.6,
+                  com_height_m=1.0, race_distance=2000)
+    calc = IPCalculator(**kwargs)
+    calc.solve(t_max=150)
+
+    reference = IPCalculator(**{**kwargs, 'dt': 0.02})
+    reference.solve(t_max=150)
+
+    ref_v_interp = np.interp(calc.time, reference.time, reference.velocity)
+    assert np.max(np.abs(calc.velocity - ref_v_interp)) < 0.5
+
+
+def test_solve_with_track_and_com_height_produces_lean():
+    calc = IPCalculator(**SAMPLE_ATTRS, track_length=100.0, corners=0.8,
+                         com_height_m=0.7, race_distance=1000)
+    calc.solve()
+    assert np.all(np.diff(calc.position) >= 0)  # monotonic wheel distance
+    thetas = [IPCalculator._lean_angle(v, calc._kappa_at(s))
+              for v, s in zip(calc.velocity, calc.position)]
+    assert max(thetas) > 0
+
+
+def test_solve_with_track_no_com_height_still_runs():
+    # Track geometry present but no com_height_m -- banked Crr still applies,
+    # but coning/energy terms are no-ops.
+    calc = IPCalculator(**SAMPLE_ATTRS, track_length=100.0, corners=0.8, race_distance=1000)
+    calc.solve()
+    assert len(calc.velocity) == len(calc.position)
 
 
 # ------ CdACalculator (no .fit file needed) ------

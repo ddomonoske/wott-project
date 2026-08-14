@@ -161,6 +161,9 @@ class Controller:
                 mech_losses=envir.mech_losses,
                 power_plan=sim.power_plan.as_tuple_list(),
                 dt=0.1,
+                com_height_m=rider.com_height_m,
+                track_length=envir.track_length,
+                corners=envir.corners,
             )
             calc.solve()
             self.view.show_sim_window(sim_id, sim.name, calc.get_results())
