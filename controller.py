@@ -1,3 +1,7 @@
+import csv
+import re
+from pathlib import Path
+
 from calcs import IPCalculator, CdACalculator, read_fit_file_data
 from model.entities import Rider, Environment, Simulation, AeroTest
 from model.storage import Storage
@@ -8,6 +12,29 @@ def _replace_empty_name(name_ids: list[tuple[str, int]], replacement: str = "Emp
     # New entities have an empty name until the user fills it in and saves.
     # Substitute a placeholder so the selection list shows something readable.
     return [(replacement, id_) if name == "" else (name, id_) for name, id_ in name_ids]
+
+
+def _sanitize_filename(name: str) -> str:
+    name = name.strip().replace(" ", "_")
+    name = re.sub(r"[^A-Za-z0-9_\-]", "", name)
+    return name or "simulation"
+
+
+def _downloads_dir() -> Path:
+    return Path.home() / "Downloads"
+
+
+def _unique_path(path: Path) -> Path:
+    # Mirrors the Finder/Explorer convention (name(1).ext, name(2).ext, ...)
+    # since neither the filesystem nor Python's stdlib will pick a free name for us.
+    if not path.exists():
+        return path
+    i = 1
+    while True:
+        candidate = path.with_name(f"{path.stem}({i}){path.suffix}")
+        if not candidate.exists():
+            return candidate
+        i += 1
 
 
 class Controller:
@@ -169,6 +196,21 @@ class Controller:
             self.view.show_sim_window(sim_id, sim.name, calc.get_results())
         except Exception as e:
             self.view.show_detail_error(e)
+
+    def download_sim_csv_btn_press(self, sim_name: str, time: list, velocity: list, power: list):
+        try:
+            downloads = _downloads_dir()
+            downloads.mkdir(parents=True, exist_ok=True)
+            path = _unique_path(downloads / f"{_sanitize_filename(sim_name)}.csv")
+            rows = [(t, f"{v:.2f}", round(p)) for t, v, p in zip(time, velocity, power)]
+            with open(path, "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["Time (s)", "Speed (kph)", "Power (W)"])
+                writer.writerows(rows)
+        except Exception as e:
+            self.view.show_detail_error(e)
+        else:
+            self.view.show_detail_success(f"Saved to {path}")
 
     def calc_aero_test_btn_press(self, aero_test_id: int):
         test = self.storage.get_aero_test(aero_test_id)

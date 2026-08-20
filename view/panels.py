@@ -495,14 +495,23 @@ class AeroTestProfileFrame(_AlertMixin, ctk.CTkFrame):
 
 class SimulationWindow(ctk.CTkToplevel):
     def __init__(self, root, sim_name: str = "Simulation",
-                 time=None, power=None, velocity=None, splits=None, split_table=None):
+                 time=None, power=None, velocity=None, splits=None, split_table=None,
+                 csv_data=None, controller=None):
         super().__init__(root)
         self.title("Simulation")
+        self.controller = controller
+        self.sim_name = sim_name
+        self.csv_data = csv_data
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
 
-        ctk.CTkLabel(self, text=sim_name, font=ctk.CTkFont(size=20, weight="bold")).grid(
-            row=0, column=0, columnspan=2, padx=20, pady=(20, 10))
+        header_frm = ctk.CTkFrame(self, fg_color="transparent")
+        header_frm.grid_columnconfigure(0, weight=1)
+        header_frm.grid(row=0, column=0, columnspan=2, sticky="ew", padx=20, pady=(20, 10))
+        ctk.CTkLabel(header_frm, text=sim_name, font=ctk.CTkFont(size=20, weight="bold")).grid(
+            row=0, column=0, sticky="w")
+        ctk.CTkButton(header_frm, text="Download CSV", command=self._download_csv).grid(
+            row=0, column=1, sticky="e", padx=(10, 0))
 
         plot_frm = ctk.CTkFrame(self)
         plot_frm.grid_columnconfigure(0, weight=1, minsize=300)
@@ -563,6 +572,11 @@ class SimulationWindow(ctk.CTkToplevel):
         splits_frm.configure(width=tbl.winfo_width() + 2 * extra_pad)
 
         self.protocol("WM_DELETE_WINDOW", self._on_close)
+
+    def _download_csv(self):
+        if self.controller and self.csv_data:
+            self.controller.download_sim_csv_btn_press(
+                self.sim_name, self.csv_data["time"], self.csv_data["velocity"], self.csv_data["power"])
 
     def _on_close(self):
         # Explicitly close matplotlib figures to free memory; they are not freed
@@ -692,7 +706,7 @@ class View(ctk.CTkFrame):
         # Close any existing results window for this sim before opening a new one.
         if sim_id in self.sim_windows:
             self.sim_windows[sim_id]._on_close()
-        window = SimulationWindow(self, sim_name=sim_name, **results)
+        window = SimulationWindow(self, sim_name=sim_name, controller=self.controller, **results)
         self.sim_windows[sim_id] = window
 
     def show_aero_test_window(self, aero_test_id: int, aero_test: AeroTest,

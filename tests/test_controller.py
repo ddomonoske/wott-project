@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from model.entities import Rider, Environment, Simulation, AeroTest, PowerPlan
 from model.storage import Storage
-from controller import Controller, _replace_empty_name
+from controller import Controller, _replace_empty_name, _sanitize_filename
 
 
 # ------ Stubs ------
@@ -284,6 +284,62 @@ def test_run_sim_track_geometry_without_com_height_still_runs(ctrl):
     c.run_sim_btn_press(sim.sim_id)
     assert view.last_error is None
     assert view.sim_window_shown is True
+
+
+# ------ Download CSV ------
+
+def test_sanitize_filename():
+    assert _sanitize_filename("David in COS") == "David_in_COS"
+    assert _sanitize_filename("Weird: Name/Test*?") == "Weird_NameTest"
+    assert _sanitize_filename("   ") == "simulation"
+
+
+def test_download_sim_csv_success(ctrl, tmp_path, monkeypatch):
+    c, storage, view = ctrl
+    monkeypatch.setattr("controller._downloads_dir", lambda: tmp_path)
+    c.download_sim_csv_btn_press(
+        "David in COS", [0, 1, 2], [10.126, 12.5, 15.004], [200.6, 250.4, 300.7])
+    csv_path = tmp_path / "David_in_COS.csv"
+    assert csv_path.exists()
+    rows = csv_path.read_text().splitlines()
+    assert rows[0] == "Time (s),Speed (kph),Power (W)"
+    # Speed rounded to 2 decimal places, power rounded to a whole watt.
+    assert rows[1] == "0,10.13,201"
+    assert rows[2] == "1,12.50,250"
+    assert rows[3] == "2,15.00,301"
+    assert view.last_error is None
+    assert view.last_success == f"Saved to {csv_path}"
+
+
+def test_download_sim_csv_does_not_overwrite_existing_file(ctrl, tmp_path, monkeypatch):
+    c, storage, view = ctrl
+    monkeypatch.setattr("controller._downloads_dir", lambda: tmp_path)
+
+    c.download_sim_csv_btn_press("David in COS", [0], [10.0], [200])
+    first_path = tmp_path / "David_in_COS.csv"
+    assert first_path.exists()
+
+    c.download_sim_csv_btn_press("David in COS", [0, 1], [20.0, 21.0], [300, 310])
+    second_path = tmp_path / "David_in_COS(1).csv"
+    assert second_path.exists()
+    assert view.last_success == f"Saved to {second_path}"
+
+    c.download_sim_csv_btn_press("David in COS", [0, 1, 2], [30.0, 31.0, 32.0], [400, 410, 420])
+    third_path = tmp_path / "David_in_COS(2).csv"
+    assert third_path.exists()
+
+    # The original file is untouched, not overwritten.
+    first_rows = first_path.read_text().splitlines()
+    assert first_rows[1] == "0,10.00,200"
+
+
+def test_download_sim_csv_failure(ctrl, tmp_path, monkeypatch):
+    c, storage, view = ctrl
+    blocker = tmp_path / "blocker"
+    blocker.write_text("not a directory")
+    monkeypatch.setattr("controller._downloads_dir", lambda: blocker / "Downloads")
+    c.download_sim_csv_btn_press("Test", [0], [1.0], [100])
+    assert view.last_error is not None
 
 
 # ------ Aero test flow ------

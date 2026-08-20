@@ -38,7 +38,7 @@ def test_get_results_keys():
     calc = IPCalculator(**SAMPLE_ATTRS)
     calc.solve()
     results = calc.get_results()
-    assert set(results.keys()) == {"time", "power", "velocity", "splits", "split_table"}
+    assert set(results.keys()) == {"time", "power", "velocity", "splits", "split_table", "csv_data"}
 
 
 def test_get_results_lengths_match():
@@ -95,6 +95,46 @@ def test_velocity_output_is_kph():
     results = calc.get_results()
     # Peak TT speed should be 40-70 kph; raw m/s would be ~11-19, confirming the conversion
     assert 40 < max(results["velocity"]) < 100
+
+
+# ------ CSV export resampling ------
+
+def test_csv_export_data_one_second_spacing():
+    calc = IPCalculator(**SAMPLE_ATTRS)
+    calc.solve()
+    csv_data = calc.get_csv_export_data()
+    diffs = np.diff(csv_data["time"])
+    assert np.allclose(diffs, 1.0)
+
+
+def test_csv_export_data_spans_full_duration():
+    calc = IPCalculator(**SAMPLE_ATTRS)
+    calc.solve()
+    csv_data = calc.get_csv_export_data()
+    assert csv_data["time"][0] == 0.0
+    # Last row's interval should reach the end of the simulation, possibly
+    # via a shorter final bin if the run doesn't end on a whole second.
+    last_width = calc.time[-1] - csv_data["time"][-1]
+    assert 0 < last_width <= 1.0
+    assert len(csv_data["time"]) == len(csv_data["velocity"]) == len(csv_data["power"])
+
+
+def test_csv_export_data_preserves_area_under_curve():
+    # Bin-averaging (integral / width) must reproduce the same total area
+    # (energy, distance) as the full-resolution curve, not just look similar.
+    calc = IPCalculator(**SAMPLE_ATTRS)
+    calc.solve()
+    csv_data = calc.get_csv_export_data()
+
+    widths = np.diff(np.append(csv_data["time"], calc.time[-1]))
+    resampled_power_area = np.sum(np.array(csv_data["power"]) * widths)
+    full_res_power_area = np.trapz(calc.power, calc.time)
+    assert resampled_power_area == pytest.approx(full_res_power_area, rel=1e-6)
+
+    velocity_kph = 3600 / 1000 * calc.velocity
+    resampled_velocity_area = np.sum(np.array(csv_data["velocity"]) * widths)
+    full_res_velocity_area = np.trapz(velocity_kph, calc.time)
+    assert resampled_velocity_area == pytest.approx(full_res_velocity_area, rel=1e-6)
 
 
 # ------ Corner-lean physics helpers ------

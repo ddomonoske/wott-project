@@ -270,6 +270,35 @@ class IPCalculator:
             "velocity": (3600 / 1000 * self.velocity).tolist(),  # convert m/s to kph
             "splits": self.get_lap_splits(),
             "split_table": self.build_split_table(),
+            "csv_data": self.get_csv_export_data(),
+        }
+
+    def get_csv_export_data(self, dt: float = 1.0) -> Dict[str, list]:
+        """Resample velocity/power onto a fixed 1-point-per-dt grid.
+
+        Each point is the time-weighted average over its interval (via the
+        cumulative integral), not a nearest-sample pick, so the area under
+        the resampled curve -- and therefore energy/distance -- matches the
+        full-resolution simulation despite the coarser spacing.
+        """
+        t_max = float(self.time[-1])
+        n_full = int(np.floor(t_max / dt))
+        edges = np.arange(n_full + 1) * dt
+        if edges[-1] < t_max:
+            edges = np.append(edges, t_max)
+        widths = np.diff(edges)
+
+        velocity_kph = 3600 / 1000 * self.velocity
+        cum_velocity = cumulative_trapezoid(velocity_kph, self.time, initial=0.0)
+        cum_power = cumulative_trapezoid(self.power, self.time, initial=0.0)
+
+        edge_velocity = np.interp(edges, self.time, cum_velocity)
+        edge_power = np.interp(edges, self.time, cum_power)
+
+        return {
+            "time": edges[:-1].tolist(),
+            "velocity": (np.diff(edge_velocity) / widths).tolist(),
+            "power": (np.diff(edge_power) / widths).tolist(),
         }
 
 
