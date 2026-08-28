@@ -2,7 +2,7 @@
 \label{sec:simulation-model}
 
 The forward simulation is implemented by \texttt{IPCalculator} and solved
-numerically with \url{scipy.integrate.solve_ivp}; the equation of motion
+numerically with \texttt{scipy.integrate.solve\_ivp}; the equation of motion
 follows.
 
 \subsection{Equation of motion}
@@ -96,7 +96,7 @@ models.
 \Cref{eq:newton-second-law} (extended with the cornering correction of
 \cref{sec:cornering-model}) is a coupled, nonstiff, first-order ODE system in the
 state $y=(v,s)$ of \cref{eq:state-vector}. It is solved with
-\url{scipy.integrate.solve_ivp} using its default explicit Runge-Kutta method
+\texttt{scipy.integrate.solve\_ivp} using its default explicit Runge-Kutta method
 (RK45, the Dormand-Prince pair) and default error tolerances. RK45 is adaptive:
 at every step it estimates the local truncation error and grows or shrinks the
 next step to keep that error within tolerance. The only control the simulation

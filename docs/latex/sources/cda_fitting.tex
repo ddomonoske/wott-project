@@ -111,7 +111,7 @@ local optimizer seeded arbitrarily could converge to the wrong minimum),
     window could have started at.
 
     \item \textbf{Refinement}: the best coarse candidate is refined with
-    \url{scipy.optimize.minimize_scalar} using the bounded Brent method,
+    \texttt{scipy.optimize.minimize\_scalar} using the bounded Brent method,
     searching within one grid spacing on either side of the coarse minimum.
 \end{enumerate}
 At each candidate $s_0$, the scoring function is the sum of squared residuals of
