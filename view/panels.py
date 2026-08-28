@@ -17,7 +17,7 @@ plt.rcParams.update({"figure.facecolor": "LightGray"})
 
 from calcs import TrackShape
 from model.entities import Rider, Environment, Simulation, AeroTest
-from view.components import (ScrollableBtnList, CustomTable, SectionLabel,
+from view.components import (AlertMixin, ScrollableBtnList, CustomTable, SectionLabel,
                               RiderEnvirDropdownFrame, PowerPlanFrame)
 from view.aero_test_window import AeroTestWindow
 
@@ -106,19 +106,7 @@ class AeroTestSelectFrame(ctk.CTkFrame):
 
 # ------ Profile frames (main content) ------
 
-class _AlertMixin:
-    """Mixin that provides show_alert_error / show_alert_success on self.alert_lbl."""
-
-    def show_alert_error(self, message, ms: int = 3000):
-        self.alert_lbl.configure(text=str(message), text_color='red')
-        self.alert_lbl.after(ms, lambda: self.alert_lbl.configure(text=""))
-
-    def show_alert_success(self, message, ms: int = 3000):
-        self.alert_lbl.configure(text=str(message), text_color='green')
-        self.alert_lbl.after(ms, lambda: self.alert_lbl.configure(text=""))
-
-
-class RiderProfileFrame(_AlertMixin, ctk.CTkFrame):
+class RiderProfileFrame(AlertMixin, ctk.CTkFrame):
     def __init__(self, parent, rider: Rider, controller=None):
         super().__init__(parent)
         self.controller = controller
@@ -195,7 +183,7 @@ class RiderProfileFrame(_AlertMixin, ctk.CTkFrame):
             self.controller.delete_rider_btn_press(self.rider_id)
 
 
-class EnvironmentProfileFrame(_AlertMixin, ctk.CTkFrame):
+class EnvironmentProfileFrame(AlertMixin, ctk.CTkFrame):
     def __init__(self, parent, envir: Environment, controller=None):
         super().__init__(parent)
         self.controller = controller
@@ -338,7 +326,7 @@ class EnvironmentProfileFrame(_AlertMixin, ctk.CTkFrame):
             self.controller.delete_envir_btn_press(self.envir_id)
 
 
-class SimulationProfileFrame(_AlertMixin, ctk.CTkFrame):
+class SimulationProfileFrame(AlertMixin, ctk.CTkFrame):
     def __init__(self, parent, sim: Simulation,
                  selected_rider: tuple[str, int],
                  selected_envir: tuple[str, int],
@@ -403,7 +391,7 @@ class SimulationProfileFrame(_AlertMixin, ctk.CTkFrame):
             self.controller.delete_sim_btn_press(self.sim_id)
 
 
-class AeroTestProfileFrame(_AlertMixin, ctk.CTkFrame):
+class AeroTestProfileFrame(AlertMixin, ctk.CTkFrame):
     def __init__(self, parent, aero_test: AeroTest,
                  selected_rider: tuple[str, int],
                  selected_envir: tuple[str, int],
@@ -718,3 +706,11 @@ class View(ctk.CTkFrame):
                 pass
         window = AeroTestWindow(self, aero_test, fit_data, self.controller)
         self.aero_test_windows[aero_test_id] = window
+
+    def show_aero_test_window_error(self, aero_test_id: int, message):
+        # Route to the popup window itself (not main_content_frm) since the
+        # user is looking at it, not the underlying main window, when a
+        # selection-level action like a CdA calculation fails.
+        window = self.aero_test_windows.get(aero_test_id)
+        if window is not None:
+            window.show_alert_error(message)

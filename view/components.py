@@ -4,6 +4,18 @@ from typing import List, Callable, Optional, Union, Tuple
 from functools import partial
 
 
+class AlertMixin:
+    """Mixin that provides show_alert_error / show_alert_success on self.alert_lbl."""
+
+    def show_alert_error(self, message, ms: int = 3000):
+        self.alert_lbl.configure(text=str(message), text_color='red')
+        self.alert_lbl.after(ms, lambda: self.alert_lbl.configure(text=""))
+
+    def show_alert_success(self, message, ms: int = 3000):
+        self.alert_lbl.configure(text=str(message), text_color='green')
+        self.alert_lbl.after(ms, lambda: self.alert_lbl.configure(text=""))
+
+
 class ScrollableBtnList(ctk.CTkScrollableFrame):
     def __init__(self, parent, name_ids: List[tuple[str, int]],
                  callback: Callable[[int], None] = None, *args, **kwargs):
