@@ -42,8 +42,8 @@ On a straight ($\kappa = 0$) or at rest ($v=0$), $\theta = 0$ and every term
 introduced in this section vanishes, so the model reduces exactly to
 \cref{sec:simulation-model} with no cornering configured.
 
-\subsection{Center-of-mass coning and wheel-speed geometry}
-\label{sec:coning}
+\subsection{Center-of-mass offset and wheel-speed geometry}
+\label{sec:wheel-speed-geometry}
 
 The state variable $v$ represents the speed of the rider's center of mass. When
 leaned at angle $\theta$, the center of mass sits a horizontal distance
@@ -69,27 +69,45 @@ so that curvature lookups $\kappa(s)$ stay correctly aligned with the track
 geometry the wheels are actually traveling over. This is a purely geometric
 correction; it carries no direct effect on $dv/dt$.
 
+Because the race-distance terminal event of \cref{sec:numerical-integration}
+triggers when $s$ -- the same coordinate advanced via \cref{eq:ds-dt} --
+reaches $s_{\mathrm{race}}$, the tracked race distance is a track-surface
+(wheel-path) distance, matching how a race distance is physically marked on a
+track. A direct consequence is that the rider's center of mass itself covers a
+slightly shorter cumulative distance than $s_{\mathrm{race}}$ over the course
+of a full run, since it cuts inside the wheels' path through every corner.
+
 \subsection{Energy-feedback term}
 \label{sec:energy-feedback}
 
 As the rider leans into and out of a corner, the center of mass also moves
-\emph{vertically}: its height above the ground is proportional to $h\cos\theta$,
-which decreases as $\theta$ grows from zero. By conservation of mechanical
-energy, this vertical motion trades against forward kinetic energy -- leaning
-into a corner draws a small amount of speed away from forward motion, and
-leaning back out returns it. This subsection derives the resulting correction to
-$dv/dt$.
+\emph{vertically}: writing $z \equiv h\cos\theta$ for its height above a fixed
+reference, $z$ decreases as $\theta$ grows from zero -- leaning over lowers the
+center of mass, the same way tipping a rigid rod from vertical lowers its tip.
+By conservation of mechanical energy, this loss of height converts into a
+small \emph{gain} in forward speed on the way into a corner; the reverse
+conversion, speed converting back into height, gives a small \emph{loss} of
+speed coming back upright on the way out. This subsection derives that
+acceleration contribution, denoted $a_{\mathrm{energy}}$.
 
 \subsubsection{Explicit s-dependence of theta}
 
-Differentiating \cref{eq:lean-angle-tan} with respect to arc length $s$ at fixed
-$v$, using $x \equiv v^2\kappa/g$ and $\frac{d}{ds}\arctan(x) = \frac{1}{1+x^2}\frac{dx}{ds}$,
-gives the rate of change of lean angle due to the changing curvature alone:
+Differentiating \cref{eq:lean-angle-tan} implicitly with respect to arc length
+$s$ at fixed $v$, using $\frac{d}{ds}\tan\theta = \sec^2\theta\,
+\partial\theta/\partial s$ and the identity $\sec^2\theta = 1+\tan^2\theta$,
+gives
 \begin{equation}
+    \sec^2\theta\left.\frac{\partial\theta}{\partial s}\right|_{v} =
+        \frac{v^2}{g}\,\frac{d\kappa}{ds}
+    \quad\Longrightarrow\quad
     \left.\frac{\partial\theta}{\partial s}\right|_{v} =
-        \frac{1}{1+x^2}\,\frac{v^2}{g}\,\frac{d\kappa}{ds}.
+        \cos^2\theta\,\frac{v^2}{g}\,\frac{d\kappa}{ds},
     \label{eq:dtheta-ds}
 \end{equation}
+the rate of change of lean angle due to the changing curvature alone. (The
+implementation computes this equivalent form as $1/(1+x^2)$ with
+$x \equiv \tan\theta = v^2\kappa/g$, identical to $\cos^2\theta$ by
+$\sec^2\theta = 1+\tan^2\theta$.)
 
 \subsubsection{Vertical-energy acceleration term}
 
@@ -119,11 +137,11 @@ right-hand side of the ODE depend on $dv/dt$ itself.
 
 \subsubsection{Implicit feedback coefficient}
 
-Differentiating \cref{eq:lean-angle-tan} with respect to $v$ at fixed $\kappa$
-gives the $v$-driven part of $d\theta/dt$:
+Differentiating \cref{eq:lean-angle-tan} implicitly with respect to $v$ at
+fixed $\kappa$ the same way gives the $v$-driven part of $d\theta/dt$:
 \begin{equation}
     \frac{\partial\theta}{\partial v} =
-        \frac{1}{1+x^2}\cdot\frac{2v\kappa}{g}.
+        \cos^2\theta\,\frac{2v\kappa}{g}.
     \label{eq:dtheta-dv}
 \end{equation}
 Substituting the full chain rule
@@ -133,7 +151,7 @@ equation of the form $dv/dt = a_{\mathrm{energy}}^{(s)} + C \cdot dv/dt$ (plus t
 non-cornering forces), where
 \begin{equation}
     C(v,\kappa,\theta,h) =
-        \frac{2 h \kappa \sin\theta}{1+x^2}.
+        2 h \kappa \sin\theta \cos^2\theta.
     \label{eq:feedback-coeff}
 \end{equation}
 Here every explicit factor of $v$ and $g$ introduced by the

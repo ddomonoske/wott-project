@@ -101,9 +101,17 @@ drivetrain losses, $F_p (1-\eta)$, as already shown in
 \cref{sec:cornering-model}) is a coupled, nonstiff, first-order ODE system in the
 state $y=(v,s)$ of \cref{eq:state-vector}. It is solved with
 \url{scipy.integrate.solve_ivp} using its default explicit Runge-Kutta method
-(RK45, the Dormand-Prince pair) and default error tolerances. RK45's adaptive
-step-size control is a good match for the smooth power/drag dynamics away from
-corners.
+(RK45, the Dormand-Prince pair) and default error tolerances. RK45 is adaptive:
+at every step it estimates the local truncation error and grows or shrinks the
+next step to keep that error within tolerance. The only control the simulation
+imposes on this process is \texttt{max\_step}, an upper bound (discussed
+below); below that bound the solver's own error control still governs the step
+actually taken, and it does shrink on its own when the dynamics call for it --
+for instance, right at a power-plan segment boundary, where the commanded
+power $P(t)$ jumps discontinuously between segments
+(\cref{sec:propulsive-force}), or near the torque-limited/power-limited
+crossover speed $P(t)/F_{\max}$ in \cref{eq:propulsive-force}, where the force
+curve has a kink.
 
 The solver is given a terminal event that stops integration exactly when the
 rider crosses the target race distance,

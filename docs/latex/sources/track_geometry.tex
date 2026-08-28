@@ -54,6 +54,26 @@ shape is set by the filter kernel rather than by an exact geometric construction
 It is this smoothed transition ramp that motivates the \texttt{max\_step}
 restriction discussed in \cref{sec:numerical-integration}.
 
+This smoothing also leaves the track's total accumulated turning unchanged. A
+box filter is a normalized moving average, so it redistributes curvature
+locally without changing its integral, provided the signal is unchanged
+wherever the averaging window reaches past the domain's ends -- true here,
+since both track endpoints ($s=0$ and $s=L$) fall at the midpoint of a
+straight, well away from any corner, where the raw curvature is already zero.
+Consequently
+\begin{equation}
+    \int_0^L \kappa(s)\,ds = 2\pi
+    \label{eq:total-turning}
+\end{equation}
+exactly, independent of the transition length: each of the two corners is an
+exact semicircle contributing $\kappa_{\mathrm{corner}}\,\ell_{\mathrm{corner}}
+= \pi$ radians of turning by \cref{eq:corner-radius}, and smoothing only moves
+\emph{where} that turning happens along $s$, not how much of it there is. This
+holds for any track length $L$ and corner fraction $c$, and is exactly why the
+reconstructed centerline of \cref{sec:position-reconstruction} always closes
+into a loop that returns to the starting point after one full lap, whatever
+transition length is configured.
+
 \subsection{Position reconstruction}
 \label{sec:position-reconstruction}
 
@@ -65,10 +85,10 @@ curvature, and position is the running integral of the heading's cosine and
 sine components,
 \begin{align}
     \phi(s) &= \int_0^s \kappa(s')\,ds', \label{eq:heading} \\
-    x(s) &= \int_0^s \cos\phi(s')\,ds', \label{eq:x-pos} \\
-    y(s) &= \int_0^s \sin\phi(s')\,ds'. \label{eq:y-pos}
+    X(s) &= \int_0^s \cos\phi(s')\,ds', \label{eq:x-pos} \\
+    Y(s) &= \int_0^s \sin\phi(s')\,ds'. \label{eq:y-pos}
 \end{align}
 Each integral is evaluated numerically by cumulative trapezoidal integration.
-As a sanity check on the construction, the reconstructed centerline closes on
-itself: after one full lap, $(x,y)$ returns to within \SI{1}{\metre} of the
-starting point.
+As a consequence of \cref{eq:total-turning}, the reconstructed centerline
+closes on itself: after one full lap, $(X,Y)$ returns to within \SI{1}{\metre}
+of the starting point, for any track length or transition setting.
