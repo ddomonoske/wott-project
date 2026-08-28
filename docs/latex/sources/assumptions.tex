@@ -27,8 +27,10 @@ fitted \CdA{} value.
     (\cref{sec:cda-dvdt}) use the recorded (center-of-mass) speed directly,
     rather than the wheel-path speed $v_{\mathrm{wheel}}$ of
     \cref{eq:wheel-speed} that the forward simulation uses for the same
-    purpose; the difference is second-order in $\kappa h \sin\theta$ and small
-    for realistic lean angles, but is not corrected for.
+    purpose; since $v_{\mathrm{wheel}} - v \approx v\,\kappa h \sin\theta$ to
+    leading order, the difference is first-order (linear) in $\kappa h
+    \sin\theta$, and small in practice for realistic lean angles, but is not
+    corrected for.
 
     \item \textbf{Flat-track assumption.} Neither the forward simulation nor the
     \CdA{} fit includes a gravitational grade term. This is appropriate for a

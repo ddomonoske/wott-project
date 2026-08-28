@@ -27,8 +27,7 @@ drivetrain. Dividing by $m$ gives the straight-line acceleration
 When the track has curvature, an additional cornering correction is added to
 \cref{eq:a-power}; that correction is developed in full in
 \cref{sec:cornering-model}, since it depends on quantities not yet introduced
-here. The remainder of this section derives each of the three forces in
-\cref{eq:newton-second-law}.
+here.
 
 \subsection{Rolling resistance}
 \label{sec:rolling-resistance}
@@ -90,9 +89,7 @@ traction force $F_{\max}$ (\texttt{max\_force}, default \SI{200}{\newton}):
 \end{equation}
 with $F_p = 0$ whenever $v = 0$ and $P(t) \leq 0$. This is the standard
 torque-limited/power-limited force-velocity curve used in vehicle propulsion
-models. The force actually delivered to the ground is reduced by
-drivetrain losses, $F_p (1-\eta)$, as already shown in
-\cref{eq:newton-second-law,eq:a-power}.
+models.
 
 \subsection{Numerical integration}
 \label{sec:numerical-integration}
@@ -143,8 +140,8 @@ silently stepping over a transition zone between two \texttt{t\_eval} samples
 and producing a visibly jagged velocity trace through the corner, since the
 solver's dense-output polynomial has no way to know a sharp feature lies between
 its chosen steps. Capping \texttt{max\_step} at $dt$ forces the solver to
-evaluate the right-hand side within every transition zone, at the cost of some
-integration speed only when track geometry is enabled.
+evaluate the right-hand side within every transition zone, at some cost to
+integration speed.
 
 \subsection{Outputs}
 \label{sec:sim-outputs}

@@ -29,12 +29,16 @@ maximum ($c=1.0$, no straights at all, i.e.\ a single circular track).
 
 Each corner is modeled as an exact semicircular arc: a $180^\circ$ turn subtending
 arc length $\ell_{\mathrm{corner}}$. Since arc length equals radius times swept
-angle, and the swept angle of a semicircle is $\pi$,
+angle, and the swept angle of a semicircle is $\pi$, the (fixed) corner radius
+is
 \begin{equation}
-    r = \frac{\ell_{\mathrm{corner}}}{\pi}.
+    r = \frac{\ell_{\mathrm{corner}}}{\pi},
     \label{eq:corner-radius}
 \end{equation}
-The corner curvature is then simply $\kappa_{\mathrm{corner}} = 1/r$.
+coinciding with the instantaneous turn radius $1/\kappa$ of \cref{sec:lean-angle}
+only on the corner plateau, not through the smoothed transition ramps of
+\cref{sec:curvature-smoothing}. The corner curvature is then simply
+$\kappa_{\mathrm{corner}} = 1/r$.
 
 \subsection{Curvature profile and transition smoothing}
 \label{sec:curvature-smoothing}
@@ -72,10 +76,10 @@ but fails as $c \to 1$, where the straights vanish entirely. Within that regime,
 \end{equation}
 exactly, independent of the transition length: each of the two corners is an
 exact semicircle contributing $\kappa_{\mathrm{corner}}\,\ell_{\mathrm{corner}}
-= \pi$ radians of turning by \cref{eq:corner-radius}, and smoothing only moves
-\emph{where} that turning happens along $s$, not how much of it there is -- and
-correspondingly, the reconstructed centerline of \cref{sec:position-reconstruction}
-closes into a loop returning to the starting point after one full lap.
+= \pi$ radians of turning by \cref{eq:corner-radius}, and smoothing only
+relocates \emph{where} that turning happens along $s$
+(\cref{sec:position-reconstruction} verifies the resulting loop closure
+numerically).
 
 \subsection{Position reconstruction}
 \label{sec:position-reconstruction}

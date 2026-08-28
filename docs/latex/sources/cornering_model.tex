@@ -9,9 +9,8 @@ section derives that correction term by term.
 \subsection{Framing: a quasi-static lean, not a dynamical degree of freedom}
 \label{sec:quasi-static-lean}
 
-Before deriving the correction, it is worth stating precisely what kind of model
-this is, since it is easy to over-read the following equations as a full
-rigid-body treatment. The lean angle $\theta$ is \emph{algebraically slaved} to
+The lean angle $\theta$ derived below is easy to over-read as a full rigid-body
+treatment; it is not one. $\theta$ is \emph{algebraically slaved} to
 the instantaneous speed $v$ and track curvature $\kappa$ at every instant; it is
 not an independent state variable with its own rotational inertia, and the model
 does not track a separate roll rate. There is also no friction-circle or
@@ -45,6 +44,36 @@ introduced in this section vanishes, so the model reduces exactly to
 \subsection{Center-of-mass offset and wheel-speed geometry}
 \label{sec:wheel-speed-geometry}
 
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=1.15]
+        \draw[thick] (-2.2,0) -- (2.2,0);
+        \filldraw (0,0) circle (1.3pt);
+        \node[below] at (0,0) {wheel-ground contact};
+        \draw[dashed, gray] (0,0) -- (0,3.4);
+        \draw[thick, blue] (0,0) -- (60:3.2) coordinate (com);
+        \filldraw[blue] (com) circle (1.8pt);
+        \node[above right, blue] at (com) {center of mass};
+        \draw (0,1.1) arc (90:60:1.1);
+        \node at (77:1.45) {$\theta$};
+        \draw[dotted] (com) -- (0,{3.2*sin(60)});
+        \draw[dotted] (com) -- ({3.2*cos(60)},0);
+        \draw[<->] (0,-0.5) -- ({3.2*cos(60)},-0.5);
+        \node[below] at ({0.5*3.2*cos(60)},-0.5) {$h\sin\theta$};
+        \draw[<->] ({3.2*cos(60)+0.5},0) -- ({3.2*cos(60)+0.5},{3.2*sin(60)});
+        \node[right] at ({3.2*cos(60)+0.5},{0.5*3.2*sin(60)}) {$z=h\cos\theta$};
+        \node[left] at (25:1.7) {$h$};
+    \end{tikzpicture}
+    \caption{Lean geometry viewed from behind the rider. The center of mass sits
+    a distance $h$ from the wheel-ground contact point along the bike's leaned
+    axis, at lean angle $\theta$ from vertical. Its horizontal offset from the
+    contact point, $h\sin\theta$, is the inboard shift used below in
+    \cref{eq:wheel-speed}; its height above the contact point,
+    $z = h\cos\theta$, is the quantity that varies as the rider leans in
+    \cref{sec:energy-feedback}.}
+    \label{fig:lean-geometry}
+\end{figure}
+
 The state variable $v$ represents the speed of the rider's center of mass. When
 leaned at angle $\theta$, the center of mass sits a horizontal distance
 $h \sin\theta$ inboard of the wheel-ground contact line, tracing a smaller
@@ -70,7 +99,11 @@ than the center-of-mass speed,
     \frac{ds}{dt} = v_{\mathrm{wheel}},
     \label{eq:ds-dt}
 \end{equation}
-This is a purely geometric correction; it carries no direct effect on $dv/dt$.
+Equation \eqref{eq:ds-dt} itself only updates the position state; it is not a
+term in $dv/dt$. The wheel speed $v_{\mathrm{wheel}}$ it defines, however, is
+reused below in \cref{sec:energy-feedback}'s energy-feedback term, so the
+cornering correction as a whole does still affect $dv/dt$, just not through
+this equation.
 
 Because the race-distance terminal event of \cref{sec:numerical-integration}
 triggers when $s$ -- the same coordinate advanced via \cref{eq:ds-dt} --
@@ -113,8 +146,8 @@ $\kappa(s)$ as a smoothed, differentiable profile rather than a step function,
 so $d\kappa/ds$ is a genuine, bounded function of $s$ rather than a delta spike
 at each corner boundary. (The implementation computes this equivalent form as
 $1/(1+x^2)$ with
-$x \equiv \tan\theta = v^2\kappa/g$, identical to $\cos^2\theta$ by
-$\sec^2\theta = 1+\tan^2\theta$.)
+$x \equiv \tan\theta = v^2\kappa/g$, identical to $\cos^2\theta$ by the same
+identity.)
 
 \subsubsection{Vertical-energy acceleration term}
 
@@ -203,9 +236,12 @@ on speed, consistent with energy conservation.
 
 The energy-feedback terms of this section -- $a_{\mathrm{energy}}$ and the
 feedback coefficient $C$ -- are set to zero whenever $v < V_{\mathrm{eps}}$
-(\SI{0.1}{\metre\per\second}), which avoids division-by-near-zero in
-\cref{eq:a-energy-general,eq:feedback-coeff}. (Lean angle $\theta$ and the
-banked rolling resistance of \cref{sec:rolling-resistance} are not gated this
-way; both remain well-defined at $v = 0$, where $\theta \to 0$ smoothly.) This
-is a numerical safeguard for the simulation's start condition, not a distinct
-physical regime.
+(\SI{0.1}{\metre\per\second}). This avoids division-by-near-zero in
+\cref{eq:a-energy-general}, the only one of the two with an explicit $1/v$
+term; \cref{eq:feedback-coeff} has no such term (it depends only on $\kappa$,
+$h$, and $\theta$) but is zeroed alongside it for consistency, since both
+represent the same near-zero-speed cornering-energy exchange. (Lean angle
+$\theta$ and the banked rolling resistance of \cref{sec:rolling-resistance} are
+not gated this way; both remain well-defined at $v = 0$, where $\theta \to 0$
+smoothly.) This is a numerical safeguard for the simulation's start condition,
+not a distinct physical regime.
