@@ -5,18 +5,13 @@
 \cref{sec:simulation-model,sec:cornering-model}: instead of integrating forward
 from a known \CdA{} to predict $v(t)$, it takes a measured $\bigl(t, v, P\bigr)$
 trace from a rider's \texttt{.fit} file and solves for the one remaining
-unknown, \CdA{}.
-
-\subsection{Problem statement}
-\label{sec:cda-problem}
-
-Given a selected window of recorded time, speed, and power samples, the rider's
+unknown, \CdA{}. Given a selected window of recorded samples, the rider's
 acceleration can be computed directly by differentiating the recorded speed
 trace, leaving \cref{eq:newton-second-law} (extended with the cornering forces
-of \cref{sec:cornering-model}) as a single linear equation in the one unknown
-$\CdA$, since every other quantity in the force balance -- mass, rolling
-resistance, propulsive force, and the cornering corrections -- can be computed
-directly from the recorded data and the rider's/environment's known parameters.
+of \cref{sec:cornering-model}) as a single linear equation in $\CdA$, since
+every other quantity in the force balance -- mass, rolling resistance,
+propulsive force, and the cornering corrections -- can be computed directly
+from the recorded data and the rider's/environment's known parameters.
 
 \subsection{Acceleration from recorded data}
 \label{sec:cda-dvdt}
@@ -26,8 +21,15 @@ acceleration $dv/dt$ is estimated by a central finite difference
 (\texttt{numpy.gradient}) on the raw, non-uniformly spaced recording timestamps,
 with no smoothing applied to the speed trace beforehand. Distance traveled
 within the selected window is obtained by cumulative trapezoidal integration of
-the recorded speed, rather than from a separate odometer or GPS-distance field.
-Both choices are revisited as limitations in \cref{sec:assumptions}.
+the recorded speed -- using recorded (center-of-mass) speed rather than the
+wheel speed $v_{\mathrm{wheel}}$ of \cref{eq:wheel-speed}, a small approximation
+revisited in \cref{sec:assumptions} -- rather than from a separate odometer or
+GPS-distance field. Together with the phase offset $s_0$ of
+\cref{sec:cda-s0-search}, this distance gives each sample's track position,
+$s_i = s_0 + \mathrm{dist}_i$, used for the curvature lookups $\kappa(s_i)$ that
+feed the cornering corrections below. Both the unsmoothed finite difference and
+the wheel-speed approximation are revisited as limitations in
+\cref{sec:assumptions}.
 
 \subsection{Rearranged force balance}
 \label{sec:cda-rearranged}
@@ -36,20 +38,23 @@ Rearranging \cref{eq:newton-second-law} (with $F_{ad}$ from
 \cref{eq:aero-drag} and the cornering-corrected rolling resistance and energy
 terms of \cref{sec:cornering-model}) to isolate the drag force gives
 \begin{equation}
-    F_{ad} = F_p(1-\eta) + F_{rr}(\theta) + m\,a_{\mathrm{energy}} - m\,\frac{dv}{dt},
+    F_{ad} = m\,\frac{dv}{dt} - F_p(1-\eta) - F_{rr}(\theta) - m\,a_{\mathrm{energy}},
     \label{eq:cda-force-balance}
 \end{equation}
 where the propulsive force here uses the recorded power directly,
 $F_p = P(t)/v$, with no traction cap applied (unlike the forward model's
 \cref{eq:propulsive-force}), since $P(t)$ is measured rather than a target to be
-achieved. Since $F_{ad} = \CdA \cdot \bigl(\tfrac{1}{2}\rho v^2\bigr)$ by
-\cref{eq:aero-drag}, writing
+achieved. \Cref{eq:aero-drag} gives $F_{ad} = -\CdA \cdot
+\bigl(\tfrac{1}{2}\rho v^2\bigr)$, always negative since drag opposes motion;
+working instead with the drag \emph{magnitude} $D \equiv -F_{ad} = \CdA \cdot
+\bigl(\tfrac{1}{2}\rho v^2\bigr)$, a positive quantity, and negating
+\cref{eq:cda-force-balance} accordingly, gives
 \begin{equation}
     x \equiv \tfrac{1}{2}\rho v^2, \qquad
-    y \equiv F_p(1-\eta) + F_{rr}(\theta) + m\,a_{\mathrm{energy}} - m\,\frac{dv}{dt},
+    y \equiv D = F_p(1-\eta) + F_{rr}(\theta) + m\,a_{\mathrm{energy}} - m\,\frac{dv}{dt},
     \label{eq:cda-xy}
 \end{equation}
-reduces the fit to a single linear regression, $y = \CdA \cdot x$, evaluated
+reducing the fit to a single linear regression, $y = \CdA \cdot x$, evaluated
 across every sample in the selected window.
 
 \subsection{Closed-form least-squares fit}
@@ -68,25 +73,32 @@ computed directly with no iterative solver:
 cda = np.sum(x * y) / np.sum(x ** 2)
 residual = np.sum((y - x * cda) ** 2)
 \end{lstlisting}
-The fit is rejected if $\CdA \leq 0$ (a non-physical result) or if the selected
-window has too little speed variation for $\sum_i x_i^2$ to meaningfully
-constrain the regression.
+The fit is rejected if $\CdA \leq 0$ (a non-physical result) or if
+$\sum_i x_i^2 = 0$ -- a defensive guard against a zero denominator that, given
+the $v > V_{\mathrm{eps}}$ filtering of \cref{sec:cda-dvdt}, is not expected to
+trigger in practice. Independently, the selected window must contain at least
+two samples with $v > V_{\mathrm{eps}}$ after filtering; fewer raises an error
+rather than returning a degenerate fit.
 
 \subsection{Lap-phase search}
 \label{sec:cda-s0-search}
 
-The track's curvature $\kappa(s)$ is periodic in position $s$
-(\cref{sec:track-geometry}), but the phase offset $s_0$ at which the recorded
-window began -- where on the track, modulo one straight-and-corner period, the
-rider was when recording started -- is not directly known from the \texttt{.fit}
-data. \texttt{CdAFitter} searches for $s_0$ in two stages:
+The track's curvature $\kappa(s)$ is periodic in position $s$ with fundamental
+period $L/2$ -- one straight-and-corner unit, from
+\cref{eq:straight-corner-length} -- since the two straight-and-corner units
+making up a full lap of length $L$ are geometrically identical
+(\cref{sec:track-geometry}). The phase offset $s_0$ at which the recorded
+window began -- where on the track, modulo that period, the rider was when
+recording started -- is not directly known from the \texttt{.fit} data. Because
+the residual-versus-$s_0$ landscape is periodic and, in general, multimodal (a
+local optimizer seeded arbitrarily could converge to the wrong minimum),
+\texttt{CdAFitter} searches for $s_0$ in two stages:
 
 \begin{enumerate}
     \item \textbf{Coarse grid search}: the fit of
     \cref{eq:cda-closed-form} is evaluated at $150$ candidate offsets spaced
-    evenly over \emph{half} the track's straight-and-corner period. Only half
-    the period needs to be searched because the track's two straights and two
-    corners are geometrically symmetric within a full lap.
+    evenly over the full period $[0, L/2)$, covering every distinct phase the
+    window could have started at.
 
     \item \textbf{Refinement}: the best coarse candidate is refined with
     \url{scipy.optimize.minimize_scalar} using the bounded Brent method,
@@ -100,10 +112,3 @@ chosen to minimize the resulting residual. If no track geometry is configured,
 $s_0$ is not searched and the fit is evaluated directly with $\kappa \equiv 0$
 throughout, in which case the cornering terms of
 \cref{eq:cda-force-balance} vanish identically.
-
-\subsection{Sample requirements}
-\label{sec:cda-requirements}
-
-The fit requires at least two samples with $v > V_{\mathrm{eps}}$ after
-filtering; a selection window with fewer moving samples raises an error rather
-than returning a degenerate fit.

@@ -37,9 +37,12 @@ On level, upright riding, rolling resistance is the familiar
 $F_{rr,0} = -m g \Crr$, opposing the direction of travel, where $g$ is the
 acceleration of gravity and $\Crr$ is the rolling resistance coefficient
 (\texttt{envir.crr}). When the rider is leaned over at angle $\theta$ through a
-corner (\cref{sec:cornering-model} derives $\theta$), the normal force between
-tire and track increases, since the same weight $mg$ must be supported through a
-smaller effective vertical component:
+corner (\cref{sec:cornering-model} derives $\theta$), the model treats the
+tire-track contact \emph{as if} the rider were riding a surface banked at angle
+$\theta$, rather than balancing via tire friction on a flat track: no lateral
+friction is needed to supply the centripetal force under this idealization, but
+the normal force increases, since the same weight $mg$ must be supported through
+a smaller effective vertical component:
 \begin{equation}
     N(\theta) = \frac{m g}{\cos\theta}.
     \label{eq:normal-force}
@@ -51,8 +54,7 @@ Because rolling resistance is proportional to the normal force, this gives
 \end{equation}
 At $\theta = 0$ (straights, or when no cornering model is configured),
 $\cos\theta = 1$ and \cref{eq:rolling-resistance} reduces to the standard flat
-result $F_{rr,0}$. This is implemented directly as the banked rolling-resistance
-force used throughout the equation of motion.
+result $F_{rr,0}$.
 
 \subsection{Aerodynamic drag}
 \label{sec:aero-drag}
@@ -88,9 +90,7 @@ traction force $F_{\max}$ (\texttt{max\_force}, default \SI{200}{\newton}):
 \end{equation}
 with $F_p = 0$ whenever $v = 0$ and $P(t) \leq 0$. This is the standard
 torque-limited/power-limited force-velocity curve used in vehicle propulsion
-models: at low speed the achievable force saturates at a traction limit, and
-above the crossover speed $P(t)/F_{\max}$ the force is set by the requirement
-that $F \cdot v = P(t)$. The force actually delivered to the ground is reduced by
+models. The force actually delivered to the ground is reduced by
 drivetrain losses, $F_p (1-\eta)$, as already shown in
 \cref{eq:newton-second-law,eq:a-power}.
 
@@ -127,24 +127,24 @@ reported finish time and position; the run raises an error if the event never
 fires within the solve horizon $t_{\max}$ (default \SI{300}{\second}).
 
 Results are additionally requested on a fixed, uniformly spaced grid
-(\texttt{t\_eval}) at spacing $dt$, independent of the solver's own internal
-adaptive step choices. When track geometry is configured, the solver's
+(\texttt{t\_eval}) of $n = \lceil t_{\max}/dt \rceil$ points spanning
+$[0, t_{\max})$ -- a spacing of $t_{\max}/n$, equal to $dt$ when $t_{\max}$ is an
+exact multiple of it and slightly under $dt$ otherwise -- independent of the
+solver's own internal adaptive step choices. When track geometry is configured, the solver's
 \texttt{max\_step} is capped at $dt$; when no track geometry is present it is left
 unbounded (\texttt{numpy.inf}) so RK45 is free to take its own, larger, error-
 controlled steps. The reason for this cap is the curvature profile itself:
 \cref{sec:track-geometry} shows that $\kappa(s)$ is smoothed into a ramp between
 zero and its cornering value over a short transition zone (default
 \SI{30}{\metre}), which a fast-moving rider can cross in well under a second.
-RK45's adaptive step size is chosen to satisfy an error tolerance on the smooth
-power and drag dynamics, and left unconstrained it can grow to several seconds --
-long enough to step entirely over a transition zone between two \texttt{t\_eval}
-samples. Because the requested output points still fall on the solver's dense-
-output polynomial, the solver would not raise any error in this situation; it
-would simply produce an inaccurate, visibly jagged velocity trace through the
-corner, since the polynomial's own error control has no way to know that a sharp
-feature exists between its chosen steps. Capping \texttt{max\_step} at $dt$ forces
-the solver to actually evaluate the right-hand side within every transition zone,
-at the cost of some integration speed only when track geometry is enabled.
+RK45's own error control, tuned to the comparatively smooth power and drag
+dynamics, may grow its step size to several seconds without raising any error,
+silently stepping over a transition zone between two \texttt{t\_eval} samples
+and producing a visibly jagged velocity trace through the corner, since the
+solver's dense-output polynomial has no way to know a sharp feature lies between
+its chosen steps. Capping \texttt{max\_step} at $dt$ forces the solver to
+evaluate the right-hand side within every transition zone, at the cost of some
+integration speed only when track geometry is enabled.
 
 \subsection{Outputs}
 \label{sec:sim-outputs}

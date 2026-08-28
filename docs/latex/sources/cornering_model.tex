@@ -49,25 +49,28 @@ The state variable $v$ represents the speed of the rider's center of mass. When
 leaned at angle $\theta$, the center of mass sits a horizontal distance
 $h \sin\theta$ inboard of the wheel-ground contact line, tracing a smaller
 effective turn radius than the wheels themselves, which remain on the track
-surface. For the same angular sweep of the turn, the wheels -- farther from the
-turn center -- must therefore cover more ground per unit time than the center of
-mass. Writing this as a scaling of the center-of-mass speed,
+surface: writing $r = 1/\kappa$ for the wheels' turn radius, the center of mass
+turns on a radius $r - h\sin\theta$. For the same angular sweep of the turn,
+both the wheels and the center of mass sweep the same angle in the same time, so
+their speeds scale directly with radius,
+$v / v_{\mathrm{wheel}} = (r - h\sin\theta)/r = 1 - \kappa h \sin\theta$. Solving
+for the wheel speed,
 \begin{equation}
     v_{\mathrm{wheel}}(v, \kappa, \theta) =
-        \frac{v}{1 - \kappa h \sin\theta}.
+        \frac{v}{1 - \kappa h \sin\theta},
     \label{eq:wheel-speed}
 \end{equation}
-This matters because track curvature $\kappa(s)$ is indexed by arc length along
-the track surface -- the wheels' path -- not by the center of mass's path.
-Consequently the position state advances at the wheel speed rather than the
-center-of-mass speed,
+with the denominator floored at $0.01$ in the implementation as a numerical
+safeguard against extreme combinations of $\kappa$, $h$, and $\theta$ driving it
+toward zero. This matters because track curvature $\kappa(s)$ is indexed by arc
+length along the track surface -- the wheels' path -- not by the center of
+mass's path. Consequently the position state advances at the wheel speed rather
+than the center-of-mass speed,
 \begin{equation}
     \frac{ds}{dt} = v_{\mathrm{wheel}},
     \label{eq:ds-dt}
 \end{equation}
-so that curvature lookups $\kappa(s)$ stay correctly aligned with the track
-geometry the wheels are actually traveling over. This is a purely geometric
-correction; it carries no direct effect on $dv/dt$.
+This is a purely geometric correction; it carries no direct effect on $dv/dt$.
 
 Because the race-distance terminal event of \cref{sec:numerical-integration}
 triggers when $s$ -- the same coordinate advanced via \cref{eq:ds-dt} --
@@ -104,8 +107,12 @@ gives
         \cos^2\theta\,\frac{v^2}{g}\,\frac{d\kappa}{ds},
     \label{eq:dtheta-ds}
 \end{equation}
-the rate of change of lean angle due to the changing curvature alone. (The
-implementation computes this equivalent form as $1/(1+x^2)$ with
+the rate of change of lean angle due to the changing curvature alone. This
+derivative is well-defined everywhere: \cref{sec:curvature-smoothing} constructs
+$\kappa(s)$ as a smoothed, differentiable profile rather than a step function,
+so $d\kappa/ds$ is a genuine, bounded function of $s$ rather than a delta spike
+at each corner boundary. (The implementation computes this equivalent form as
+$1/(1+x^2)$ with
 $x \equiv \tan\theta = v^2\kappa/g$, identical to $\cos^2\theta$ by
 $\sec^2\theta = 1+\tan^2\theta$.)
 
@@ -146,9 +153,15 @@ fixed $\kappa$ the same way gives the $v$-driven part of $d\theta/dt$:
 \end{equation}
 Substituting the full chain rule
 $d\theta/dt = \left.\partial\theta/\partial s\right|_v v_{\mathrm{wheel}} + \partial\theta/\partial v \cdot dv/dt$
-into \cref{eq:a-energy-general} and collecting the $dv/dt$ terms gives an
-equation of the form $dv/dt = a_{\mathrm{energy}}^{(s)} + C \cdot dv/dt$ (plus the
-non-cornering forces), where
+into \cref{eq:a-energy-general}, and adding this lean-driven acceleration to the
+non-cornering acceleration of \cref{eq:a-power}, gives the full equation of
+motion in the form
+\begin{equation}
+    \frac{dv}{dt} = a_{\mathrm{power}} + a_{\mathrm{energy}}^{(s)} +
+        C(v,\kappa,\theta,h) \cdot \frac{dv}{dt},
+    \label{eq:dv-dt-implicit}
+\end{equation}
+self-referential in $dv/dt$ through $\theta$'s own dependence on $v$, where
 \begin{equation}
     C(v,\kappa,\theta,h) =
         2 h \kappa \sin\theta \cos^2\theta.
@@ -156,17 +169,15 @@ non-cornering forces), where
 \end{equation}
 Here every explicit factor of $v$ and $g$ introduced by the
 $gh\sin\theta/v$ prefactor of \cref{eq:a-energy-general} and the $2v\kappa/g$
-factor of \cref{eq:dtheta-dv} cancels, leaving $C$ independent of both. Solving
-the resulting equation explicitly for $dv/dt$, rather than treating $C$ as a
-second implicit unknown requiring its own root-find at every solver step, gives
-the combined result.
+factor of \cref{eq:dtheta-dv} cancels, leaving $C$ independent of both.
 
 \subsection{Combined equation of motion}
 \label{sec:combined-eom}
 
-Substituting \cref{eq:a-energy-s,eq:feedback-coeff} into
-\cref{eq:a-power} and solving for $dv/dt$ gives the full cornering-corrected
-equation of motion:
+Because $C$ enters \cref{eq:dv-dt-implicit} linearly, $dv/dt$ can be solved for
+explicitly rather than treated as a second implicit unknown requiring its own
+root-find at every solver step. Solving \cref{eq:dv-dt-implicit} for $dv/dt$
+gives the full cornering-corrected equation of motion:
 \begin{equation}
     \frac{dv}{dt} =
         \frac{a_{\mathrm{power}} + a_{\mathrm{energy}}^{(s)}}
@@ -185,15 +196,16 @@ transition ramps of \cref{sec:track-geometry} while $v$ and $\theta$ are
 approximately unchanged, $a_{\mathrm{energy}}^{(s)}$ takes equal and opposite
 values entering and exiting a corner at the same speed. Over a full lean-in and
 lean-out cycle at constant $v$, the term therefore integrates to zero net effect
-on speed, consistent with energy conservation: the center of mass returns to its
-original height, so no net kinetic energy should be gained or lost.
+on speed, consistent with energy conservation.
 
 \subsection{Low-speed floor}
 \label{sec:v-eps}
 
-All cornering and energy terms in this section are set to zero whenever
-$v < V_{\mathrm{eps}}$ (\SI{0.1}{\metre\per\second}), which both avoids
-division-by-near-zero in \cref{eq:a-energy-general,eq:feedback-coeff} and
-reflects the fact that lean is already negligible at near-zero speed. This is a
-numerical safeguard for the simulation's start condition, not a distinct
+The energy-feedback terms of this section -- $a_{\mathrm{energy}}$ and the
+feedback coefficient $C$ -- are set to zero whenever $v < V_{\mathrm{eps}}$
+(\SI{0.1}{\metre\per\second}), which avoids division-by-near-zero in
+\cref{eq:a-energy-general,eq:feedback-coeff}. (Lean angle $\theta$ and the
+banked rolling resistance of \cref{sec:rolling-resistance} are not gated this
+way; both remain well-defined at $v = 0$, where $\theta \to 0$ smoothly.) This
+is a numerical safeguard for the simulation's start condition, not a distinct
 physical regime.

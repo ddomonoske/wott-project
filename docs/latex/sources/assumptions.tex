@@ -7,16 +7,28 @@ their limitations are clear to anyone interpreting the simulation's output or a
 fitted \CdA{} value.
 
 \begin{itemize}
-    \item \textbf{Point-mass, one-dimensional longitudinal dynamics.} The rider
-    and bicycle are treated as a single point mass moving along the track's arc
-    length. Lean angle is an algebraic, quasi-static function of instantaneous
-    speed and curvature (\cref{sec:quasi-static-lean}), not an independent
-    dynamical state with its own inertia.
+    \item \textbf{Point-mass dynamics; quasi-static lean, no traction check.}
+    The rider and bicycle are treated as a single point mass moving along the
+    track's arc length. Lean angle is an algebraic function of instantaneous
+    speed and curvature (\cref{sec:quasi-static-lean}), not a dynamical state
+    with its own inertia, and is computed unconditionally from speed and
+    curvature with no friction-circle/traction-limit check on whether the tire
+    could actually supply the implied lateral friction.
 
-    \item \textbf{No friction-circle or traction-limit check on cornering.} The
-    lean angle of \cref{eq:lean-angle} is computed unconditionally from speed
-    and curvature; the model never checks whether the tire could actually
-    supply the implied lateral friction at that speed and curvature.
+    \item \textbf{Idealized (as-if-banked) lean geometry.} The
+    rolling-resistance normal-force increase of \cref{eq:normal-force} treats
+    leaning as equivalent to riding a surface banked at angle $\theta$ (no
+    lateral tire friction needed to supply the centripetal force), rather than
+    modeling the actual friction-based lean mechanics of a bicycle on a flat
+    track (\cref{sec:rolling-resistance}).
+
+    \item \textbf{CdA fit approximates wheel speed with center-of-mass speed.}
+    The \CdA{} fit's distance-from-speed integration and lean-rate chain rule
+    (\cref{sec:cda-dvdt}) use the recorded (center-of-mass) speed directly,
+    rather than the wheel-path speed $v_{\mathrm{wheel}}$ of
+    \cref{eq:wheel-speed} that the forward simulation uses for the same
+    purpose; the difference is second-order in $\kappa h \sin\theta$ and small
+    for realistic lean angles, but is not corrected for.
 
     \item \textbf{Flat-track assumption.} Neither the forward simulation nor the
     \CdA{} fit includes a gravitational grade term. This is appropriate for a
@@ -34,7 +46,7 @@ fitted \CdA{} value.
     window, not varied over time or estimated from the data.
 
     \item \textbf{Unsmoothed finite-difference acceleration in the CdA fit.} The
-    acceleration used in \cref{sec:cda-dvdt} is a raw central difference of the
+    acceleration of \cref{sec:cda-dvdt} is a raw central difference of the
     recorded speed trace, with no low-pass filtering beforehand; noisy speed
     samples propagate directly into a noisy \CdA{} estimate.
 

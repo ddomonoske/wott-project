@@ -4,10 +4,8 @@
 \Cref{tab:notation} lists every symbol used in this document, its meaning, its
 SI unit, its default or typical value where one exists, and the corresponding
 function, class, or entity attribute in the implementation. Derivations
-throughout this document use SI units exclusively; the single exception is
-velocity as reported to the user, which is converted to
-\si{\kilo\metre\per\hour} for display only (\cref{sec:sim-outputs}) and is never
-used in that form internally.
+throughout this document use SI units exclusively, with one display-only
+exception for reported velocity (\cref{sec:sim-outputs}).
 
 {\scriptsize
 \setlength{\tabcolsep}{4pt}
@@ -41,7 +39,7 @@ used in that form internally.
     $\kappa$ & track curvature ($\kappa_{\mathrm{corner}}=1/r$ on corner arcs) & \si{\per\metre} & -- & TrackShape, \_kappa\_at \\
     $h$ & rider center-of-mass height & \si{\metre} & optional & Rider.\allowbreak com\_height\_m \\
     $v_{\mathrm{wheel}}$ & wheel-contact-path speed & \si{\metre\per\second} & -- & IPCalculator.\allowbreak \_wheel\_speed \\
-    $r$ & instantaneous turn radius ($=1/\kappa$); corner radius & \si{\metre} & -- & TrackShape.compute (radius) \\
+    $r$ & corner radius (fixed, $=\ell_{\mathrm{corner}}/\pi$); used locally in \cref{sec:lean-angle} as shorthand for the instantaneous turn radius $1/\kappa$, which coincides with this fixed value only on the corner plateau & \si{\metre} & -- & TrackShape.compute (radius) \\
     $z$ & center-of-mass height above a fixed reference ($=h\cos\theta$) & \si{\metre} & -- & (derivation only) \\
     $a_{\mathrm{energy}}$ & acceleration from the corner-lean energy exchange ($a_{\mathrm{energy}}^{(s)}$ denotes its explicitly $s$-driven component) & \si{\metre\per\second\squared} & -- & IPCalculator.\allowbreak \_energy\_accel \\
     $C$ & implicit feedback coefficient (theta's dependence on $v$) & dimensionless & -- & IPCalculator.\allowbreak \_energy\_feedback\_coeff \\

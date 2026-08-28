@@ -54,13 +54,18 @@ shape is set by the filter kernel rather than by an exact geometric construction
 It is this smoothed transition ramp that motivates the \texttt{max\_step}
 restriction discussed in \cref{sec:numerical-integration}.
 
-This smoothing also leaves the track's total accumulated turning unchanged. A
-box filter is a normalized moving average, so it redistributes curvature
-locally without changing its integral, provided the signal is unchanged
-wherever the averaging window reaches past the domain's ends -- true here,
-since both track endpoints ($s=0$ and $s=L$) fall at the midpoint of a
-straight, well away from any corner, where the raw curvature is already zero.
-Consequently
+This smoothing also leaves the track's total accumulated turning unchanged,
+\emph{provided} each straight is long enough that the box filter's averaging
+window -- half-width $\mathrm{transition}/2$ on either side -- does not reach
+past the straight into the raw curvature of an adjacent corner. A box filter is
+a normalized moving average, so it redistributes curvature locally without
+changing its integral as long as the signal it averages is unchanged wherever
+the window reaches past the domain's ends; that holds here whenever
+$\ell_{\mathrm{straight}}/2 \geq \mathrm{transition}/2$, i.e.
+$L(1-c)/4 \geq \mathrm{transition}/2$, which the application's default
+parameters satisfy ($\ell_{\mathrm{straight}}/2 = \SI{25}{\metre}$ against a
+\SI{15}{\metre} half-window at the default \SI{250}{\metre} track and $c=0.6$)
+but fails as $c \to 1$, where the straights vanish entirely. Within that regime,
 \begin{equation}
     \int_0^L \kappa(s)\,ds = 2\pi
     \label{eq:total-turning}
@@ -68,11 +73,9 @@ Consequently
 exactly, independent of the transition length: each of the two corners is an
 exact semicircle contributing $\kappa_{\mathrm{corner}}\,\ell_{\mathrm{corner}}
 = \pi$ radians of turning by \cref{eq:corner-radius}, and smoothing only moves
-\emph{where} that turning happens along $s$, not how much of it there is. This
-holds for any track length $L$ and corner fraction $c$, and is exactly why the
-reconstructed centerline of \cref{sec:position-reconstruction} always closes
-into a loop that returns to the starting point after one full lap, whatever
-transition length is configured.
+\emph{where} that turning happens along $s$, not how much of it there is -- and
+correspondingly, the reconstructed centerline of \cref{sec:position-reconstruction}
+closes into a loop returning to the starting point after one full lap.
 
 \subsection{Position reconstruction}
 \label{sec:position-reconstruction}
@@ -90,5 +93,6 @@ sine components,
 \end{align}
 Each integral is evaluated numerically by cumulative trapezoidal integration.
 As a consequence of \cref{eq:total-turning}, the reconstructed centerline
-closes on itself: after one full lap, $(X,Y)$ returns to within \SI{1}{\metre}
-of the starting point, for any track length or transition setting.
+closes on itself to within \SI{1}{\metre} of the starting point after one full
+lap, for the straight/transition combinations described in
+\cref{sec:curvature-smoothing}.
