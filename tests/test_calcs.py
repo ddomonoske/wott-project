@@ -4,7 +4,7 @@ import types
 import pytest
 import numpy as np
 import fitdecode
-from calcs import IPCalculator, read_fit_file_data
+from calcs import IPCalculator, CdAFitter, read_fit_file_data
 
 
 SAMPLE_ATTRS = dict(
@@ -214,6 +214,29 @@ def test_energy_feedback_coeff_matches_formula():
     assert IPCalculator._energy_feedback_coeff(v, kappa, theta, h) == pytest.approx(expected)
 
 
+def test_dtheta_dv_zero_on_straight():
+    assert IPCalculator._dtheta_dv(v=15.0, kappa=0.0) == 0.0
+
+
+def test_dtheta_dv_matches_formula():
+    v, kappa = 12.0, 1.0 / 25.0
+    x = v ** 2 * kappa / IPCalculator.GRAVITY
+    expected = (1.0 / (1.0 + x ** 2)) * (2.0 * v * kappa / IPCalculator.GRAVITY)
+    assert IPCalculator._dtheta_dv(v, kappa) == pytest.approx(expected)
+
+
+def test_dtheta_dv_consistent_with_energy_feedback_coeff():
+    # _energy_feedback_coeff is the pre-solved implicit-feedback form of the
+    # same partial derivative _dtheta_dv exposes standalone (needed by the CdA
+    # inverse fit below, which has a known dv/dt and so doesn't need the
+    # implicit solve forward integration requires). They must agree:
+    # energy_feedback_coeff == (g*h*sin(theta)/v) * dtheta_dv.
+    v, kappa, theta, h = 12.0, 1.0 / 25.0, 0.5, 0.8
+    coeff = IPCalculator._energy_feedback_coeff(v, kappa, theta, h)
+    expected = (IPCalculator.GRAVITY * h * math.sin(theta) / v) * IPCalculator._dtheta_dv(v, kappa)
+    assert coeff == pytest.approx(expected)
+
+
 # ------ Corner-lean physics integration (via solve()) ------
 
 def test_solve_no_op_without_track_geometry():
@@ -286,57 +309,108 @@ def test_solve_with_track_no_com_height_still_runs():
     assert len(calc.velocity) == len(calc.position)
 
 
-# ------ CdACalculator (no .fit file needed) ------
+# ------ CdAFitter ------
 
-def test_cda_set_range_valid():
-    from calcs import CdACalculator
-    calc = CdACalculator("/fake/path", 1.2, 80, 0.004, 0.02)
-    calc._max_index = 100
-    calc.start_index = 0
-    calc.end_index = 100
-    calc.set_range(10, 90)
-    assert calc.start_index == 10
-    assert calc.end_index == 90
-
-
-def test_cda_set_range_invalid():
-    from calcs import CdACalculator
-    import pytest
-    calc = CdACalculator("/fake/path", 1.2, 80, 0.004, 0.02)
-    calc._max_index = 100
-    calc.start_index = 0
-    calc.end_index = 100
-    with pytest.raises(ValueError):
-        calc.set_range(90, 10)  # start > end
-
-
-def test_cda_calc_cda_constant_velocity():
-    from calcs import CdACalculator
-    import numpy as np
-    calc = CdACalculator("/fake/path", air_density=1.2, mass_kg=80, crr=0.004, mech_losses=0.02)
-    v = np.full(10, 10.0)   # constant 10 m/s => zero acceleration term
-    t = np.arange(10, dtype=float)
-    p = np.full(10, 300.0)
-    result = calc.calc_cda(t, v, p)
+def test_cda_fitter_matches_known_value_constant_velocity():
+    # No track geometry, constant velocity -- degenerates to the same
+    # power-balance inversion the old average-based calculator used, and
+    # should reproduce the same known answer.
+    fitter = CdAFitter(air_density=1.2, mass_kg=80, crr=0.004, mech_losses=0.02)
+    t = np.arange(20, dtype=float)
+    v = np.full(20, 10.0)
+    p = np.full(20, 300.0)
+    result = fitter.fit(t, v, p)
     # f_power = 300/10 * 0.98 = 29.4; f_rolling = -80*9.80665*0.004 ~= -3.14
-    # cda = 2 / (1.2 * 100) * (29.4 - 3.14) ~= 0.438
-    assert abs(result - 0.438) < 0.01
+    # cda = (29.4 - 3.14) / (0.5*1.2*100) ~= 0.438
+    assert result["cda"] == pytest.approx(0.438, abs=0.01)
+    assert result["s0"] is None
 
 
-def test_norm_power():
-    from calcs import CdACalculator
-    import numpy as np
-    calc = CdACalculator("/fake/path", 1.2, 80, 0.004, 0.02)
-    p = np.array([200.0, 300.0, 400.0, 500.0])
-    expected = float(np.mean(p ** 4) ** 0.25)
-    assert abs(calc.get_norm_power(p) - expected) < 0.001
+def test_cda_fitter_no_track_geometry_still_fits():
+    fitter = CdAFitter(air_density=1.2, mass_kg=80, crr=0.004, mech_losses=0.02)
+    t = np.arange(20, dtype=float)
+    v = np.linspace(9.0, 11.0, 20)
+    p = np.linspace(280.0, 320.0, 20)
+    result = fitter.fit(t, v, p)
+    assert result["s0"] is None
+    assert result["cda"] > 0
 
 
-@pytest.mark.skip(reason="requires local .fit file outside repo")
-def test_cda_calculator():
-    from calcs import CdACalculator
-    calc = CdACalculator("/path/to/activity.fit", 0, 0, 0, 0)
-    calc.read_fit_file()
+def test_cda_fitter_insufficient_moving_samples_raises():
+    fitter = CdAFitter(air_density=1.2, mass_kg=80, crr=0.004, mech_losses=0.02)
+    t = np.arange(5, dtype=float)
+    v = np.zeros(5)  # all below V_EPS
+    p = np.zeros(5)
+    with pytest.raises(ValueError):
+        fitter.fit(t, v, p)
+
+
+def test_cda_fitter_s0_periodicity():
+    # Regression test: TrackShape's symmetric two-straight/two-corner
+    # construction makes kappa(s) periodic with period track_length/2, not
+    # track_length, so the s0 search only needs to cover the half-period.
+    # Guard against someone "fixing" the search range back to the full
+    # track_length under a mistaken belief it's under-searching.
+    fitter = CdAFitter(air_density=1.2, mass_kg=80, crr=0.004, mech_losses=0.02,
+                        com_height_m=0.7, track_length=250.0, corners=0.6)
+    rng = np.random.default_rng(0)
+    v = rng.uniform(8.0, 14.0, 60)
+    p = rng.uniform(200.0, 400.0, 60)
+    dv_dt = np.gradient(v, np.arange(60, dtype=float))
+    dist = np.cumsum(v)
+    s0 = 37.5
+
+    cda_a, residual_a = fitter._cda_for_s0(s0, v, p, dv_dt, dist)
+    cda_b, residual_b = fitter._cda_for_s0(s0 + fitter.track_length / 2, v, p, dv_dt, dist)
+
+    assert cda_a == pytest.approx(cda_b)
+    assert residual_a == pytest.approx(residual_b)
+
+
+def test_cda_fitter_round_trip_recovers_known_cda_on_cornered_track():
+    # Strongest check: drive the forward simulator with a KNOWN cda on a
+    # cornered track, resample to 1Hz like a real FIT file, and confirm the
+    # inverse fit recovers that same cda from the resulting speed/power trace.
+    known_cda = 0.195
+    kwargs = dict(cda=known_cda, air_density=1.12, mass_kg=100.0, crr=0.002, mech_losses=0.02,
+                  power_plan=[(0, 500, 300)], dt=0.1, track_length=250.0, corners=0.6,
+                  com_height_m=0.7, race_distance=2000)
+    calc = IPCalculator(**kwargs)
+    calc.solve(t_max=150)
+    csv_data = calc.get_csv_export_data(dt=1.0)
+
+    t = np.array(csv_data["time"])
+    v = np.array(csv_data["velocity"]) / 3.6  # kph -> m/s, matching FIT 'speed' units
+    p = np.array(csv_data["power"])
+
+    fitter = CdAFitter(air_density=1.12, mass_kg=100.0, crr=0.002, mech_losses=0.02,
+                        com_height_m=0.7, track_length=250.0, corners=0.6)
+    result = fitter.fit(t, v, p)
+
+    assert result["cda"] == pytest.approx(known_cda, rel=0.03)
+    assert result["s0"] is not None
+
+
+def test_cda_fitter_round_trip_recovers_known_cda_no_com_height():
+    # Track geometry present but no com_height_m -- banked Crr still applies
+    # but the energy term is a no-op; recovery should still work.
+    known_cda = 0.22
+    kwargs = dict(cda=known_cda, air_density=1.12, mass_kg=90.0, crr=0.003, mech_losses=0.02,
+                  power_plan=[(0, 450, 300)], dt=0.1, track_length=250.0, corners=0.6,
+                  race_distance=2000)
+    calc = IPCalculator(**kwargs)
+    calc.solve(t_max=150)
+    csv_data = calc.get_csv_export_data(dt=1.0)
+
+    t = np.array(csv_data["time"])
+    v = np.array(csv_data["velocity"]) / 3.6
+    p = np.array(csv_data["power"])
+
+    fitter = CdAFitter(air_density=1.12, mass_kg=90.0, crr=0.003, mech_losses=0.02,
+                        track_length=250.0, corners=0.6)
+    result = fitter.fit(t, v, p)
+
+    assert result["cda"] == pytest.approx(known_cda, rel=0.03)
 
 
 # ------ read_fit_file_data ------

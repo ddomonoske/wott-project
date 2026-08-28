@@ -2,7 +2,7 @@ import csv
 import re
 from pathlib import Path
 
-from calcs import IPCalculator, CdACalculator, read_fit_file_data
+from calcs import IPCalculator, CdAFitter, read_fit_file_data
 from model.entities import Rider, Environment, Simulation, AeroTest
 from model.storage import Storage
 from view.panels import View
@@ -245,6 +245,32 @@ class Controller:
         test.delete_selection(selection_id)
         if aero_test_id in self.view.aero_test_windows:
             self.view.aero_test_windows[aero_test_id].refresh_selections(test.selections)
+
+    def calc_selection_cda_btn_press(self, aero_test_id: int, selection_id: int,
+                                      t, v, p):
+        test = self.storage.get_aero_test(aero_test_id)
+        sel = next((s for s in test.selections if s.selection_id == selection_id), None)
+        if sel is None:
+            return
+        rider = self.storage.get_rider(test.rider_id) if test.rider_id is not None else None
+        envir = self.storage.get_envir(test.envir_id) if test.envir_id is not None else None
+        try:
+            if rider is None or envir is None:
+                raise ValueError("Aero Test must have a rider and environment assigned")
+            required = (rider.weight_kg, envir.air_density, envir.crr, envir.mech_losses)
+            if any(x is None for x in required):
+                raise ValueError("Rider weight and Environment air density / Crr / "
+                                  "mechanical losses must all be set")
+            fitter = CdAFitter(air_density=envir.air_density, mass_kg=rider.weight_kg,
+                                crr=envir.crr, mech_losses=envir.mech_losses,
+                                com_height_m=rider.com_height_m,
+                                track_length=envir.track_length, corners=envir.corners)
+            cda = fitter.fit(t, v, p)["cda"]
+        except Exception as e:
+            self.view.show_aero_test_window_error(aero_test_id, e)
+            return
+        self.update_aero_test_selection(aero_test_id, selection_id, sel.name,
+                                         sel.start_time, sel.end_time, cda=cda)
 
     # ------ Power plan ------
 
