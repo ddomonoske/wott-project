@@ -1,0 +1,249 @@
+\section{Cornering Model}
+\label{sec:cornering-model}
+
+Whenever the track's curvature profile $\kappa(s)$ (\cref{sec:track-geometry})
+is nonzero, the simulation adds a lean-angle and banked-rolling-resistance
+correction to the equation of motion (\cref{sec:lean-angle,sec:rolling-resistance}).
+If the rider's center-of-mass height $h$ (\texttt{com\_height\_m}) is also
+known, two further corrections activate: the wheel-speed geometric correction
+and the energy-feedback term
+(\cref{sec:wheel-speed-geometry,sec:energy-feedback}). This section derives
+each term in turn.
+
+\subsection{Framing: a quasi-static lean, not a dynamical degree of freedom}
+\label{sec:quasi-static-lean}
+
+The lean angle $\theta$ derived below is easy to over-read as a full rigid-body
+treatment; it is not one. $\theta$ is \emph{algebraically slaved} to
+the instantaneous speed $v$ and track curvature $\kappa$ at every instant; it is
+not an independent state variable with its own rotational inertia, and the model
+does not track a separate roll rate. There is also no friction-circle or
+traction-limit check: $\theta$ is computed unconditionally from $v$ and
+$\kappa$ regardless of whether the tire could actually supply the implied
+lateral friction. This is a deliberate simplification, revisited in
+\cref{sec:assumptions}, appropriate for the smooth, moderate-curvature track
+geometry of \cref{sec:track-geometry} but not a general-purpose vehicle dynamics
+model.
+
+\subsection{Lean angle}
+\label{sec:lean-angle}
+
+For a bicycle in a steady, flat turn of radius $r = 1/\kappa$ at speed $v$, the
+classic no-slip lean-angle balance equates the lateral force required for
+circular motion, $m v^2 / r$, with the horizontal component of gravity acting
+through the lean:
+\begin{equation}
+    \tan\theta = \frac{v^2}{g r} = \frac{v^2 \kappa}{g}.
+    \label{eq:lean-angle-tan}
+\end{equation}
+Solving for $\theta$,
+\begin{equation}
+    \theta(v,\kappa) = \arctan\!\left(\frac{v^2 \kappa}{g}\right).
+    \label{eq:lean-angle}
+\end{equation}
+On a straight ($\kappa = 0$) or at rest ($v=0$), $\theta = 0$ and every term
+introduced in this section vanishes, so the model reduces exactly to
+\cref{sec:simulation-model} with no cornering configured.
+
+\subsection{Center-of-mass offset and wheel-speed geometry}
+\label{sec:wheel-speed-geometry}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=1.15]
+        \draw[thick] (-2.2,0) -- (2.2,0);
+        \filldraw (0,0) circle (1.3pt);
+        \node[below] at (0,0) {wheel-ground contact};
+        \draw[dashed, gray] (0,0) -- (0,3.4);
+        \draw[thick, blue] (0,0) -- (60:3.2) coordinate (com);
+        \filldraw[blue] (com) circle (1.8pt);
+        \node[above right, blue] at (com) {center of mass};
+        \draw (0,1.1) arc (90:60:1.1);
+        \node at (77:1.45) {$\theta$};
+        \draw[dotted] (com) -- (0,{3.2*sin(60)});
+        \draw[dotted] (com) -- ({3.2*cos(60)},0);
+        \draw[<->] (0,-0.5) -- ({3.2*cos(60)},-0.5);
+        \node[below] at ({0.5*3.2*cos(60)},-0.5) {$h\sin\theta$};
+        \draw[<->] ({3.2*cos(60)+0.5},0) -- ({3.2*cos(60)+0.5},{3.2*sin(60)});
+        \node[right] at ({3.2*cos(60)+0.5},{0.5*3.2*sin(60)}) {$z=h\cos\theta$};
+        \node[left] at (60:1.7) {$h$};
+    \end{tikzpicture}
+    \caption{Lean geometry viewed from behind the rider: the center of mass sits
+    a distance $h$ from the wheel-ground contact point at lean angle $\theta$
+    from vertical, with horizontal offset $h\sin\theta$ and height
+    $z = h\cos\theta$ above the contact point.}
+    \label{fig:lean-geometry}
+\end{figure}
+
+The state variable $v$ represents the speed of the rider's center of mass
+(\cref{fig:lean-geometry}). When
+leaned at angle $\theta$, the center of mass sits a horizontal distance
+$h \sin\theta$ inboard of the wheel-ground contact line, tracing a smaller
+effective turn radius than the wheels themselves, which remain on the track
+surface: writing $r = 1/\kappa$ for the wheels' turn radius, the center of mass
+turns on a radius $r - h\sin\theta$. For the same angular sweep of the turn,
+both the wheels and the center of mass sweep the same angle in the same time, so
+their speeds scale directly with radius,
+$v / v_{\mathrm{wheel}} = (r - h\sin\theta)/r = 1 - \kappa h \sin\theta$. Solving
+for the wheel speed,
+\begin{equation}
+    v_{\mathrm{wheel}}(v, \kappa, \theta) =
+        \frac{v}{1 - \kappa h \sin\theta},
+    \label{eq:wheel-speed}
+\end{equation}
+with the denominator floored at $0.01$ in the implementation as a numerical
+safeguard against extreme combinations of $\kappa$, $h$, and $\theta$ driving it
+toward zero. This matters because track curvature $\kappa(s)$ is indexed by arc
+length along the track surface -- the wheels' path -- not by the center of
+mass's path. Consequently the position state advances at the wheel speed rather
+than the center-of-mass speed,
+\begin{equation}
+    \frac{ds}{dt} = v_{\mathrm{wheel}},
+    \label{eq:ds-dt}
+\end{equation}
+Equation \eqref{eq:ds-dt} itself only updates the position state; it is not a
+term in $dv/dt$. The wheel speed $v_{\mathrm{wheel}}$ it defines, however, is
+reused below in \cref{sec:energy-feedback}'s energy-feedback term, so the
+cornering correction as a whole does still affect $dv/dt$, just not through
+this equation.
+
+Because the race-distance terminal event of \cref{sec:numerical-integration}
+triggers when $s$ -- the same coordinate advanced via \cref{eq:ds-dt} --
+reaches $s_{\mathrm{race}}$, the tracked race distance is a track-surface
+(wheel-path) distance, matching how a race distance is physically marked on a
+track. A direct consequence is that the rider's center of mass itself covers a
+slightly shorter cumulative distance than $s_{\mathrm{race}}$ over the course
+of a full run, since it cuts inside the wheels' path through every corner.
+
+\subsection{Energy-feedback term}
+\label{sec:energy-feedback}
+
+As the rider leans into and out of a corner, the center of mass also moves
+\emph{vertically}: writing $z \equiv h\cos\theta$ for its height above a fixed
+reference, $z$ decreases as $\theta$ grows from zero -- leaning over lowers the
+center of mass, the same way tipping a rigid rod from vertical lowers its tip.
+By conservation of mechanical energy, this loss of height converts into a
+small \emph{gain} in forward speed on the way into a corner; the reverse
+conversion, speed converting back into height, gives a small \emph{loss} of
+speed coming back upright on the way out. This subsection derives that
+acceleration contribution, denoted $a_{\mathrm{energy}}$.
+
+\subsubsection{Explicit s-dependence of theta}
+
+Differentiating \cref{eq:lean-angle-tan} implicitly with respect to arc length
+$s$ at fixed $v$, using $\frac{d}{ds}\tan\theta = \sec^2\theta\,
+\partial\theta/\partial s$ and the identity $\sec^2\theta = 1+\tan^2\theta$,
+gives
+\begin{equation}
+    \sec^2\theta\left.\frac{\partial\theta}{\partial s}\right|_{v} =
+        \frac{v^2}{g}\,\frac{d\kappa}{ds}
+    \quad\Longrightarrow\quad
+    \left.\frac{\partial\theta}{\partial s}\right|_{v} =
+        \cos^2\theta\,\frac{v^2}{g}\,\frac{d\kappa}{ds},
+    \label{eq:dtheta-ds}
+\end{equation}
+the rate of change of lean angle due to the changing curvature alone. This
+derivative is well-defined everywhere: \cref{sec:curvature-smoothing} constructs
+$\kappa(s)$ as a smoothed, differentiable profile rather than a step function,
+so $d\kappa/ds$ is a genuine, bounded function of $s$ rather than a delta spike
+at each corner boundary. (The implementation computes this equivalent form as
+$1/(1+x^2)$ with
+$x \equiv \tan\theta = v^2\kappa/g$, identical to $\cos^2\theta$ by the same
+identity.)
+
+\subsubsection{Vertical-energy acceleration term}
+
+The center-of-mass height above a fixed reference is, up to a constant,
+$h\cos\theta$, so its vertical velocity is
+$\frac{dz}{dt} = -h\sin\theta\,\frac{d\theta}{dt}$. Energy conservation on the
+combined kinetic and potential terms, $\frac{d}{dt}\!\left(\tfrac{1}{2}v^2 + gz\right) = 0$
+for the lean-driven exchange alone, gives $v\,\frac{dv}{dt}\Big|_{\text{lean}} = gh\sin\theta\,\frac{d\theta}{dt}$,
+or
+\begin{equation}
+    a_{\mathrm{energy}} = \frac{gh\sin\theta}{v}\,\frac{d\theta}{dt}.
+    \label{eq:a-energy-general}
+\end{equation}
+Only the arc-length-driven part of $d\theta/dt$ -- that is,
+$\left.\partial\theta/\partial s\right|_v \cdot ds/dt$, using the wheel speed
+of \cref{eq:ds-dt} -- is applied explicitly here:
+\begin{equation}
+    a_{\mathrm{energy}}^{(s)} =
+        \frac{gh\sin\theta}{v}\left(\frac{\partial\theta}{\partial s}\right)v_{\mathrm{wheel}}.
+    \label{eq:a-energy-s}
+\end{equation}
+The remaining part of $d\theta/dt$, driven by $v$ itself changing, is handled
+separately in the next subsection: since $\theta$ depends on $v$
+(\cref{eq:lean-angle}), and $v$ is precisely the quantity being solved for,
+folding that dependence directly into \cref{eq:a-energy-general} would make the
+right-hand side of the ODE depend on $dv/dt$ itself.
+
+\subsubsection{Implicit feedback coefficient}
+
+Differentiating \cref{eq:lean-angle-tan} implicitly with respect to $v$ at
+fixed $\kappa$ the same way gives the $v$-driven part of $d\theta/dt$:
+\begin{equation}
+    \frac{\partial\theta}{\partial v} =
+        \cos^2\theta\,\frac{2v\kappa}{g}.
+    \label{eq:dtheta-dv}
+\end{equation}
+Substituting the full chain rule
+$d\theta/dt = \left.\partial\theta/\partial s\right|_v v_{\mathrm{wheel}} + \partial\theta/\partial v \cdot dv/dt$
+into \cref{eq:a-energy-general}, and adding this lean-driven acceleration to the
+non-cornering acceleration of \cref{eq:a-power}, gives the full equation of
+motion in the form
+\begin{equation}
+    \frac{dv}{dt} = a_{\mathrm{power}} + a_{\mathrm{energy}}^{(s)} +
+        C(v,\kappa,\theta,h) \cdot \frac{dv}{dt},
+    \label{eq:dv-dt-implicit}
+\end{equation}
+self-referential in $dv/dt$ through $\theta$'s own dependence on $v$, where
+\begin{equation}
+    C(v,\kappa,\theta,h) =
+        2 h \kappa \sin\theta \cos^2\theta.
+    \label{eq:feedback-coeff}
+\end{equation}
+Here every explicit factor of $v$ and $g$ introduced by the
+$gh\sin\theta/v$ prefactor of \cref{eq:a-energy-general} and the $2v\kappa/g$
+factor of \cref{eq:dtheta-dv} cancels, leaving $C$ independent of both.
+
+\subsection{Combined equation of motion}
+\label{sec:combined-eom}
+
+Because $C$ enters \cref{eq:dv-dt-implicit} linearly, $dv/dt$ can be solved for
+explicitly rather than treated as a second implicit unknown requiring its own
+root-find at every solver step. Solving \cref{eq:dv-dt-implicit} for $dv/dt$
+gives the full cornering-corrected equation of motion:
+\begin{equation}
+    \frac{dv}{dt} =
+        \frac{a_{\mathrm{power}} + a_{\mathrm{energy}}^{(s)}}
+             {\max\bigl(1 - C,\ 0.1\bigr)}.
+    \label{eq:dv-dt-full}
+\end{equation}
+The floor on the denominator is a numerical safeguard against $C$ approaching
+$1$, which would only occur at combinations of lean, curvature, and speed far
+outside any realistic riding condition; it has no physical interpretation. Together
+with \cref{eq:ds-dt}, \cref{eq:dv-dt-full} completes the right-hand side of the
+ODE integrated in \cref{sec:numerical-integration}.
+
+As a consistency check, this construction is antisymmetric between corner entry
+and corner exit: because $d\kappa/ds$ changes sign between the entry and exit
+transition ramps of \cref{sec:track-geometry} while $v$ and $\theta$ are
+approximately unchanged, $a_{\mathrm{energy}}^{(s)}$ takes equal and opposite
+values entering and exiting a corner at the same speed. Over a full lean-in and
+lean-out cycle at constant $v$, the term therefore integrates to zero net effect
+on speed, consistent with energy conservation.
+
+\subsection{Low-speed floor}
+\label{sec:v-eps}
+
+The energy-feedback terms of this section -- $a_{\mathrm{energy}}$ and the
+feedback coefficient $C$ -- are set to zero whenever $v < V_{\mathrm{eps}}$
+(\SI{0.1}{\metre\per\second}). This avoids division-by-near-zero in
+\cref{eq:a-energy-general}, the only one of the two with an explicit $1/v$
+term; \cref{eq:feedback-coeff} has no such term (it depends only on $\kappa$,
+$h$, and $\theta$) but is zeroed alongside it for consistency, since both
+represent the same near-zero-speed cornering-energy exchange. (Lean angle
+$\theta$ and the banked rolling resistance of \cref{sec:rolling-resistance} are
+not gated this way; both remain well-defined at $v = 0$, where $\theta \to 0$
+smoothly.) This is a numerical safeguard for the simulation's start condition,
+not a distinct physical regime.

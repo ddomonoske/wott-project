@@ -123,8 +123,8 @@ class IPCalculator:
     @staticmethod
     def _wheel_speed(v: float, kappa: float, theta: float,
                       com_height_m: Optional[float]) -> float:
-        # Geometric coning: the CoM sits h*sin(theta) inside the wheels' turn
-        # radius, so for the same angular sweep the wheels cover more ground.
+        # The CoM sits h*sin(theta) inside the wheels' turn radius, so for
+        # the same angular sweep the wheels cover more ground.
         if not com_height_m:
             return v
         denom = max(1.0 - kappa * com_height_m * np.sin(theta), 0.01)

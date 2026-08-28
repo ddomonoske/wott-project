@@ -1,0 +1,65 @@
+\section{Notation, Units, and Parameters}
+\label{sec:notation}
+
+\Cref{tab:notation} lists the symbols used throughout this document, their
+meaning, their SI unit, their default or typical value where one exists, and
+the corresponding function, class, or entity attribute in the implementation.
+Derivations
+throughout this document use SI units exclusively, with one display-only
+exception for reported velocity (\cref{sec:sim-outputs}).
+
+{\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}p{0.06\textwidth} p{0.27\textwidth} p{0.13\textwidth} p{0.17\textwidth} >{\ttfamily}p{0.27\textwidth}@{}}
+    \toprule
+    \textbf{Symbol} & \textbf{Meaning} & \textbf{Unit} & \textbf{Default / typical} & \textbf{Code reference} \\
+    \midrule
+    \endfirsthead
+    \toprule
+    \textbf{Symbol} & \textbf{Meaning} & \textbf{Unit} & \textbf{Default / typical} & \textbf{Code reference} \\
+    \midrule
+    \endhead
+    $v$ & speed along direction of travel (center of mass) & \si{\metre\per\second} & -- & IPCalculator, state \\
+    $s$ & distance traveled along track (wheel path) & \si{\metre} & -- & IPCalculator, state \\
+    $t$ & elapsed time & \si{\second} & -- & IPCalculator \\
+    $m$ & rider + bicycle mass & \si{\kilo\gram} & \num{100.0} (test value) & Rider.\allowbreak weight\_kg \\
+    $g$ & gravitational acceleration & \si{\metre\per\second\squared} & \num{9.80665} & IPCalculator.\allowbreak GRAVITY \\
+    $F_{rr}$ & rolling resistance force & \si{\newton} & -- & IPCalculator.\allowbreak \_banked\_rolling\_resistance \\
+    $F_{ad}$ & aerodynamic drag force & \si{\newton} & -- & IPCalculator.\_ode\_rhs (f\_ad) \\
+    $F_p$ & propulsive force before drivetrain losses & \si{\newton} & -- & IPCalculator.\allowbreak calc\_pedal\_force \\
+    $N$ & normal force between tire and track under lean & \si{\newton} & -- & (derivation only) \\
+    $P_{\mathrm{report}}$ & reported power output (force-capped) & \si{\watt} & -- & IPCalculator.solve (self.power) \\
+    $a_{\mathrm{power}}$ & straight-line acceleration from rolling resistance, drag, and propulsive force & \si{\metre\per\second\squared} & -- & IPCalculator.\_ode\_rhs (a\_power) \\
+    $\Crr$ & rolling resistance coefficient & \num{1} & \num{0.002} (test value) & Environment.\allowbreak crr \\
+    $\rho$ & air density & \si{\kilo\gram\per\cubic\metre} & \num{1.12} (test value) & Environment.\allowbreak air\_density \\
+    $\CdA$ & aerodynamic drag area & \si{\metre\squared} & \num{0.195} (test value) & Rider.cda \\
+    $P(t)$ & commanded or recorded power & \si{\watt} & -- & power plan / .fit power field \\
+    $F_{\max}$ & maximum possible force a rider can produce at low speeds & \si{\newton} & \num{200} & IPCalculator.\allowbreak max\_force \\
+    $\eta$ & fractional drivetrain mechanical loss & \num{1} & \num{0.02} (test value) & Environment.\allowbreak mech\_losses \\
+    $\theta$ & lean angle & \si{\radian} & -- & IPCalculator.\allowbreak \_lean\_angle \\
+    $\kappa$ & track curvature & \si{\per\metre} & -- & TrackShape.compute (kappa); IPCalculator.\allowbreak\_kappa\_at \\
+    $h$ & rider center-of-mass height & \si{\metre} & optional & Rider.\allowbreak com\_height\_m \\
+    $v_{\mathrm{wheel}}$ & wheel-contact-path speed & \si{\metre\per\second} & -- & IPCalculator.\allowbreak \_wheel\_speed \\
+    $r$ & corner radius & \si{\metre} & -- & TrackShape.compute (radius) \\
+    $z$ & center-of-mass height above a fixed reference & \si{\metre} & -- & (derivation only) \\
+    $a_{\mathrm{energy}}$ & acceleration from the corner-lean energy exchange & \si{\metre\per\second\squared} & -- & IPCalculator.\allowbreak \_energy\_accel computes only $a_{\mathrm{energy}}^{(s)}$; the full $a_{\mathrm{energy}}$ is materialized in CdAFitter.\allowbreak \_cda\_for\_s0 \\
+    $C$ & implicit feedback coefficient (lean angle's dependence on speed) & \num{1} & -- & IPCalculator.\allowbreak \_energy\_feedback\_coeff \\
+    $L$ & total track length & \si{\metre} & \num{250.0} & Environment.\allowbreak track\_length \\
+    $c$ & fraction of track length devoted to cornering & \num{1}, $[0.20, 1.0]$ & \num{0.60} & Environment.\allowbreak corners \\
+    $\ell_{\mathrm{straight}}$ & arc length of each straight segment & \si{\metre} & derived from $L, c$ & TrackShape.compute (straight) \\
+    $\ell_{\mathrm{corner}}$ & arc length of each corner segment & \si{\metre} & derived from $L, c$ & TrackShape.compute (corner) \\
+    -- & curvature transition (smoothing) zone length & \si{\metre} & \num{30.0} & TrackShape.\allowbreak transition \\
+    $\phi$ & track heading angle & \si{\radian} & -- & TrackShape.compute (heading) \\
+    $X, Y$ & Cartesian centerline coordinates (visualization only) & \si{\metre} & -- & TrackShape.compute (x, y) \\
+    $V_{\mathrm{eps}}$ & low-speed floor for cornering/energy terms & \si{\metre\per\second} & \num{0.1} & IPCalculator.\allowbreak V\_EPS \\
+    $s_{\mathrm{race}}$ & target race distance & \si{\metre} & \num{4000} & IPCalculator.\allowbreak race\_distance \\
+    $dt$ & output sampling interval & \si{\second} & \num{0.1} (sim) / \num{1} (class default) & IPCalculator.dt \\
+    $t_{\max}$ & solve time horizon & \si{\second} & \num{300} & IPCalculator.\allowbreak solve \\
+    $x, y$ & CdA-fit regression predictor ($x$) and response ($y$) variables & Pa; N & -- & CdAFitter.\allowbreak \_cda\_for\_s0 \\
+    $s_0$ & lap-phase offset of the recorded window & \si{\metre} & -- & CdAFitter.fit (s0) \\
+    \bottomrule
+    \caption{Notation, units, and default parameter values used throughout this
+    document.}
+    \label{tab:notation}
+\end{longtable}
+}

@@ -303,7 +303,7 @@ def test_solve_with_track_and_com_height_produces_lean():
 
 def test_solve_with_track_no_com_height_still_runs():
     # Track geometry present but no com_height_m -- banked Crr still applies,
-    # but coning/energy terms are no-ops.
+    # but CoM-offset/energy terms are no-ops.
     calc = IPCalculator(**SAMPLE_ATTRS, track_length=100.0, corners=0.8, race_distance=1000)
     calc.solve()
     assert len(calc.velocity) == len(calc.position)
