@@ -27,9 +27,9 @@ pytest tests/test_controller.py
 
 Strict MVC. Files are organized into packages:
 
-- **`model/entities.py`** — dataclasses: `Rider`, `Environment`, `Simulation`, `AeroTest`, `PowerPlan`, `PowerPlanPoint`. All snake_case. `Simulation` and `AeroTest` store `rider_id`/`envir_id` integers rather than object references — the controller resolves them from `Storage` when needed.
+- **`model/entities.py`** — dataclasses: `Rider`, `Environment`, `Simulation`, `AeroTest`, `PowerPlan`, `PowerPlanPoint`. All snake_case. `Simulation` and `AeroTest` store `rider_id`/`envir_id` integers rather than object references — the controller resolves them from `Storage` when needed. `Rider.com_height_m` (optional) enables the cornering model in `calcs.py`.
 - **`model/storage.py`** — `Storage` owns the lists of all entities and persists them via `pickle` to `~/Library/Application Support/wott_project/`. Manages monotonically increasing integer IDs so deleted IDs are never reused. Loaded on init, saved explicitly via `storage.save()` on app close.
-- **`calcs.py`** — physics. `IPCalculator` solves a cycling ODE (rolling + aero drag + pedaling force) using `scipy.odeint` to produce velocity/position/split outputs. `CdACalculator` computes CdA from `.fit` files via `fitdecode`.
+- **`calcs.py`** — physics. `IPCalculator` solves a cycling ODE (rolling + aero drag + pedaling force, plus cornering: lean angle, CoM coning/wheel-speed geometry, and an energy-feedback term keyed off `com_height_m`) using `scipy.integrate.solve_ivp` to produce velocity/position/split outputs; a capped `max_step` resolves corner transitions accurately. `TrackShape` generates the track's curvature profile (`kappa(s)`) from `track_length`/`corners` for the cornering model. `CdACalculator` computes CdA from `.fit` files via `fitdecode`.
 - **`view/panels.py`** — top-level `View` and all panel widgets built on `customtkinter`.
 - **`view/components.py`** — reusable lower-level widgets.
 - **`controller.py`** — `Controller` wires `Storage` to `View`. All button callbacks live here.
