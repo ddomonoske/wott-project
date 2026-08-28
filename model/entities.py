@@ -171,6 +171,7 @@ class AeroTestSelection:
     max_speed: Optional[float] = None
     min_speed: Optional[float] = None
     avg_accel: Optional[float] = None
+    cda: Optional[float] = None
 
 
 @dataclass

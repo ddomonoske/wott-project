@@ -2,6 +2,7 @@ from typing import List, Dict, Optional
 import numpy as np
 from scipy.integrate import cumulative_trapezoid, solve_ivp
 from scipy.ndimage import uniform_filter1d
+from scipy.optimize import minimize_scalar
 import fitdecode
 
 
@@ -138,6 +139,16 @@ class IPCalculator:
         # into dv/dt and must be solved for rather than looked up.)
         x = (v ** 2) * kappa / g
         return (1.0 / (1.0 + x ** 2)) * (v ** 2 / g) * dkappa_ds
+
+    @staticmethod
+    def _dtheta_dv(v: float, kappa: float, g: float = GRAVITY) -> float:
+        # Partial d(theta)/dv from arctan(v^2*kappa/g), holding s (kappa) fixed --
+        # the contribution to dtheta/dt from v itself changing. Needed by the CdA
+        # inverse fit (CdAFitter), which has a known dv/dt from recorded speed and
+        # so can use this directly instead of the implicit _energy_feedback_coeff
+        # solve that forward integration requires.
+        x = (v ** 2) * kappa / g
+        return (1.0 / (1.0 + x ** 2)) * (2.0 * v * kappa / g)
 
     @staticmethod
     def _energy_accel(v: float, com_height_m: Optional[float], theta: float,
@@ -387,63 +398,121 @@ def read_fit_file_data(file_path: str) -> dict[str, np.ndarray]:
     return result
 
 
-class CdACalculator:
-    GRAVITY = 9.80665
+class CdAFitter:
+    """Fits CdA -- and, when track geometry is available, an unknown lap-phase
+    offset s0 -- to a recorded speed/power trace from an AeroTest selection.
+
+    Inverts the same equation of motion IPCalculator integrates forward
+    (power, banked rolling resistance, aero drag, and the corner lean/energy
+    terms), but since dv/dt is measured directly from recorded speed rather
+    than being the unknown being solved for, no implicit self-referential
+    solve is needed: CdA drops out of a single linear regression for any
+    given s0, and s0 itself is found by a 1-D search.
+    """
+
+    S0_GRID_POINTS = 150
 
     def __init__(self,
-                 file_path: str,
                  air_density: float,
                  mass_kg: float,
                  crr: float,
-                 mech_losses: float) -> None:
-        self.file_path = file_path
+                 mech_losses: float,
+                 com_height_m: Optional[float] = None,
+                 track_length: Optional[float] = None,
+                 corners: Optional[float] = None) -> None:
         self.air_density = air_density
         self.mass_kg = mass_kg
         self.crr = crr
         self.mech_losses = mech_losses
+        self.com_height_m = com_height_m
+        self.track_length = track_length
+        self._has_track = (track_length is not None and corners is not None
+                            and track_length > 0)
+        if self._has_track:
+            track = TrackShape(track_length=track_length, corners=corners).compute()
+            self._track_s = track["s"]
+            self._track_kappa = track["kappa"]
+            self._track_dkappa_ds = np.gradient(self._track_kappa, self._track_s)
 
-    def read_fit_file(self):
-        with fitdecode.FitReader(self.file_path) as fit:
-            for frame in fit:
-                if frame.frame_type == fitdecode.FIT_FRAME_DATA and frame.name == 'session':
-                    self.n = np.ceil(frame.get_field('total_moving_time').value).astype(int)
-                    self.start_time = frame.get_field('start_time').value
-                    break
+    def _kappa_and_dkappa(self, s: np.ndarray) -> tuple:
+        if not self._has_track:
+            return np.zeros_like(s), np.zeros_like(s)
+        s_mod = s % self.track_length
+        kappa = np.interp(s_mod, self._track_s, self._track_kappa)
+        dkappa_ds = np.interp(s_mod, self._track_s, self._track_dkappa_ds)
+        return kappa, dkappa_ds
 
-        self.t = np.zeros(self.n)
-        self.v = np.zeros(self.n)
-        self.p = np.zeros(self.n)
-        self.c = np.zeros(self.n)
-        self.d = np.zeros(self.n)
+    def _cda_for_s0(self, s0: float, v: np.ndarray, p: np.ndarray,
+                     dv_dt: np.ndarray, dist: np.ndarray) -> tuple:
+        kappa, dkappa_ds = self._kappa_and_dkappa(s0 + dist)
+        theta = np.array([IPCalculator._lean_angle(vv, kk) for vv, kk in zip(v, kappa)])
+        dtheta_ds = np.array([IPCalculator._dtheta_ds(vv, kk, dk)
+                              for vv, kk, dk in zip(v, kappa, dkappa_ds)])
+        dtheta_dv = np.array([IPCalculator._dtheta_dv(vv, kk) for vv, kk in zip(v, kappa)])
+        # Full chain rule dtheta/dt -- unlike forward integration, dv/dt is
+        # already known here so this needs no implicit feedback solve.
+        dtheta_dt = dtheta_ds * v + dtheta_dv * dv_dt
 
-        with fitdecode.FitReader(self.file_path) as fit:
-            i = 0
-            for frame in fit:
-                if frame.frame_type == fitdecode.FIT_FRAME_DATA and frame.name == 'record':
-                    self.t[i] = (frame.get_field("timestamp").value - self.start_time).total_seconds()
-                    self.v[i] = frame.get_field("speed").value
-                    self.p[i] = frame.get_field("power").value
-                    self.c[i] = frame.get_field("cadence").value
-                    self.d[i] = frame.get_field("distance").value
-                    i += 1
-
-        self.start_index = 0
-        self.end_index = self._max_index = i - 1
-
-    def set_range(self, start: int, end: int):
-        if 0 <= start < self._max_index and start < end <= self._max_index:
-            self.start_index = start
-            self.end_index = end
+        f_power = p / v * (1 - self.mech_losses)
+        f_rolling = np.array([IPCalculator._banked_rolling_resistance(self.mass_kg, self.crr, th)
+                              for th in theta])
+        if self.com_height_m:
+            a_energy = np.where(
+                v >= IPCalculator.V_EPS,
+                (IPCalculator.GRAVITY * self.com_height_m * np.sin(theta)
+                 / np.maximum(v, IPCalculator.V_EPS)) * dtheta_dt,
+                0.0)
         else:
-            raise ValueError("inappropriate start and end indices")
+            a_energy = np.zeros_like(v)
+        f_energy = self.mass_kg * a_energy
 
-    def calc_cda(self, t: np.ndarray, v: np.ndarray, p: np.ndarray) -> float:
-        assert np.min(v) > 5
-        v_avg = np.mean(v)
-        f_power = np.mean(p) / v_avg * (1 - self.mech_losses)
-        f_rolling = -1 * self.mass_kg * self.GRAVITY * self.crr
-        f_accel = -1 * self.mass_kg * (v[-1] - v[0]) / (t[-1] - t[0])
-        return 2 / (self.air_density * v_avg ** 2) * (f_power + f_rolling + f_accel)
+        # Drag force magnitude implied by the data, and its coefficient (same
+        # sign convention as the old average-based calculation: y = x * cda).
+        y = f_power + f_rolling + f_energy - self.mass_kg * dv_dt
+        x = 0.5 * self.air_density * v ** 2
 
-    def get_norm_power(self, p: np.ndarray) -> float:
-        return float(np.mean(p ** 4) ** 0.25)
+        denom = float(np.sum(x ** 2))
+        if denom <= 0:
+            raise ValueError("Selection window has insufficient speed variation to fit CdA")
+        cda = float(np.sum(x * y) / denom)
+        residual = float(np.sum((y - x * cda) ** 2))
+        return cda, residual
+
+    def fit(self, t: np.ndarray, v: np.ndarray, p: np.ndarray) -> dict:
+        """Fit CdA to a recorded (t, v, p) trace. Returns {"cda", "s0"}
+        (s0 is None when no track geometry was supplied)."""
+        t = np.asarray(t, dtype=float)
+        v = np.asarray(v, dtype=float)
+        p = np.asarray(p, dtype=float)
+
+        mask = v > IPCalculator.V_EPS
+        if np.sum(mask) < 2:
+            raise ValueError("Selection window does not have enough moving samples to fit CdA")
+        t, v, p = t[mask], v[mask], p[mask]
+
+        dv_dt = np.gradient(v, t)
+        dist = cumulative_trapezoid(v, t, initial=0.0)
+
+        if self._has_track:
+            half_period = self.track_length / 2
+            s0_grid = np.linspace(0, half_period, self.S0_GRID_POINTS, endpoint=False)
+            residuals = [self._cda_for_s0(s0, v, p, dv_dt, dist)[1] for s0 in s0_grid]
+            best_idx = int(np.argmin(residuals))
+            best_s0 = float(s0_grid[best_idx])
+
+            grid_spacing = half_period / self.S0_GRID_POINTS
+            low = max(0.0, best_s0 - grid_spacing)
+            high = min(half_period, best_s0 + grid_spacing)
+            opt = minimize_scalar(lambda s0: self._cda_for_s0(s0, v, p, dv_dt, dist)[1],
+                                   bounds=(low, high), method='bounded')
+            s0_final = float(opt.x) if opt.success else best_s0
+            cda, _ = self._cda_for_s0(s0_final, v, p, dv_dt, dist)
+        else:
+            s0_final = None
+            cda, _ = self._cda_for_s0(0.0, v, p, dv_dt, dist)
+
+        if cda <= 0:
+            raise ValueError("Fit produced a non-physical (non-positive) CdA; "
+                              "check the selection window and rider/environment inputs")
+
+        return {"cda": cda, "s0": s0_final}
