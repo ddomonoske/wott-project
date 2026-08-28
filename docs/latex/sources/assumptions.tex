@@ -1,0 +1,55 @@
+\section{Assumptions and Limitations}
+\label{sec:assumptions}
+
+The models in \cref{sec:simulation-model,sec:cornering-model,sec:track-geometry,sec:cda-fitting}
+make a number of simplifying assumptions. They are listed here plainly, so that
+their limitations are clear to anyone interpreting the simulation's output or a
+fitted \CdA{} value.
+
+\begin{itemize}
+    \item \textbf{Point-mass, one-dimensional longitudinal dynamics.} The rider
+    and bicycle are treated as a single point mass moving along the track's arc
+    length. Lean angle is an algebraic, quasi-static function of instantaneous
+    speed and curvature (\cref{sec:quasi-static-lean}), not an independent
+    dynamical state with its own inertia.
+
+    \item \textbf{No friction-circle or traction-limit check on cornering.} The
+    lean angle of \cref{eq:lean-angle} is computed unconditionally from speed
+    and curvature; the model never checks whether the tire could actually
+    supply the implied lateral friction at that speed and curvature.
+
+    \item \textbf{Flat-track assumption.} Neither the forward simulation nor the
+    \CdA{} fit includes a gravitational grade term. This is appropriate for a
+    velodrome or flat closed-circuit use case, but a limitation for road data
+    with meaningful elevation change.
+
+    \item \textbf{No wind-speed correction.} \texttt{CdAFitter} uses ground
+    speed directly in the drag equation (\cref{eq:aero-drag}); wind speed is
+    present in recorded \texttt{.fit} telemetry but is not subtracted from or
+    added to the speed used in the fit.
+
+    \item \textbf{Steady environmental and mechanical conditions.} Rolling
+    resistance coefficient, air density, and drivetrain mechanical loss are each
+    taken as a single constant value across an entire simulation run or fitting
+    window, not varied over time or estimated from the data.
+
+    \item \textbf{Unsmoothed finite-difference acceleration in the CdA fit.} The
+    acceleration used in \cref{sec:cda-dvdt} is a raw central difference of the
+    recorded speed trace, with no low-pass filtering beforehand; noisy speed
+    samples propagate directly into a noisy \CdA{} estimate.
+
+    \item \textbf{Unweighted least squares.} The regression of
+    \cref{eq:cda-closed-form} weights every sample equally and includes no
+    outlier-robust reweighting, so a small number of corrupted samples can shift
+    the fit disproportionately.
+
+    \item \textbf{Idealized track geometry.} The track geometry of
+    \cref{sec:track-geometry} is a two-straight, two-semicircle oval with a
+    box-filter-smoothed (not clothoid) transition; it approximates, but does not
+    exactly reproduce, the geometry of a real track or velodrome.
+
+    \item \textbf{Position reconstruction is visualization-only.} The
+    Cartesian centerline computed in \cref{sec:position-reconstruction} is used
+    only to draw the track shape in the application; it has no influence on the
+    physics of \cref{sec:simulation-model,sec:cornering-model}.
+\end{itemize}

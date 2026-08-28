@@ -1,0 +1,40 @@
+% Preamble: packages, page geometry, hyperref/cleveref setup, and small macros.
+
+\usepackage[margin=1in]{geometry}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{csquotes}
+\usepackage{listings}
+
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks   = true,
+    linkcolor    = blue!55!black,
+    citecolor    = blue!55!black,
+    urlcolor     = blue!55!black,
+    pdftitle     = {Theory and Computational Methods for Cycling Race Simulation and CdA Fitting},
+    pdfauthor    = {David Domonoske}
+}
+\usepackage[capitalize]{cleveref}
+
+\lstset{
+    basicstyle       = \ttfamily\small,
+    columns          = fullflexible,
+    breaklines       = true,
+    frame            = single,
+    language         = Python,
+    keywordstyle     = \bfseries,
+    showstringspaces = false
+}
+
+% Frequently used symbols; \ensuremath lets these be used in text or math mode.
+\newcommand{\CdA}{\ensuremath{C_{d}A}}
+\newcommand{\Crr}{\ensuremath{C_{rr}}}
+
+\sisetup{per-mode = symbol}

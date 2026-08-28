@@ -1,0 +1,49 @@
+\section{Notation, Units, and Parameters}
+\label{sec:notation}
+
+\Cref{tab:notation} lists every symbol used in this document, its meaning, its
+SI unit, its default or typical value where one exists, and the corresponding
+function, class, or entity attribute in the implementation. Derivations
+throughout this document use SI units exclusively; the single exception is
+velocity as reported to the user, which is converted to
+\si{\kilo\metre\per\hour} for display only (\cref{sec:sim-outputs}) and is never
+used in that form internally.
+
+{\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}p{0.06\textwidth} p{0.27\textwidth} p{0.13\textwidth} p{0.17\textwidth} >{\ttfamily}p{0.27\textwidth}@{}}
+    \toprule
+    \textbf{Symbol} & \textbf{Meaning} & \textbf{Unit} & \textbf{Default / typical} & \textbf{Code reference} \\
+    \midrule
+    \endfirsthead
+    \toprule
+    \textbf{Symbol} & \textbf{Meaning} & \textbf{Unit} & \textbf{Default / typical} & \textbf{Code reference} \\
+    \midrule
+    \endhead
+    $v$ & speed along direction of travel & \si{\metre\per\second} & -- & IPCalculator, state \\
+    $s$ & distance traveled along track & \si{\metre} & -- & IPCalculator, state \\
+    $t$ & elapsed time & \si{\second} & -- & IPCalculator \\
+    $m$ & rider + bicycle mass & \si{\kilo\gram} & \num{100.0} (test value) & Rider.\allowbreak weight\_kg \\
+    $g$ & gravitational acceleration & \si{\metre\per\second\squared} & \num{9.80665} & IPCalculator.\allowbreak GRAVITY \\
+    $\Crr$ & rolling resistance coefficient & dimensionless & \num{0.002} (test value) & Environment.\allowbreak crr \\
+    $\rho$ & air density & \si{\kilo\gram\per\cubic\metre} & \num{1.12} (test value) & Environment.\allowbreak air\_density \\
+    $\CdA$ & aerodynamic drag area & \si{\metre\squared} & \num{0.195} (test value) & Rider.cda \\
+    $P(t)$ & commanded or recorded power & \si{\watt} & -- & power plan / .fit power field \\
+    $F_{\max}$ & maximum traction (propulsive) force & \si{\newton} & \num{200} & IPCalculator.\allowbreak max\_force \\
+    $\eta$ & fractional drivetrain mechanical loss & dimensionless & \num{0.02} (test value) & Environment.\allowbreak mech\_losses \\
+    $\theta$ & lean angle & \si{\radian} & -- & IPCalculator.\allowbreak \_lean\_angle \\
+    $\kappa$ & track curvature & \si{\per\metre} & -- & TrackShape, \_kappa\_at \\
+    $h$ & rider center-of-mass height & \si{\metre} & optional & Rider.\allowbreak com\_height\_m \\
+    $L$ & total track length & \si{\metre} & \num{250.0} & Environment.\allowbreak track\_length \\
+    $c$ & fraction of track length devoted to cornering & dimensionless, $[0.20, 1.0]$ & \num{0.60} & Environment.\allowbreak corners \\
+    -- & curvature transition (smoothing) zone length & \si{\metre} & \num{30.0} & TrackShape.\allowbreak transition \\
+    $V_{\mathrm{eps}}$ & low-speed floor for cornering/energy terms & \si{\metre\per\second} & \num{0.1} & IPCalculator.\allowbreak V\_EPS \\
+    $s_{\mathrm{race}}$ & target race distance & \si{\metre} & \num{4000} & IPCalculator.\allowbreak race\_distance \\
+    $dt$ & output sampling interval & \si{\second} & \num{0.1} (sim) / \num{1} (class default) & IPCalculator.dt \\
+    $t_{\max}$ & solve time horizon & \si{\second} & \num{300} & IPCalculator.\allowbreak solve \\
+    \bottomrule
+    \caption{Notation, units, and default parameter values used throughout this
+    document.}
+    \label{tab:notation}
+\end{longtable}
+}
