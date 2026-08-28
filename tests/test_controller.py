@@ -31,6 +31,7 @@ class StubView:
         self.aero_test_window_shown = False
         self.aero_test_window_args = None
         self.aero_test_windows: dict = {}
+        self.last_aero_test_window_error = None
 
     def show_rider_selection_list(self, name_ids): self.rider_list = name_ids
     def show_envir_selection_list(self, name_ids): self.envir_list = name_ids
@@ -48,6 +49,9 @@ class StubView:
     def show_aero_test_window(self, aero_test_id, aero_test, fit_data):
         self.aero_test_window_shown = True
         self.aero_test_window_args = (aero_test_id, aero_test, fit_data)
+
+    def show_aero_test_window_error(self, aero_test_id, msg):
+        self.last_aero_test_window_error = str(msg)
 
 
 @pytest.fixture
@@ -485,4 +489,64 @@ def test_delete_aero_test_selection_refreshes_open_window(ctrl):
 
     assert stub_window.refreshed_selections is test.selections
     assert len(stub_window.refreshed_selections) == 0
+
+
+# ------ CdA calculation ------
+
+def test_calc_selection_cda_missing_rider_envir_shows_error(ctrl):
+    c, storage, view = ctrl
+    c.add_aero_test_btn_press()
+    test = storage.aero_tests[0]
+    sel = test.add_selection("Lap 1", 0.0, 20.0)
+
+    c.calc_selection_cda_btn_press(test.aero_test_id, sel.selection_id,
+                                    np.arange(20, dtype=float),
+                                    np.linspace(9.0, 11.0, 20),
+                                    np.linspace(250.0, 300.0, 20))
+
+    assert view.last_aero_test_window_error is not None
+    assert sel.cda is None
+
+
+def test_calc_selection_cda_missing_required_fields_shows_error(ctrl):
+    c, storage, view = ctrl
+    rider = storage.add_rider(first_name="Dave")  # no weight_kg
+    envir = storage.add_environment(name="COS", air_density=1.2, crr=0.004, mech_losses=0.02)
+    c.add_aero_test_btn_press()
+    test = storage.aero_tests[0]
+    test.rider_id = rider.rider_id
+    test.envir_id = envir.envir_id
+    sel = test.add_selection("Lap 1", 0.0, 20.0)
+
+    c.calc_selection_cda_btn_press(test.aero_test_id, sel.selection_id,
+                                    np.arange(20, dtype=float),
+                                    np.linspace(9.0, 11.0, 20),
+                                    np.linspace(250.0, 300.0, 20))
+
+    assert view.last_aero_test_window_error is not None
+    assert sel.cda is None
+
+
+def test_calc_selection_cda_success_persists_and_refreshes(ctrl):
+    c, storage, view = ctrl
+    rider = storage.add_rider(first_name="Dave", weight_kg=80)
+    envir = storage.add_environment(name="COS", air_density=1.2, crr=0.004, mech_losses=0.02)
+    c.add_aero_test_btn_press()
+    test = storage.aero_tests[0]
+    test.rider_id = rider.rider_id
+    test.envir_id = envir.envir_id
+    sel = test.add_selection("Lap 1", 0.0, 20.0)
+
+    stub_window = StubAeroTestWindow()
+    view.aero_test_windows[test.aero_test_id] = stub_window
+
+    c.calc_selection_cda_btn_press(test.aero_test_id, sel.selection_id,
+                                    np.arange(20, dtype=float),
+                                    np.linspace(9.0, 11.0, 20),
+                                    np.linspace(250.0, 300.0, 20))
+
+    assert view.last_aero_test_window_error is None
+    assert sel.cda is not None
+    assert sel.cda > 0
+    assert stub_window.refreshed_selections is test.selections
 

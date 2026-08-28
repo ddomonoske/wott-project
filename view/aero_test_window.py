@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 from model.entities import AeroTest, AeroTestSelection
-from view.components import SectionLabel
+from view.components import AlertMixin, SectionLabel
 
 
 _DEFAULT_ON = frozenset({'speed', 'power', 'cadence', 'wind_speed'})
@@ -36,7 +36,7 @@ _UNITS: dict[str, str] = {
 _ACTIVE_SEL_BORDER = ("white", "gray75")
 
 
-class AeroTestWindow(ctk.CTkToplevel):
+class AeroTestWindow(AlertMixin, ctk.CTkToplevel):
     def __init__(self, root, aero_test: AeroTest, fit_data: dict[str, np.ndarray],
                  controller=None):
         super().__init__(root)
@@ -127,7 +127,7 @@ class AeroTestWindow(ctk.CTkToplevel):
     def _build_right_panel(self, selections: list):
         right = ctk.CTkFrame(self, corner_radius=0)
         right.grid_columnconfigure(0, weight=1)
-        right.grid_rowconfigure(8, weight=1)
+        right.grid_rowconfigure(9, weight=1)
         right.grid(row=0, column=1, sticky="nsew")
 
         # Active selection name -- large, centered
@@ -175,6 +175,7 @@ class AeroTestWindow(ctk.CTkToplevel):
             ("_avg_speed_val", "Avg Speed:"),
             ("_speed_range_val", "Speed Range:"),
             ("_speed_delta_val", "Avg Accel:"),
+            ("_cda_val", "CdA:"),
         ]
         for i, (attr, label) in enumerate(stat_rows):
             ctk.CTkLabel(stats_frame, text=label, anchor="w").grid(
@@ -191,23 +192,31 @@ class AeroTestWindow(ctk.CTkToplevel):
         self._name_entry = ctk.CTkEntry(name_frame, placeholder_text="Selection name")
         self._name_entry.grid(row=1, column=0, sticky="ew")
 
-        # Save button -- natural width, horizontal padding only
-        ctk.CTkButton(right, text="Save Selection",
+        # Save / Calculate CdA buttons -- natural width, horizontal padding only
+        btn_frame = ctk.CTkFrame(right, fg_color="transparent")
+        btn_frame.grid(row=5, column=0, padx=20, pady=6)
+        ctk.CTkButton(btn_frame, text="Save Selection",
                       fg_color="green", hover_color="dark green",
                       command=self._save_selection).grid(
-            row=5, column=0, padx=20, pady=6)
+            row=0, column=0, padx=(0, 6))
+        ctk.CTkButton(btn_frame, text="Calculate CdA",
+                      command=self._calc_cda).grid(
+            row=0, column=1, padx=(6, 0))
+
+        self.alert_lbl = ctk.CTkLabel(right, text="", anchor="center")
+        self.alert_lbl.grid(row=6, column=0, padx=10, pady=(0, 4), sticky="ew")
 
         # Divider
         ctk.CTkFrame(right, height=2, corner_radius=0,
                      fg_color=("dark slate gray", "gray60")).grid(
-            row=6, column=0, sticky="ew", padx=10, pady=4)
+            row=7, column=0, sticky="ew", padx=10, pady=4)
 
         SectionLabel(right, "Saved Selections").grid(
-            row=7, column=0, padx=10, pady=(4, 2), sticky="w")
+            row=8, column=0, padx=10, pady=(4, 2), sticky="w")
 
         self._sel_scroll = ctk.CTkScrollableFrame(right, corner_radius=0)
         self._sel_scroll.grid_columnconfigure(0, weight=1)
-        self._sel_scroll.grid(row=8, column=0, sticky="nsew", padx=10, pady=(0, 10))
+        self._sel_scroll.grid(row=9, column=0, sticky="nsew", padx=10, pady=(0, 10))
 
         self._refresh_selections_list(selections)
 
@@ -432,6 +441,13 @@ class AeroTestWindow(ctk.CTkToplevel):
         self._speed_delta_val.configure(
             text=self._fmt(stats.get('avg_accel'), "m/s\N{SUPERSCRIPT TWO}", decimals=4))
 
+        # A freshly drawn/adjusted span has no CdA yet -- it's only computed
+        # (and persisted) once "Calculate CdA" is run on a saved selection.
+        self._display_cda(None)
+
+    def _display_cda(self, cda: Optional[float]):
+        self._cda_val.configure(text=self._fmt(cda, "m\N{SUPERSCRIPT TWO}", decimals=4))
+
     # ------ save / load / delete selections ------
 
     def _save_selection(self):
@@ -451,6 +467,17 @@ class AeroTestWindow(ctk.CTkToplevel):
             self.controller.save_aero_test_selection(
                 self.aero_test_id, name, self._sel_start, self._sel_end, **stats)
 
+    def _calc_cda(self):
+        if self._active_sel_id is None or not self.controller:
+            return
+        mask = (self._time >= self._sel_start) & (self._time <= self._sel_end)
+        speed, power = self._fit_data.get('speed'), self._fit_data.get('power')
+        if not mask.any() or speed is None or power is None:
+            return
+        self.controller.calc_selection_cda_btn_press(
+            self.aero_test_id, self._active_sel_id,
+            self._time[mask], speed[mask], power[mask])
+
     def _clear_selection(self):
         self._sel_start = None
         self._sel_end = None
@@ -461,7 +488,8 @@ class AeroTestWindow(ctk.CTkToplevel):
         self._start_ent.delete(0, 'end')
         self._end_ent.delete(0, 'end')
         for attr in ('_duration_val', '_distance_val', '_avg_power_val',
-                     '_avg_speed_val', '_speed_range_val', '_speed_delta_val'):
+                     '_avg_speed_val', '_speed_range_val', '_speed_delta_val',
+                     '_cda_val'):
             getattr(self, attr).configure(text="-")
         self._update_zoom_state()
         self._redraw_plot()
@@ -487,6 +515,7 @@ class AeroTestWindow(ctk.CTkToplevel):
         mask = (self._time >= sel.start_time) & (self._time <= sel.end_time)
         if mask.any():
             self._update_stats_display(self._compute_stats(mask))
+        self._display_cda(sel.cda)
 
         self._update_zoom_state()
         self._redraw_plot()
@@ -528,6 +557,10 @@ class AeroTestWindow(ctk.CTkToplevel):
     def refresh_selections(self, selections: list):
         """Called by controller after the selections list on the AeroTest changes."""
         self._refresh_selections_list(selections)
+        if self._active_sel_id is not None:
+            sel = next((s for s in selections if s.selection_id == self._active_sel_id), None)
+            if sel is not None:
+                self._display_cda(sel.cda)
 
     # ------ close ------
 
