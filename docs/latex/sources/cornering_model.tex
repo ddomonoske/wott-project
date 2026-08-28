@@ -1,10 +1,14 @@
 \section{Cornering Model}
 \label{sec:cornering-model}
 
-When the rider's center-of-mass height $h$ (\texttt{com\_height\_m}) and the
-track's curvature profile $\kappa(s)$ (\cref{sec:track-geometry}) are both known,
-the simulation adds a cornering correction to the equation of motion. This
-section derives that correction term by term.
+Whenever the track's curvature profile $\kappa(s)$ (\cref{sec:track-geometry})
+is nonzero, the simulation adds a lean-angle and banked-rolling-resistance
+correction to the equation of motion (\cref{sec:lean-angle,sec:rolling-resistance}).
+If the rider's center-of-mass height $h$ (\texttt{com\_height\_m}) is also
+known, two further corrections activate: the wheel-speed geometric correction
+and the energy-feedback term
+(\cref{sec:wheel-speed-geometry,sec:energy-feedback}). This section derives
+each term in turn.
 
 \subsection{Framing: a quasi-static lean, not a dynamical degree of freedom}
 \label{sec:quasi-static-lean}
@@ -62,19 +66,17 @@ introduced in this section vanishes, so the model reduces exactly to
         \node[below] at ({0.5*3.2*cos(60)},-0.5) {$h\sin\theta$};
         \draw[<->] ({3.2*cos(60)+0.5},0) -- ({3.2*cos(60)+0.5},{3.2*sin(60)});
         \node[right] at ({3.2*cos(60)+0.5},{0.5*3.2*sin(60)}) {$z=h\cos\theta$};
-        \node[left] at (25:1.7) {$h$};
+        \node[left] at (60:1.7) {$h$};
     \end{tikzpicture}
-    \caption{Lean geometry viewed from behind the rider. The center of mass sits
-    a distance $h$ from the wheel-ground contact point along the bike's leaned
-    axis, at lean angle $\theta$ from vertical. Its horizontal offset from the
-    contact point, $h\sin\theta$, is the inboard shift used below in
-    \cref{eq:wheel-speed}; its height above the contact point,
-    $z = h\cos\theta$, is the quantity that varies as the rider leans in
-    \cref{sec:energy-feedback}.}
+    \caption{Lean geometry viewed from behind the rider: the center of mass sits
+    a distance $h$ from the wheel-ground contact point at lean angle $\theta$
+    from vertical, with horizontal offset $h\sin\theta$ and height
+    $z = h\cos\theta$ above the contact point.}
     \label{fig:lean-geometry}
 \end{figure}
 
-The state variable $v$ represents the speed of the rider's center of mass. When
+The state variable $v$ represents the speed of the rider's center of mass
+(\cref{fig:lean-geometry}). When
 leaned at angle $\theta$, the center of mass sits a horizontal distance
 $h \sin\theta$ inboard of the wheel-ground contact line, tracing a smaller
 effective turn radius than the wheels themselves, which remain on the track

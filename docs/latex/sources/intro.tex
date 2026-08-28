@@ -20,8 +20,9 @@ behind the two central calculations in the WOTT cycling performance application:
 Both calculations share a single underlying physical model: a point mass moving
 along a one-dimensional track coordinate $s$, subject to rolling resistance,
 aerodynamic drag, and a rider-supplied propulsive force, together with an optional
-quasi-static cornering correction that activates when track curvature and rider
-center-of-mass height are both known. \Cref{sec:simulation-model} develops this
+quasi-static cornering correction that activates whenever track curvature is
+present, with further geometric and energetic refinements activating when the
+rider's center-of-mass height is also known. \Cref{sec:simulation-model} develops this
 equation of motion and its numerical solution. \Cref{sec:cornering-model} derives
 the cornering correction in detail, since it is the most involved part of the
 model. \Cref{sec:track-geometry} describes how the track's curvature profile is

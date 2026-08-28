@@ -37,7 +37,7 @@ exception for reported velocity (\cref{sec:sim-outputs}).
     $F_{\max}$ & maximum traction (propulsive) force & \si{\newton} & \num{200} & IPCalculator.\allowbreak max\_force \\
     $\eta$ & fractional drivetrain mechanical loss & dimensionless & \num{0.02} (test value) & Environment.\allowbreak mech\_losses \\
     $\theta$ & lean angle & \si{\radian} & -- & IPCalculator.\allowbreak \_lean\_angle \\
-    $\kappa$ & track curvature ($\kappa_{\mathrm{corner}}=1/r$ on corner arcs) & \si{\per\metre} & -- & TrackShape, \_kappa\_at \\
+    $\kappa$ & track curvature ($\kappa_{\mathrm{corner}}=1/r$ on corner arcs) & \si{\per\metre} & -- & TrackShape.compute (kappa); IPCalculator.\allowbreak\_kappa\_at \\
     $h$ & rider center-of-mass height & \si{\metre} & optional & Rider.\allowbreak com\_height\_m \\
     $v_{\mathrm{wheel}}$ & wheel-contact-path speed & \si{\metre\per\second} & -- & IPCalculator.\allowbreak \_wheel\_speed \\
     $r$ & corner radius (fixed, $=\ell_{\mathrm{corner}}/\pi$); used locally in \cref{sec:lean-angle} as shorthand for the instantaneous turn radius $1/\kappa$, which coincides with this fixed value only on the corner plateau & \si{\metre} & -- & TrackShape.compute (radius) \\

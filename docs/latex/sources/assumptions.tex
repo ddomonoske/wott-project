@@ -33,9 +33,9 @@ fitted \CdA{} value.
     corrected for.
 
     \item \textbf{Flat-track assumption.} Neither the forward simulation nor the
-    \CdA{} fit includes a gravitational grade term. This is appropriate for a
-    velodrome or flat closed-circuit use case, but a limitation for road data
-    with meaningful elevation change.
+    \CdA{} fit includes a gravitational grade term in \cref{eq:newton-second-law}.
+    This is appropriate for a velodrome or flat closed-circuit use case, but a
+    limitation for road data with meaningful elevation change.
 
     \item \textbf{No wind-speed correction.} \texttt{CdAFitter} uses ground
     speed directly in the drag equation (\cref{eq:aero-drag}); wind speed is
@@ -43,9 +43,10 @@ fitted \CdA{} value.
     added to the speed used in the fit.
 
     \item \textbf{Steady environmental and mechanical conditions.} Rolling
-    resistance coefficient, air density, and drivetrain mechanical loss are each
-    taken as a single constant value across an entire simulation run or fitting
-    window, not varied over time or estimated from the data.
+    resistance coefficient, air density, and drivetrain mechanical loss
+    (\cref{sec:rolling-resistance,sec:aero-drag,sec:eom}) are each taken as a
+    single constant value across an entire simulation run or fitting window,
+    not varied over time or estimated from the data.
 
     \item \textbf{Unsmoothed finite-difference acceleration in the CdA fit.} The
     acceleration of \cref{sec:cda-dvdt} is a raw central difference of the

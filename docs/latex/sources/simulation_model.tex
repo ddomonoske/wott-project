@@ -1,10 +1,9 @@
 \section{Forward Simulation Model}
 \label{sec:simulation-model}
 
-The forward simulation predicts a rider's velocity and position over time given a
-target power plan, physical parameters, and environmental conditions. It is
-implemented by \texttt{IPCalculator} and solved numerically with
-\url{scipy.integrate.solve_ivp}.
+The forward simulation is implemented by \texttt{IPCalculator} and solved
+numerically with \url{scipy.integrate.solve_ivp}; the equation of motion
+follows.
 
 \subsection{Equation of motion}
 \label{sec:eom}
