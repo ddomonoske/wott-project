@@ -29,7 +29,7 @@ exception for reported velocity (\cref{sec:sim-outputs}).
     $F_p$ & propulsive force before drivetrain losses & \si{\newton} & -- & IPCalculator.\allowbreak calc\_pedal\_force \\
     $N$ & normal force between tire and track under lean & \si{\newton} & -- & (derivation only) \\
     $P_{\mathrm{report}}$ & reported power output (force-capped) & \si{\watt} & -- & IPCalculator.solve (self.power) \\
-    $a_{\mathrm{power}}$ & straight-line acceleration from rolling resistance, drag, and propulsive force & \si{\metre\per\second\squared} & -- & IPCalculator.\_ode\_rhs (a\_power) \\
+    $a_{\mathrm{straight}}$ & straight-line acceleration from rolling resistance, drag, and propulsive force & \si{\metre\per\second\squared} & -- & IPCalculator.\_ode\_rhs (a\_power) \\
     $\Crr$ & rolling resistance coefficient & \num{1} & \num{0.002} (test value) & Environment.\allowbreak crr \\
     $\rho$ & air density & \si{\kilo\gram\per\cubic\metre} & \num{1.12} (test value) & Environment.\allowbreak air\_density \\
     $\CdA$ & aerodynamic drag area & \si{\metre\squared} & \num{0.195} (test value) & Rider.cda \\
@@ -42,8 +42,10 @@ exception for reported velocity (\cref{sec:sim-outputs}).
     $v_{\mathrm{wheel}}$ & wheel-contact-path speed & \si{\metre\per\second} & -- & IPCalculator.\allowbreak \_wheel\_speed \\
     $r$ & corner radius & \si{\metre} & -- & TrackShape.compute (radius) \\
     $z$ & center-of-mass height above a fixed reference & \si{\metre} & -- & (derivation only) \\
-    $a_{\mathrm{energy}}$ & acceleration from the corner-lean energy exchange & \si{\metre\per\second\squared} & -- & IPCalculator.\allowbreak \_energy\_accel computes only $a_{\mathrm{energy}}^{(s)}$; the full $a_{\mathrm{energy}}$ is materialized in CdAFitter.\allowbreak \_cda\_for\_s0 \\
-    $C$ & implicit feedback coefficient (lean angle's dependence on speed) & \num{1} & -- & IPCalculator.\allowbreak \_energy\_feedback\_coeff \\
+    $a_{\mathrm{corner}}$ & acceleration from the corner-lean energy exchange & \si{\metre\per\second\squared} & -- & IPCalculator.\allowbreak \_energy\_accel computes only $a_{\mathrm{corner}}^{(s)}$; the full $a_{\mathrm{corner}}$ is materialized in CdAFitter.\allowbreak \_cda\_for\_s0 \\
+    $a_{\mathrm{corner}}^{(s)}$ & explicit, arc-length-driven part of $a_{\mathrm{corner}}$ (known from the current state, no implicit solve needed) & \si{\metre\per\second\squared} & -- & IPCalculator.\allowbreak \_energy\_accel \\
+    $a_{\mathrm{corner}}^{(v)}$ & implicit, speed-driven part of $a_{\mathrm{corner}}$; equal to $C \cdot dv/dt$ & \si{\metre\per\second\squared} & -- & folded into IPCalculator.\allowbreak \_ode\_rhs via $C$ (not materialized separately) \\
+    $C$ & coefficient of $dv/dt$ in $a_{\mathrm{corner}}^{(v)}$ (lean angle's implicit dependence on speed) & \num{1} & -- & IPCalculator.\allowbreak \_energy\_feedback\_coeff \\
     $L$ & total track length & \si{\metre} & \num{250.0} & Environment.\allowbreak track\_length \\
     $c$ & fraction of track length devoted to cornering & \num{1}, $[0.20, 1.0]$ & \num{0.60} & Environment.\allowbreak corners \\
     $\ell_{\mathrm{straight}}$ & arc length of each straight segment & \si{\metre} & derived from $L, c$ & TrackShape.compute (straight) \\

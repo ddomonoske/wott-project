@@ -1,10 +1,10 @@
 \section{Aerodynamic Drag (CdA) Fitting}
 \label{sec:cda-fitting}
 
-\texttt{CdAFitter} inverts the equation of motion of
+\nolinkurl{CdAFitter} inverts the equation of motion of
 \cref{sec:simulation-model,sec:cornering-model}: instead of integrating forward
 from a known \CdA{} to predict $v(t)$, it takes a measured $\bigl(t, v, P\bigr)$
-trace from a rider's \texttt{.fit} file and solves for the one remaining
+trace from a rider's \nolinkurl{.fit} file and solves for the one remaining
 unknown, \CdA{}. Given a selected window of recorded samples, the rider's
 acceleration can be computed directly by differentiating the recorded speed
 trace, leaving \cref{eq:newton-second-law} (extended with the cornering forces
@@ -18,7 +18,7 @@ from the recorded data and the rider's/environment's known parameters.
 
 Recorded samples are filtered to those with $v > V_{\mathrm{eps}}$, and the
 acceleration $dv/dt$ is estimated by a central finite difference
-(\texttt{numpy.gradient}) on the raw, non-uniformly spaced recording timestamps,
+(\nolinkurl{numpy.gradient}) on the raw, non-uniformly spaced recording timestamps,
 with no smoothing applied to the speed trace beforehand. Distance traveled
 within the selected window is obtained by cumulative trapezoidal integration of
 the recorded speed, giving a cumulative distance $\mathrm{dist}_i$ at each
@@ -35,20 +35,21 @@ feed the cornering corrections below.
 
 Unlike the forward simulation, $dv/dt$ here is already known -- estimated
 directly from the recorded speed trace in \cref{sec:cda-dvdt} -- so the
-circularity that motivated splitting $a_{\mathrm{energy}}$ into an explicit
-$s$-driven part (\cref{eq:a-energy-s}) and an implicit $v$-driven feedback
-coefficient $C$ (\cref{eq:feedback-coeff}) does not arise here: the fit
+circularity that motivated splitting $a_{\mathrm{corner}}$ into an explicit
+$s$-driven part $a_{\mathrm{corner}}^{(s)}$ (\cref{eq:a-corner-s}) and an
+implicit $v$-driven part $a_{\mathrm{corner}}^{(v)} = C \cdot dv/dt$
+(\cref{eq:feedback-coeff}) does not arise here: the fit
 evaluates the full chain rule directly,
 $d\theta/dt = \left.\partial\theta/\partial s\right|_v v + \partial\theta/\partial v \cdot dv/dt$
 (\cref{eq:dtheta-ds,eq:dtheta-dv}, using recorded speed $v$ in place of
 $v_{\mathrm{wheel}}$, \cref{sec:cda-dvdt}), and substitutes it into the general
-\cref{eq:a-energy-general} to get $a_{\mathrm{energy}}$ directly.
+\cref{eq:a-corner-general} to get $a_{\mathrm{corner}}$ directly.
 
 Rearranging \cref{eq:newton-second-law} (with $F_{ad}$ from
 \cref{eq:aero-drag} and the cornering-corrected rolling resistance and energy
 terms of \cref{sec:cornering-model}) to isolate the drag force gives
 \begin{equation}
-    F_{ad} = m\,\frac{dv}{dt} - F_p(1-\eta) - F_{rr}(\theta) - m\,a_{\mathrm{energy}},
+    F_{ad} = m\,\frac{dv}{dt} - F_p(1-\eta) - F_{rr}(\theta) - m\,a_{\mathrm{corner}}\ ,
     \label{eq:cda-force-balance}
 \end{equation}
 where the propulsive force here uses the recorded power directly,
@@ -61,7 +62,7 @@ working instead with the drag \emph{magnitude} $D \equiv -F_{ad} = \CdA \cdot
 \cref{eq:cda-force-balance} accordingly, gives
 \begin{equation}
     x \equiv \tfrac{1}{2}\rho v^2, \qquad
-    y \equiv D = F_p(1-\eta) + F_{rr}(\theta) + m\,a_{\mathrm{energy}} - m\,\frac{dv}{dt},
+    y \equiv D = F_p(1-\eta) + F_{rr}(\theta) + m\,a_{\mathrm{corner}} - m\,\frac{dv}{dt}\ ,
     \label{eq:cda-xy}
 \end{equation}
 reducing the fit to a single linear regression, $y = \CdA \cdot x$, evaluated
@@ -75,7 +76,7 @@ regression has no intercept term: the fit is constrained to pass through the
 origin, not merely close to it. The ordinary-least-squares solution to
 $y = \CdA \cdot x$ with a fixed zero intercept has the closed form
 \begin{equation}
-    \CdA = \frac{\sum_i x_i y_i}{\sum_i x_i^2},
+    \CdA = \frac{\sum_i x_i y_i}{\sum_i x_i^2}\ ,
     \label{eq:cda-closed-form}
 \end{equation}
 computed directly with no iterative solver:
@@ -99,10 +100,10 @@ period $L/2$ -- one straight-and-corner unit, from
 making up a full lap of length $L$ are geometrically identical
 (\cref{sec:track-geometry}). The phase offset $s_0$ at which the recorded
 window began -- where on the track, modulo that period, the rider was when
-recording started -- is not directly known from the \texttt{.fit} data. Because
+recording started -- is not directly known from the \nolinkurl{.fit} data. Because
 the residual-versus-$s_0$ landscape is periodic and, in general, multimodal (a
 local optimizer seeded arbitrarily could converge to the wrong minimum),
-\texttt{CdAFitter} searches for $s_0$ in two stages:
+\nolinkurl{CdAFitter} searches for $s_0$ in two stages:
 
 \begin{enumerate}
     \item \textbf{Coarse grid search}: the fit of
@@ -111,7 +112,7 @@ local optimizer seeded arbitrarily could converge to the wrong minimum),
     window could have started at.
 
     \item \textbf{Refinement}: the best coarse candidate is refined with
-    \texttt{scipy.optimize.minimize\_scalar} using the bounded Brent method,
+    \nolinkurl{scipy.optimize.minimize_scalar} using the bounded Brent method,
     searching within one grid spacing on either side of the coarse minimum.
 \end{enumerate}
 At each candidate $s_0$, the scoring function is the sum of squared residuals of

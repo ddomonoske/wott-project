@@ -19,8 +19,8 @@ fitted \CdA{} value.
     rolling-resistance normal-force increase of \cref{eq:normal-force} treats
     leaning as equivalent to riding a surface banked at angle $\theta$ (no
     lateral tire friction needed to supply the centripetal force), rather than
-    modeling the actual friction-based lean mechanics of a bicycle on a flat
-    track (\cref{sec:rolling-resistance}).
+    modeling the actual friction-based lean mechanics of a bicycle on a track
+    surface with fixed banking (\cref{sec:rolling-resistance}).
 
     \item \textbf{CdA fit approximates wheel speed with center-of-mass speed.}
     The \CdA{} fit's distance-from-speed integration and lean-rate chain rule
@@ -37,9 +37,9 @@ fitted \CdA{} value.
     This is appropriate for a velodrome or flat closed-circuit use case, but a
     limitation for road data with meaningful elevation change.
 
-    \item \textbf{No wind-speed correction.} \texttt{CdAFitter} uses ground
+    \item \textbf{No wind-speed correction.} \nolinkurl{CdAFitter} uses ground
     speed directly in the drag equation (\cref{eq:aero-drag}); wind speed is
-    present in recorded \texttt{.fit} telemetry but is not subtracted from or
+    present in recorded \nolinkurl{.fit} telemetry but is not subtracted from or
     added to the speed used in the fit.
 
     \item \textbf{Steady environmental and mechanical conditions.} Rolling

@@ -1,8 +1,8 @@
 \section{Forward Simulation Model}
 \label{sec:simulation-model}
 
-The forward simulation is implemented by \texttt{IPCalculator} and solved
-numerically with \texttt{scipy.integrate.solve\_ivp}; the equation of motion
+The forward simulation is implemented by \nolinkurl{IPCalculator} and solved
+numerically with \nolinkurl{scipy.integrate.solve_ivp}; the equation of motion
 follows.
 
 \subsection{Equation of motion}
@@ -12,19 +12,19 @@ The model treats the rider and bicycle as a single point mass $m$ moving along
 the track's arc-length coordinate $s$. On a flat, straight section of track,
 Newton's second law along the direction of travel gives
 \begin{equation}
-    m\,\frac{dv}{dt} = F_{rr} + F_{ad} + F_p (1 - \eta),
+    m\,\frac{dv}{dt} = F_{rr} + F_{ad} + F_p (1 - \eta)\ ,
     \label{eq:newton-second-law}
 \end{equation}
 where $F_{rr}$ is the rolling resistance force, $F_{ad}$ is the aerodynamic drag
 force, $F_p$ is the propulsive force delivered before drivetrain losses, and
-$\eta$ (\texttt{mech\_losses}) is the fractional mechanical loss through the
+$\eta$ (\nolinkurl{mech_losses}) is the fractional mechanical loss through the
 drivetrain. Dividing by $m$ gives the straight-line acceleration
 \begin{equation}
-    a_{\mathrm{power}} = \frac{F_{rr} + F_{ad} + F_p (1-\eta)}{m}.
-    \label{eq:a-power}
+    a_{\mathrm{straight}} = \frac{F_{rr} + F_{ad} + F_p (1-\eta)}{m}\ .
+    \label{eq:a-straight}
 \end{equation}
 When the track has curvature, an additional cornering correction is added to
-\cref{eq:a-power}; that correction is developed in full in
+\cref{eq:a-straight}; that correction is developed in full in
 \cref{sec:cornering-model}, since it depends on quantities not yet introduced
 here.
 
@@ -34,20 +34,21 @@ here.
 On level, upright riding, rolling resistance is the familiar
 $F_{rr,0} = -m g \Crr$, opposing the direction of travel, where $g$ is the
 acceleration of gravity and $\Crr$ is the rolling resistance coefficient
-(\texttt{envir.crr}). When the rider is leaned over at angle $\theta$ through a
+(\nolinkurl{envir.crr}). When the rider is leaned over at angle $\theta$ through a
 corner (\cref{sec:cornering-model} derives $\theta$), the model treats the
-tire-track contact \emph{as if} the rider were riding a surface banked at angle
-$\theta$, rather than balancing via tire friction on a flat track: no lateral
-friction is needed to supply the centripetal force under this idealization, but
-the normal force increases, since the same weight $mg$ must be supported through
+tire-track contact \emph{as if} the rider were riding a surface banked
+precisely at angle $\theta$, rather than balancing via combined normal
+force and tire friction on the track surface: no lateral friction is
+needed to supply the centripetal force under this idealization, but the
+normal force increases, since the same weight $mg$ must be supported through
 a smaller effective vertical component:
 \begin{equation}
-    N(\theta) = \frac{m g}{\cos\theta}.
+    N(\theta) = \frac{m g}{\cos\theta}\ .
     \label{eq:normal-force}
 \end{equation}
 Because rolling resistance is proportional to the normal force, this gives
 \begin{equation}
-    F_{rr}(\theta) = -\frac{m g \Crr}{\cos\theta}.
+    F_{rr}(\theta) = -\frac{m g \Crr}{\cos\theta}\ .
     \label{eq:rolling-resistance}
 \end{equation}
 At $\theta = 0$ (straights, or when no cornering model is configured),
@@ -59,10 +60,10 @@ result $F_{rr,0}$.
 
 The aerodynamic drag force follows the standard quadratic drag equation,
 \begin{equation}
-    F_{ad} = -\tfrac{1}{2} \rho \, \CdA \, v^2,
+    F_{ad} = -\tfrac{1}{2} \rho \, \CdA \, v^2\ ,
     \label{eq:aero-drag}
 \end{equation}
-where $\rho$ is air density (\texttt{envir.air\_density}) and $\CdA$ is the
+where $\rho$ is air density (\nolinkurl{envir.air_density}) and $\CdA$ is the
 rider's aerodynamic drag area: the product of drag coefficient and frontal area,
 treated here as a single lumped parameter with units of \si{\metre\squared}.
 \CdA{} is exactly the quantity that \cref{sec:cda-fitting} estimates from
@@ -77,18 +78,16 @@ instant. Converting a target power into a propulsive force
 requires dividing by speed, $F = P/v$, which is singular as $v \to 0$ and is
 physically unrealistic at low speed in any case, since no rider can deliver
 unbounded force. The model therefore caps the propulsive force at a maximum
-traction force $F_{\max}$ (\texttt{max\_force}, default \SI{200}{\newton}):
+force $F_{\max}$ (\nolinkurl{max_force}, default \SI{200}{\newton}):
 \begin{equation}
     F_p(v, t) =
     \begin{cases}
-        F_{\max}, & v < P(t) / F_{\max} \quad \text{(torque-limited)} \\[4pt]
-        P(t) / v, & v \geq P(t) / F_{\max} \quad \text{(power-limited)},
-    \end{cases}
+        F_{\max}\ , & v < P(t) / F_{\max} \quad \text{(torque-limited)} \\[4pt]
+        P(t) / v\ , & v \geq P(t) / F_{\max} \quad \text{(power-limited)}
+    \end{cases}\ ,
     \label{eq:propulsive-force}
 \end{equation}
-with $F_p = 0$ whenever $v = 0$ and $P(t) \leq 0$. This is the standard
-torque-limited/power-limited force-velocity curve used in vehicle propulsion
-models.
+with $F_p = 0$ whenever $v = 0$ and $P(t) \leq 0$.
 
 \subsection{Numerical integration}
 \label{sec:numerical-integration}
@@ -96,49 +95,44 @@ models.
 \Cref{eq:newton-second-law} (extended with the cornering correction of
 \cref{sec:cornering-model}) is a coupled, nonstiff, first-order ODE system in the
 state $y=(v,s)$ of \cref{eq:state-vector}. It is solved with
-\texttt{scipy.integrate.solve\_ivp} using its default explicit Runge-Kutta method
+\nolinkurl{scipy.integrate.solve_ivp} using its default explicit Runge-Kutta method
 (RK45, the Dormand-Prince pair) and default error tolerances. RK45 is adaptive:
 at every step it estimates the local truncation error and grows or shrinks the
 next step to keep that error within tolerance. The only control the simulation
-imposes on this process is \texttt{max\_step}, an upper bound (discussed
+imposes on this process is \nolinkurl{max_step}, an upper bound (discussed
 below); below that bound the solver's own error control still governs the step
-actually taken, and it does shrink on its own when the dynamics call for it --
-for instance, right at a power-plan segment boundary, where the commanded
-power $P(t)$ jumps discontinuously between segments
-(\cref{sec:propulsive-force}), or near the torque-limited/power-limited
-crossover speed $P(t)/F_{\max}$ in \cref{eq:propulsive-force}, where the force
-curve has a kink.
+actually taken.
 
 The solver is given a terminal event that stops integration exactly when the
 rider crosses the target race distance,
 \begin{equation}
-    e(t, y) = s(t) - s_{\mathrm{race}} = 0,
+    e(t, y) = s(t) - s_{\mathrm{race}} = 0\ ,
     \label{eq:race-distance-event}
 \end{equation}
-detected as a rising zero-crossing (\texttt{direction=1}) so integration halts on
+detected as a rising zero-crossing (\nolinkurl{direction=1}) so integration halts on
 the sample where the rider first reaches $s_{\mathrm{race}}$
-(\texttt{race\_distance}, default \SI{4000}{\metre}). SciPy locates this crossing
+(\nolinkurl{race_distance}, default \SI{4000}{\metre}). SciPy locates this crossing
 by root-finding on its dense-output polynomial, giving sub-step accuracy in the
 reported finish time and position; the run raises an error if the event never
 fires within the solve horizon $t_{\max}$ (default \SI{300}{\second}).
 
 Results are additionally requested on a fixed, uniformly spaced grid
-(\texttt{t\_eval}) of $n = \lceil t_{\max}/dt \rceil$ points spanning
+(\nolinkurl{t_eval}) of $n = \lceil t_{\max}/dt \rceil$ points spanning
 $[0, t_{\max})$ -- a spacing of $t_{\max}/n$, equal to $dt$ when $t_{\max}$ is an
 exact multiple of it and slightly under $dt$ otherwise -- independent of the
 solver's own internal adaptive step choices. When track geometry is configured, the solver's
-\texttt{max\_step} is capped at $dt$; when no track geometry is present it is left
-unbounded (\texttt{numpy.inf}) so RK45 is free to take its own, larger, error-
-controlled steps. The reason for this cap is the curvature profile itself:
+\nolinkurl{max_step} is capped at $dt$; when no track geometry is present it is left
+unbounded (\nolinkurl{numpy.inf}) so RK45 is free to take its own, larger,
+error-controlled steps. The reason for this cap is the curvature profile itself:
 \cref{sec:track-geometry} shows that $\kappa(s)$ is smoothed into a ramp between
 zero and its cornering value over a short transition zone (default
 \SI{30}{\metre}), which a fast-moving rider can cross in well under a second.
 RK45's own error control, tuned to the comparatively smooth power and drag
 dynamics, may grow its step size to several seconds without raising any error,
-silently stepping over a transition zone between two \texttt{t\_eval} samples
+silently stepping over a transition zone between two \nolinkurl{t_eval} samples
 and producing a visibly jagged velocity trace through the corner, since the
 solver's dense-output polynomial has no way to know a sharp feature lies between
-its chosen steps. Capping \texttt{max\_step} at $dt$ forces the solver to
+its chosen steps. Capping \nolinkurl{max_step} at $dt$ forces the solver to
 evaluate the right-hand side within every transition zone, at some cost to
 integration speed.
 
@@ -155,7 +149,7 @@ vectorized over the full solution.
 Lap splits are computed at evenly spaced distance markers (default every
 \SI{125}{\metre} up to \SI{4000}{\metre}) by linear interpolation between the two
 position samples straddling each split distance, giving split times at better
-than one \texttt{t\_eval} step of resolution. For CSV export, the velocity and
+than one \nolinkurl{t_eval} step of resolution. For CSV export, the velocity and
 power traces are resampled onto a uniform \SI{1}{\second} grid using
 time-weighted averaging via cumulative trapezoidal integration, rather than
 nearest-sample decimation, so that the resampled curve's area (and therefore
