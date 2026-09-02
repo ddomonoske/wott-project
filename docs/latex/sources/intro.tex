@@ -5,13 +5,13 @@ This document describes the physics, numerical methods, and modeling assumptions
 behind the two central calculations in the WOTT cycling performance application:
 
 \begin{enumerate}
-    \item \textbf{Forward race simulation}, implemented by \texttt{IPCalculator}:
+    \item \textbf{Forward race simulation}, implemented by \nolinkurl{IPCalculator}:
     given a rider's physical parameters, a target power plan, and environmental and
     track conditions, integrate the equations of motion forward in time to predict
     velocity, position, split times, and power output over the course of a race.
 
-    \item \textbf{Aerodynamic drag fitting}, implemented by \texttt{CdAFitter}:
-    given recorded speed and power data from a \texttt{.fit} file (the standard
+    \item \textbf{Aerodynamic drag fitting}, implemented by \nolinkurl{CdAFitter}:
+    given recorded speed and power data from a \nolinkurl{.fit} file (the standard
     recording format written by GPS/ANT+ cycling computers), invert the same
     equations of motion to estimate a rider's aerodynamic drag area, \CdA{}, from
     field data.
@@ -23,28 +23,26 @@ aerodynamic drag, and a rider-supplied propulsive force, together with an option
 quasi-static cornering correction that activates whenever track curvature is
 present, with further geometric and energetic refinements activating when the
 rider's center-of-mass height is also known. \Cref{sec:simulation-model} develops this
-equation of motion and its numerical solution. \Cref{sec:cornering-model} derives
-the cornering correction in detail, since it is the most involved part of the
-model. \Cref{sec:track-geometry} describes how the track's curvature profile is
-constructed from a small set of geometric parameters. \Cref{sec:cda-fitting}
+equation of motion and its numerical solution. \Cref{sec:track-geometry}
+describes how the track's curvature profile is constructed from a small set of
+geometric parameters. \Cref{sec:cornering-model} then derives the cornering
+correction in detail, since it is the most involved part of the model and
+depends on that curvature profile. \Cref{sec:cda-fitting}
 shows how the forward model is inverted to estimate \CdA{} from measured ride
 data. \Cref{sec:assumptions} collects the simplifying assumptions made throughout
 and states their limitations plainly. \Cref{sec:notation} tabulates every symbol
 used in this document, its SI unit, its default value where one exists, and the
 corresponding function or variable name in the implementation
-(\texttt{calcs.py}).
+(\nolinkurl{calcs.py}).
 
 \subsection*{State and notation conventions}
 
 The forward simulation's state at time $t$ is the pair
 \begin{equation}
-    y(t) = \bigl(v(t),\ s(t)\bigr),
+    y(t) = \bigl(v(t),\ s(t)\bigr)\ ,
     \label{eq:state-vector}
 \end{equation}
 where $v$ is the rider's speed along the direction of travel, in
 \si{\metre\per\second}, and $s$ is the distance traveled along the track, in
 \si{\metre}. All quantities in this document are expressed in SI units unless
-stated otherwise. The one exception is velocity as reported to the user, which is
-converted to \si{\kilo\metre\per\hour} purely for display; this conversion is
-never used internally and is noted again where it occurs
-(\cref{sec:sim-outputs}).
+stated otherwise.
