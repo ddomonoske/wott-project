@@ -354,17 +354,45 @@ def test_cda_fitter_s0_periodicity():
     fitter = CdAFitter(air_density=1.2, mass_kg=80, crr=0.004, mech_losses=0.02,
                         com_height_m=0.7, track_length=250.0, corners=0.6)
     rng = np.random.default_rng(0)
+    t = np.arange(60, dtype=float)
     v = rng.uniform(8.0, 14.0, 60)
     p = rng.uniform(200.0, 400.0, 60)
-    dv_dt = np.gradient(v, np.arange(60, dtype=float))
     dist = np.cumsum(v)
     s0 = 37.5
 
-    cda_a, residual_a = fitter._cda_for_s0(s0, v, p, dv_dt, dist)
-    cda_b, residual_b = fitter._cda_for_s0(s0 + fitter.track_length / 2, v, p, dv_dt, dist)
+    cda_a, residual_a = fitter._cda_for_s0(s0, t, v, p, dist)
+    cda_b, residual_b = fitter._cda_for_s0(s0 + fitter.track_length / 2, t, v, p, dist)
 
     assert cda_a == pytest.approx(cda_b)
     assert residual_a == pytest.approx(residual_b)
+
+
+def test_cda_fitter_recovers_com_speed_from_wheel_speed():
+    # Construct a known CoM speed, forward-convert to wheel speed the same
+    # way the simulator does (_wheel_speed), then check the first-order
+    # correction recovers the original CoM speed far more closely than
+    # leaving the raw wheel speed uncorrected would.
+    fitter = CdAFitter(air_density=1.2, mass_kg=80, crr=0.004, mech_losses=0.02,
+                        com_height_m=1.1)
+    v_true = np.array([8.0, 12.0, 16.0, 18.0])
+    kappa = np.full(4, 0.04)
+    theta = np.array([IPCalculator._lean_angle(vv, kk) for vv, kk in zip(v_true, kappa)])
+    v_wheel = np.array([IPCalculator._wheel_speed(vv, kk, th, 1.1)
+                        for vv, kk, th in zip(v_true, kappa, theta)])
+
+    v_recovered = fitter._recover_com_speed(v_wheel, kappa)
+
+    uncorrected_err = np.max(np.abs(v_wheel - v_true) / v_true)
+    corrected_err = np.max(np.abs(v_recovered - v_true) / v_true)
+    assert uncorrected_err > 0.01
+    assert corrected_err < 0.002
+
+
+def test_cda_fitter_recover_com_speed_no_op_without_com_height():
+    fitter = CdAFitter(air_density=1.2, mass_kg=80, crr=0.004, mech_losses=0.02)
+    v_wheel = np.array([8.0, 12.0, 16.0])
+    kappa = np.full(3, 0.04)
+    assert np.array_equal(fitter._recover_com_speed(v_wheel, kappa), v_wheel)
 
 
 def test_cda_fitter_round_trip_recovers_known_cda_on_cornered_track():
@@ -377,10 +405,19 @@ def test_cda_fitter_round_trip_recovers_known_cda_on_cornered_track():
                   com_height_m=0.7, race_distance=2000)
     calc = IPCalculator(**kwargs)
     calc.solve(t_max=150)
-    csv_data = calc.get_csv_export_data(dt=1.0)
 
+    # A speed sensor/GPS records ground (wheel-path) speed, ds/dt, not the
+    # simulator's internal CoM speed -- convert before resampling so the
+    # fitter receives what a real .fit file would actually contain.
+    kappa_full = np.array([calc._kappa_at(s) for s in calc.position])
+    theta_full = np.array([IPCalculator._lean_angle(vv, kk)
+                           for vv, kk in zip(calc.velocity, kappa_full)])
+    v_wheel_full = np.array([IPCalculator._wheel_speed(vv, kk, th, kwargs["com_height_m"])
+                             for vv, kk, th in zip(calc.velocity, kappa_full, theta_full)])
+
+    csv_data = calc.get_csv_export_data(dt=1.0)
     t = np.array(csv_data["time"])
-    v = np.array(csv_data["velocity"]) / 3.6  # kph -> m/s, matching FIT 'speed' units
+    v = np.interp(t, calc.time, v_wheel_full)  # m/s, matching FIT 'speed' units
     p = np.array(csv_data["power"])
 
     fitter = CdAFitter(air_density=1.12, mass_kg=100.0, crr=0.002, mech_losses=0.02,
@@ -393,7 +430,9 @@ def test_cda_fitter_round_trip_recovers_known_cda_on_cornered_track():
 
 def test_cda_fitter_round_trip_recovers_known_cda_no_com_height():
     # Track geometry present but no com_height_m -- banked Crr still applies
-    # but the energy term is a no-op; recovery should still work.
+    # but the energy term is a no-op; recovery should still work. Wheel speed
+    # and CoM speed are identical without com_height_m (_wheel_speed is a
+    # no-op), so calc.velocity can be used directly with no conversion.
     known_cda = 0.22
     kwargs = dict(cda=known_cda, air_density=1.12, mass_kg=90.0, crr=0.003, mech_losses=0.02,
                   power_plan=[(0, 450, 300)], dt=0.1, track_length=250.0, corners=0.6,

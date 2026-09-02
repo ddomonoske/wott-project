@@ -3,46 +3,74 @@
 
 \nolinkurl{CdAFitter} inverts the equation of motion of
 \cref{sec:simulation-model,sec:cornering-model}: instead of integrating forward
-from a known \CdA{} to predict $v(t)$, it takes a measured $\bigl(t, v, P\bigr)$
-trace from a rider's \nolinkurl{.fit} file and solves for the one remaining
-unknown, \CdA{}. Given a selected window of recorded samples, the rider's
-acceleration can be computed directly by differentiating the recorded speed
-trace, leaving \cref{eq:newton-second-law} (extended with the cornering forces
-of \cref{sec:cornering-model}) as a single linear equation in $\CdA$, since
-every other quantity in the force balance -- mass, rolling resistance,
-propulsive force, and the cornering corrections -- can be computed directly
-from the recorded data and the rider's/environment's known parameters.
+from a known \CdA{} to predict $v(t)$, it takes a measured $\bigl(t,
+v_{\mathrm{wheel}}, P\bigr)$ trace from a rider's \nolinkurl{.fit} file and
+solves for the one remaining unknown, \CdA{}. The recorded speed is a speed
+sensor or GPS field, which measures ground/wheel-path speed
+$v_{\mathrm{wheel}}$, not the center-of-mass speed $v$ the equation of motion
+is written in terms of (\cref{sec:wheel-speed-geometry}); \cref{sec:cda-dvdt}
+recovers an estimate of $v$ before the force balance below is evaluated.
+Given a selected window of recorded samples, the rider's acceleration can then
+be computed directly by differentiating that recovered speed trace, leaving
+\cref{eq:newton-second-law} (extended with the cornering forces of
+\cref{sec:cornering-model}) as a single linear equation in $\CdA$, since every
+other quantity in the force balance -- mass, rolling resistance, propulsive
+force, and the cornering corrections -- can be computed directly from the
+recorded data, the rider's/environment's known parameters, and that recovered
+speed.
 
 \subsection{Acceleration from recorded data}
 \label{sec:cda-dvdt}
 
-Recorded samples are filtered to those with $v > V_{\mathrm{eps}}$, and the
-acceleration $dv/dt$ is estimated by a central finite difference
-(\nolinkurl{numpy.gradient}) on the raw, non-uniformly spaced recording timestamps,
-with no smoothing applied to the speed trace beforehand. Distance traveled
-within the selected window is obtained by cumulative trapezoidal integration of
-the recorded speed, giving a cumulative distance $\mathrm{dist}_i$ at each
-sample $i$ from the start of the window -- using recorded (center-of-mass)
-speed rather than the wheel speed $v_{\mathrm{wheel}}$ of \cref{eq:wheel-speed},
-a small approximation revisited in \cref{sec:assumptions} -- rather than from a
-separate odometer or GPS-distance field. Together with the phase offset $s_0$
-of \cref{sec:cda-s0-search}, this gives each sample's track position,
-$s_i = s_0 + \mathrm{dist}_i$, used for the curvature lookups $\kappa(s_i)$ that
-feed the cornering corrections below.
+Recorded samples are filtered to those with $v_{\mathrm{wheel}} >
+V_{\mathrm{eps}}$. Distance traveled within the selected window is obtained by
+cumulative trapezoidal integration of the recorded speed, giving a cumulative
+distance $\mathrm{dist}_i$ at each sample $i$ from the start of the window.
+This integration correctly uses $v_{\mathrm{wheel}}$ directly, with no
+correction needed: distance and $v_{\mathrm{wheel}}$ are related by
+$ds/dt = v_{\mathrm{wheel}}$ (\cref{eq:ds-dt}) regardless of cornering, exactly
+matching what the position state tracks in the forward simulation. Together
+with the phase offset $s_0$ of \cref{sec:cda-s0-search}, this gives each
+sample's track position, $s_i = s_0 + \mathrm{dist}_i$, used for the curvature
+lookups $\kappa(s_i)$ that feed both the cornering corrections below and the
+speed correction that follows.
+
+Every other quantity in the force balance, however, is written in terms of the
+center-of-mass speed $v$, not $v_{\mathrm{wheel}}$. Since $v$ is not directly
+recorded, $\bigl(t, v_{\mathrm{wheel}}, P\bigr)$ is first
+translated into an estimate of $v$ by inverting \cref{eq:wheel-speed} --
+$v_{\mathrm{wheel}} = v/(1-\kappa h\sin\theta)$ -- with $\theta$ (\cref{eq:lean-angle}) evaluated at
+the known $v_{\mathrm{wheel}}$ in place of the unknown $v$:
+\begin{equation}
+    \hat\theta = \theta\bigl(v_{\mathrm{wheel}}, \kappa\bigr), \qquad
+    \hat v = v_{\mathrm{wheel}}\bigl(1 - \kappa h \sin\hat\theta\bigr)\ ,
+    \label{eq:cda-v-correction}
+\end{equation}
+using the curvature $\kappa = \kappa(s_i)$ at each sample's track position from
+above. Because $v_{\mathrm{wheel}} - v$ is itself first-order small in
+$\kappa h \sin\theta$ (\cref{sec:assumptions}), evaluating $\theta$ at
+$v_{\mathrm{wheel}}$ rather than the unknown $v$ only introduces a
+second-order error, so $\hat v$ recovers $v$ to second order in
+$\kappa h \sin\theta$. $\hat v = v_{\mathrm{wheel}}$ exactly whenever
+$com\_height\_m$ is unset or $\kappa = 0$, matching \cref{eq:wheel-speed}
+collapsing to $v_{\mathrm{wheel}} = v$ in those cases. The acceleration
+$dv/dt$ is then estimated by a central finite difference
+(\nolinkurl{numpy.gradient}) of $\hat v$ over the raw, non-uniformly spaced
+recording timestamps, with no smoothing applied to the speed trace beforehand.
 
 \subsection{Rearranged force balance}
 \label{sec:cda-rearranged}
 
 Unlike the forward simulation, $dv/dt$ here is already known -- estimated
-directly from the recorded speed trace in \cref{sec:cda-dvdt} -- so the
-circularity that motivated splitting $a_{\mathrm{corner}}$ into an explicit
-$s$-driven part $a_{\mathrm{corner}}^{(s)}$ (\cref{eq:a-corner-s}) and an
-implicit $v$-driven part $a_{\mathrm{corner}}^{(v)} = C \cdot dv/dt$
+directly from the recovered speed trace $\hat v$ of \cref{sec:cda-dvdt} -- so
+the circularity that motivated splitting $a_{\mathrm{corner}}$ into an
+explicit $s$-driven part $a_{\mathrm{corner}}^{(s)}$ (\cref{eq:a-corner-s})
+and an implicit $v$-driven part $a_{\mathrm{corner}}^{(v)} = C \cdot dv/dt$
 (\cref{eq:feedback-coeff}) does not arise here: the fit
 evaluates the full chain rule directly,
 $d\theta/dt = \left.\partial\theta/\partial s\right|_v v + \partial\theta/\partial v \cdot dv/dt$
-(\cref{eq:dtheta-ds,eq:dtheta-dv}, using recorded speed $v$ in place of
-$v_{\mathrm{wheel}}$, \cref{sec:cda-dvdt}), and substitutes it into the general
+(\cref{eq:dtheta-ds,eq:dtheta-dv}, using the recovered $\hat v$ in place of
+the true $v$, \cref{sec:cda-dvdt}), and substitutes it into the general
 \cref{eq:a-corner-general} to get $a_{\mathrm{corner}}$ directly.
 
 Rearranging \cref{eq:newton-second-law} (with $F_{ad}$ from
@@ -53,15 +81,15 @@ terms of \cref{sec:cornering-model}) to isolate the drag force gives
     \label{eq:cda-force-balance}
 \end{equation}
 where the propulsive force here uses the recorded power directly,
-$F_p = P(t)/v$, with no traction cap applied (unlike the forward model's
+$F_p = P(t)/\hat v$, with no traction cap applied (unlike the forward model's
 \cref{eq:propulsive-force}), since $P(t)$ is measured rather than a target to be
 achieved. \Cref{eq:aero-drag} gives $F_{ad} = -\CdA \cdot
-\bigl(\tfrac{1}{2}\rho v^2\bigr)$, always negative since drag opposes motion;
-working instead with the drag \emph{magnitude} $D \equiv -F_{ad} = \CdA \cdot
-\bigl(\tfrac{1}{2}\rho v^2\bigr)$, a positive quantity, and negating
-\cref{eq:cda-force-balance} accordingly, gives
+\bigl(\tfrac{1}{2}\rho \hat v^2\bigr)$, always negative since drag opposes
+motion; working instead with the drag \emph{magnitude}
+$D \equiv -F_{ad} = \CdA \cdot \bigl(\tfrac{1}{2}\rho \hat v^2\bigr)$, a
+positive quantity, and negating \cref{eq:cda-force-balance} accordingly, gives
 \begin{equation}
-    x \equiv \tfrac{1}{2}\rho v^2, \qquad
+    x \equiv \tfrac{1}{2}\rho \hat v^2, \qquad
     y \equiv D = F_p(1-\eta) + F_{rr}(\theta) + m\,a_{\mathrm{corner}} - m\,\frac{dv}{dt}\ ,
     \label{eq:cda-xy}
 \end{equation}

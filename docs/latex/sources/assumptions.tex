@@ -22,15 +22,13 @@ fitted \CdA{} value.
     modeling the actual friction-based lean mechanics of a bicycle on a track
     surface with fixed banking (\cref{sec:rolling-resistance}).
 
-    \item \textbf{CdA fit approximates wheel speed with center-of-mass speed.}
-    The \CdA{} fit's distance-from-speed integration and lean-rate chain rule
-    (\cref{sec:cda-dvdt}) use the recorded (center-of-mass) speed directly,
-    rather than the wheel-path speed $v_{\mathrm{wheel}}$ of
-    \cref{eq:wheel-speed} that the forward simulation uses for the same
-    purpose; since $v_{\mathrm{wheel}} - v \approx v\,\kappa h \sin\theta$ to
-    leading order, the difference is first-order (linear) in $\kappa h
-    \sin\theta$, and small in practice for realistic lean angles, but is not
-    corrected for.
+    \item \textbf{CdA fit's center-of-mass speed is a first-order estimate.}
+    The recovered speed $\hat v$ of \cref{eq:cda-v-correction} evaluates the
+    lean angle at the recorded wheel speed $v_{\mathrm{wheel}}$ rather than
+    the true (unknown) center-of-mass speed $v$, so $\hat v$ recovers $v$ only
+    to second order in $\kappa h \sin\theta$; a residual error of that order
+    -- small in practice for realistic lean angles, but not exactly zero --
+    remains in every force-balance quantity computed from $\hat v$.
 
     \item \textbf{Flat-track assumption.} Neither the forward simulation nor the
     \CdA{} fit includes a gravitational grade term in \cref{eq:newton-second-law}.
