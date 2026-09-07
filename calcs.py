@@ -408,6 +408,11 @@ class CdAFitter:
     than being the unknown being solved for, no implicit self-referential
     solve is needed: CdA drops out of a single linear regression for any
     given s0, and s0 itself is found by a 1-D search.
+
+    A speed sensor or GPS records ground/wheel-path speed (ds/dt), not the
+    center-of-mass speed the equation of motion is written in terms of, so
+    the recorded trace is first corrected to an estimated CoM speed (see
+    _recover_com_speed) before it's used in the force balance.
     """
 
     S0_GRID_POINTS = 150
@@ -442,15 +447,33 @@ class CdAFitter:
         dkappa_ds = np.interp(s_mod, self._track_s, self._track_dkappa_ds)
         return kappa, dkappa_ds
 
-    def _cda_for_s0(self, s0: float, v: np.ndarray, p: np.ndarray,
-                     dv_dt: np.ndarray, dist: np.ndarray) -> tuple:
+    def _recover_com_speed(self, v_wheel: np.ndarray, kappa: np.ndarray) -> np.ndarray:
+        """Recover an estimate of center-of-mass speed v from recorded
+        wheel/ground speed v_wheel, inverting _wheel_speed's
+        v_wheel = v / (1 - kappa*h*sin(theta(v))) by evaluating theta at the
+        known v_wheel instead of the unknown v. Exact when com_height_m is
+        unset or kappa is zero (v_wheel == v already); otherwise correct to
+        second order in kappa*h*sin(theta), since v_wheel - v is itself
+        already first-order small in that quantity.
+        """
+        if not self.com_height_m:
+            return v_wheel
+        theta_est = np.array([IPCalculator._lean_angle(vv, kk)
+                              for vv, kk in zip(v_wheel, kappa)])
+        return v_wheel * (1.0 - kappa * self.com_height_m * np.sin(theta_est))
+
+    def _cda_for_s0(self, s0: float, t: np.ndarray, v_wheel: np.ndarray,
+                     p: np.ndarray, dist: np.ndarray) -> tuple:
         kappa, dkappa_ds = self._kappa_and_dkappa(s0 + dist)
+        v = self._recover_com_speed(v_wheel, kappa)
+        dv_dt = np.gradient(v, t)
         theta = np.array([IPCalculator._lean_angle(vv, kk) for vv, kk in zip(v, kappa)])
         dtheta_ds = np.array([IPCalculator._dtheta_ds(vv, kk, dk)
                               for vv, kk, dk in zip(v, kappa, dkappa_ds)])
         dtheta_dv = np.array([IPCalculator._dtheta_dv(vv, kk) for vv, kk in zip(v, kappa)])
         # Full chain rule dtheta/dt -- unlike forward integration, dv/dt is
-        # already known here so this needs no implicit feedback solve.
+        # already known here (from the recovered CoM speed above) so this
+        # needs no implicit feedback solve.
         dtheta_dt = dtheta_ds * v + dtheta_dv * dv_dt
 
         f_power = p / v * (1 - self.mech_losses)
@@ -479,8 +502,10 @@ class CdAFitter:
         return cda, residual
 
     def fit(self, t: np.ndarray, v: np.ndarray, p: np.ndarray) -> dict:
-        """Fit CdA to a recorded (t, v, p) trace. Returns {"cda", "s0"}
-        (s0 is None when no track geometry was supplied)."""
+        """Fit CdA to a recorded (t, v, p) trace, where v is recorded
+        wheel/ground speed (a speed sensor or GPS field, e.g. .fit 'speed').
+        Returns {"cda", "s0"} (s0 is None when no track geometry was
+        supplied)."""
         t = np.asarray(t, dtype=float)
         v = np.asarray(v, dtype=float)
         p = np.asarray(p, dtype=float)
@@ -490,26 +515,28 @@ class CdAFitter:
             raise ValueError("Selection window does not have enough moving samples to fit CdA")
         t, v, p = t[mask], v[mask], p[mask]
 
-        dv_dt = np.gradient(v, t)
+        # Distance genuinely tracks wheel/ground speed (ds/dt = v_wheel, same
+        # as the forward simulation's position state), so no CoM correction
+        # is needed here -- only _cda_for_s0's dynamics terms need one.
         dist = cumulative_trapezoid(v, t, initial=0.0)
 
         if self._has_track:
             half_period = self.track_length / 2
             s0_grid = np.linspace(0, half_period, self.S0_GRID_POINTS, endpoint=False)
-            residuals = [self._cda_for_s0(s0, v, p, dv_dt, dist)[1] for s0 in s0_grid]
+            residuals = [self._cda_for_s0(s0, t, v, p, dist)[1] for s0 in s0_grid]
             best_idx = int(np.argmin(residuals))
             best_s0 = float(s0_grid[best_idx])
 
             grid_spacing = half_period / self.S0_GRID_POINTS
             low = max(0.0, best_s0 - grid_spacing)
             high = min(half_period, best_s0 + grid_spacing)
-            opt = minimize_scalar(lambda s0: self._cda_for_s0(s0, v, p, dv_dt, dist)[1],
+            opt = minimize_scalar(lambda s0: self._cda_for_s0(s0, t, v, p, dist)[1],
                                    bounds=(low, high), method='bounded')
             s0_final = float(opt.x) if opt.success else best_s0
-            cda, _ = self._cda_for_s0(s0_final, v, p, dv_dt, dist)
+            cda, _ = self._cda_for_s0(s0_final, t, v, p, dist)
         else:
             s0_final = None
-            cda, _ = self._cda_for_s0(0.0, v, p, dv_dt, dist)
+            cda, _ = self._cda_for_s0(0.0, t, v, p, dist)
 
         if cda <= 0:
             raise ValueError("Fit produced a non-physical (non-positive) CdA; "

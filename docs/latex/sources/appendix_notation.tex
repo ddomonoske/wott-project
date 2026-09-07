@@ -40,6 +40,7 @@ exception for reported velocity (\cref{sec:sim-outputs}).
     $\kappa$ & track curvature & \si{\per\metre} & -- & TrackShape.compute (kappa); IPCalculator.\allowbreak\_kappa\_at \\
     $h$ & rider center-of-mass height & \si{\metre} & optional & Rider.\allowbreak com\_height\_m \\
     $v_{\mathrm{wheel}}$ & wheel-contact-path speed & \si{\metre\per\second} & -- & IPCalculator.\allowbreak \_wheel\_speed \\
+    $\hat v$ & CdA fit's recovered estimate of center-of-mass speed, from recorded $v_{\mathrm{wheel}}$ & \si{\metre\per\second} & -- & CdAFitter.\allowbreak \_recover\_com\_speed \\
     $r$ & corner radius & \si{\metre} & -- & TrackShape.compute (radius) \\
     $z$ & center-of-mass height above a fixed reference & \si{\metre} & -- & (derivation only) \\
     $a_{\mathrm{corner}}$ & acceleration from the corner-lean energy exchange & \si{\metre\per\second\squared} & -- & IPCalculator.\allowbreak \_energy\_accel computes only $a_{\mathrm{corner}}^{(s)}$; the full $a_{\mathrm{corner}}$ is materialized in CdAFitter.\allowbreak \_cda\_for\_s0 \\
