@@ -1,6 +1,6 @@
 # WOTT
 
-A cycling performance desktop GUI app for race simulation and aerodynamic drag (CdA) testing.
+A cycling performance desktop GUI app for race simulation and aerodynamic drag (CdA) testing. Learn about the physics and implementation in [this writeup](../development/docs/simulation-and-cda-theory.pdf).
 
 ## Installation
 
